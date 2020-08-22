@@ -28996,17 +28996,123 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.HelloView = void 0;
+exports.PageColumn = exports.App = exports.EarthbarUserPage = exports.EarthbarWorkspacePage = exports.Earthbar = void 0;
 const React = __importStar(require("react"));
 const ReactDOM = __importStar(require("react-dom"));
 let logHello = (...args) => console.log('Hello |', ...args);
-class HelloView extends React.Component {
+var EbMode;
+(function (EbMode) {
+    EbMode[EbMode["Closed"] = 0] = "Closed";
+    EbMode[EbMode["Workspace"] = 1] = "Workspace";
+    EbMode[EbMode["User"] = 2] = "User";
+})(EbMode || (EbMode = {}));
+let ebApi = {
+    setView: (state, mode) => {
+        return Object.assign(Object.assign({}, state), { mode: mode });
+    },
+};
+//================================================================================
+// EARTHBAR
+class Earthbar extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            mode: EbMode.Closed,
+            currentUser: null,
+            currentWorkspace: null,
+            otherUsers: [],
+            otherWorkspaces: [],
+        };
+    }
     render() {
         logHello('render');
-        return React.createElement("h1", null, "Hello");
+        let view = this.state.mode;
+        // tab styles
+        let sWorkspaceTab = view === EbMode.Workspace
+            ? { color: 'var(--cWhite)', background: 'var(--cWorkspace)' }
+            : { color: 'var(--cWorkspace)', background: 'none' };
+        let sUserTab = view === EbMode.User
+            ? { color: 'var(--cWhite)', background: 'var(--cUser)' }
+            : { color: 'var(--cUser)', background: 'none' };
+        // tab click actions
+        let onClickWorkspaceTab = view === EbMode.Workspace
+            ? (e) => this.setState(ebApi.setView(this.state, EbMode.Closed))
+            : (e) => this.setState(ebApi.setView(this.state, EbMode.Workspace));
+        let onClickUserTab = view === EbMode.User
+            ? (e) => this.setState(ebApi.setView(this.state, EbMode.Closed))
+            : (e) => this.setState(ebApi.setView(this.state, EbMode.User));
+        // which panel to show
+        let panel = null;
+        if (view === EbMode.Workspace) {
+            panel = React.createElement(exports.EarthbarWorkspacePage, null);
+        }
+        else if (view === EbMode.User) {
+            panel = React.createElement(exports.EarthbarUserPage, null);
+        }
+        // style to hide children when a panel is open
+        let sChildren = view === EbMode.Closed
+            ? {}
+            : { visibility: 'hidden' };
+        return React.createElement("div", null,
+            React.createElement("div", { className: 'flexRow' },
+                React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: onClickWorkspaceTab }, "+gardening.pals"),
+                React.createElement("div", { className: 'flexItem', style: { flexGrow: 1 } }),
+                React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: onClickUserTab }, "@suzy.bxxxx...")),
+            React.createElement("div", { style: { position: 'relative' } },
+                React.createElement("div", { style: { position: 'absolute', zIndex: 99, left: 0, right: 0 } }, panel),
+                React.createElement("div", { style: sChildren }, this.props.children)));
     }
 }
-exports.HelloView = HelloView;
-ReactDOM.render(React.createElement(HelloView, null), document.getElementById('react-slot'));
+exports.Earthbar = Earthbar;
+exports.EarthbarWorkspacePage = (props) => React.createElement("div", { style: { padding: 'var(--s0)', color: 'var(--cWhite)', background: 'var(--cWorkspace)' } },
+    "Hello this is the workspace config page",
+    React.createElement("br", null),
+    React.createElement("br", null),
+    "Hello this is the workspace config page",
+    React.createElement("br", null),
+    React.createElement("br", null),
+    "Hello this is the workspace config page");
+exports.EarthbarUserPage = (props) => React.createElement("div", { style: { padding: 'var(--s0)', color: 'var(--cWhite)', background: 'var(--cUser)' } },
+    "Hello this is the user config page",
+    React.createElement("br", null),
+    React.createElement("br", null),
+    "Hello this is the user config page",
+    React.createElement("br", null),
+    React.createElement("br", null),
+    "Hello this is the user config page");
+//================================================================================
+// LAYOUTS
+exports.App = (props) => React.createElement("div", { style: { padding: 'var(--s0)' } },
+    "1 Hello this is the app content",
+    React.createElement("br", null),
+    React.createElement("br", null),
+    "2 Hello this is the app content",
+    React.createElement("br", null),
+    React.createElement("br", null),
+    "3 Hello this is the app content",
+    React.createElement("br", null),
+    React.createElement("br", null),
+    "4 Hello this is the app content",
+    React.createElement("br", null),
+    React.createElement("br", null),
+    "5 Hello this is the app content",
+    React.createElement("br", null),
+    React.createElement("br", null),
+    "6 Hello this is the app content",
+    React.createElement("br", null),
+    React.createElement("br", null),
+    "7 Hello this is the app content",
+    React.createElement("br", null),
+    React.createElement("br", null),
+    "8 Hello this is the app content",
+    React.createElement("br", null),
+    React.createElement("br", null),
+    "9 Hello this is the app content");
+exports.PageColumn = (props) => React.createElement("div", { className: 'pageColumn' }, props.children);
+//================================================================================
+// MAIN
+ReactDOM.render(React.createElement(exports.PageColumn, null,
+    React.createElement(Earthbar, null,
+        React.createElement(exports.App, null))), document.getElementById('react-slot'));
 
 },{"react":10,"react-dom":7}]},{},[17]);

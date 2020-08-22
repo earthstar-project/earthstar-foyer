@@ -1,52 +1,59 @@
-html {
-    line-height: 21px;
-    font-size: 16px;
-    font-family: sans-serif;
-    /* padding: var(--s0); */
+* {
+    box-sizing: border-box;
 }
 
 :root {
-    /* colors for earthstar debug view */
-    --cPath: #ffe2b8;
-    --cValue: #c9fcb7;
-    --cWorkspace: #c5e8ff;
-    --cAuthor: #f6cdff;
-}
+    --ratio: 1.5;
+    --s-5: calc(var(--s-4) / var(--ratio));
+    --s-4: calc(var(--s-3) / var(--ratio));
+    --s-3: calc(var(--s-2) / var(--ratio));
+    --s-2: calc(var(--s-1) / var(--ratio));
+    --s-1: calc(var(--s0) / var(--ratio));
+    --s0: 1rem;
+    --s1: calc(var(--s0) * var(--ratio));
+    --s2: calc(var(--s1) * var(--ratio));
+    --s3: calc(var(--s2) * var(--ratio));
+    --s4: calc(var(--s3) * var(--ratio));
+    --s5: calc(var(--s4) * var(--ratio));
+    --round: var(--s0);
+    --test-border-width: 0px;
 
-.cPath { background: var(--cPath); }
-.cValue { background: var(--cValue); }
-.cWorkspace { background: var(--cWorkspace); }
-.cAuthor { background: var(--cAuthor); }
-code {
-    background: #ddd;
-    padding: 4px 7px;
-    margin: 2px;
-    border-radius: 3px;
-    border: 1px solid #aaa;
-    display: inline-block;
-    word-break: break-all;
+    --cWorkspace: #50f;
+    --cUser: #088;
+    --cWhite: #fff;
+    --cBlack: #222;
+
+    --cText: var(--cBlack);
+    --cPageBg: var(--cGray90);
+
+    line-height: 21px;
     font-size: 16px;
-}
-pre {
-    background: #ddd;
-    padding: 4px 7px;
-    margin: 2px;
-    border-radius: 3px;
-    border: 1px solid #888;
-    word-break: break-all;
-    white-space: pre-wrap;
+    font-family: sans-serif;
+    color: var(--cText);
+    background: var(--cPageBg);
 }
 
-a {
-    text-decoration: underline;
+
+.pageColumn {
+    border: var(--test-border-width) solid #f90;
+    max-width: 70ch;
+    box-sizing: content-box;
+    margin-left: auto;
+    margin-right: auto;
+    padding: var(--s0);
 }
-a.active {
+
+.flexRow {
+    border: var(--test-border-width) dashed #880;
+    display: flex;
+}
+.flexItem {
+    border: var(--test-border-width) solid #880;
+}
+
+.earthbarTab {
+    padding: var(--s0);
     font-weight: bold;
-}
-summary {
-    display: list-item; /* ensure the disclosure triangle is shown */
-    cursor: pointer;
-}
-summary h3 {
-    display: inline;
+    border-top-left-radius: var(--s0);
+    border-top-right-radius: var(--s0);
 }
