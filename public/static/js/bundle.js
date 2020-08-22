@@ -28996,17 +28996,112 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PageColumn = exports.App = exports.EarthbarUserPage = exports.EarthbarWorkspacePage = exports.Earthbar = void 0;
+exports.PageColumn = exports.LobbyApp = void 0;
 const React = __importStar(require("react"));
 const ReactDOM = __importStar(require("react-dom"));
-let logHello = (...args) => console.log('Hello |', ...args);
+const earthbar_1 = require("./earthbar");
+class LobbyApp extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+    render() {
+        return React.createElement("div", { style: { padding: 'var(--s0)' } },
+            "1 Hello this is the app content",
+            React.createElement("br", null),
+            React.createElement("br", null),
+            "2 Hello this is the app content",
+            React.createElement("br", null),
+            React.createElement("br", null),
+            "3 Hello this is the app content",
+            React.createElement("br", null),
+            React.createElement("br", null),
+            "4 Hello this is the app content",
+            React.createElement("br", null),
+            React.createElement("br", null),
+            "5 Hello this is the app content",
+            React.createElement("br", null),
+            React.createElement("br", null),
+            "6 Hello this is the app content",
+            React.createElement("br", null),
+            React.createElement("br", null),
+            "7 Hello this is the app content",
+            React.createElement("br", null),
+            React.createElement("br", null),
+            "8 Hello this is the app content",
+            React.createElement("br", null),
+            React.createElement("br", null),
+            React.createElement("pre", null));
+    }
+}
+exports.LobbyApp = LobbyApp;
+LobbyApp.contextType = earthbar_1.EarthstarCtx;
+;
+/*
+export const App: React.FunctionComponent<any> = (props) =>
+    <div style={{padding: 'var(--s0)'}}>
+        1 Hello this is the app content<br/><br/>
+        2 Hello this is the app content<br/><br/>
+        3 Hello this is the app content<br/><br/>
+        4 Hello this is the app content<br/><br/>
+        5 Hello this is the app content<br/><br/>
+        6 Hello this is the app content<br/><br/>
+        7 Hello this is the app content<br/><br/>
+        8 Hello this is the app content<br/><br/>
+        9 Hello this is the app content
+    </div>
+*/
+exports.PageColumn = (props) => React.createElement("div", { className: 'pageColumn' }, props.children);
+//================================================================================
+// MAIN
+ReactDOM.render(React.createElement(exports.PageColumn, null,
+    React.createElement(earthbar_1.Earthbar, null,
+        React.createElement(LobbyApp, null))), document.getElementById('react-slot'));
+
+},{"./earthbar":18,"react":10,"react-dom":7}],18:[function(require,module,exports){
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EarthbarUserPage = exports.EarthbarWorkspacePage = exports.Earthbar = exports.ebApi = exports.EbMode = exports.EarthstarCtx = void 0;
+const React = __importStar(require("react"));
+let logEarthbar = (...args) => console.log('Hello |', ...args);
+//================================================================================
+// EARTHBAR TYPES
+exports.EarthstarCtx = React.createContext(null);
 var EbMode;
 (function (EbMode) {
     EbMode[EbMode["Closed"] = 0] = "Closed";
     EbMode[EbMode["Workspace"] = 1] = "Workspace";
     EbMode[EbMode["User"] = 2] = "User";
-})(EbMode || (EbMode = {}));
-let ebApi = {
+})(EbMode = exports.EbMode || (exports.EbMode = {}));
+exports.ebApi = {
+    initial: () => {
+        return {
+            mode: EbMode.Closed,
+            currentUser: null,
+            currentWorkspace: null,
+            otherUsers: [],
+            otherWorkspaces: [],
+            workspace: null,
+        };
+    },
     setView: (state, mode) => {
         return Object.assign(Object.assign({}, state), { mode: mode });
     },
@@ -29016,16 +29111,10 @@ let ebApi = {
 class Earthbar extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            mode: EbMode.Closed,
-            currentUser: null,
-            currentWorkspace: null,
-            otherUsers: [],
-            otherWorkspaces: [],
-        };
+        this.state = exports.ebApi.initial();
     }
     render() {
-        logHello('render');
+        logEarthbar('render');
         let view = this.state.mode;
         // tab styles
         let sWorkspaceTab = view === EbMode.Workspace
@@ -29036,42 +29125,60 @@ class Earthbar extends React.Component {
             : { color: 'var(--cUser)', background: 'none' };
         // tab click actions
         let onClickWorkspaceTab = view === EbMode.Workspace
-            ? (e) => this.setState(ebApi.setView(this.state, EbMode.Closed))
-            : (e) => this.setState(ebApi.setView(this.state, EbMode.Workspace));
+            ? (e) => this.setState(exports.ebApi.setView(this.state, EbMode.Closed))
+            : (e) => this.setState(exports.ebApi.setView(this.state, EbMode.Workspace));
         let onClickUserTab = view === EbMode.User
-            ? (e) => this.setState(ebApi.setView(this.state, EbMode.Closed))
-            : (e) => this.setState(ebApi.setView(this.state, EbMode.User));
+            ? (e) => this.setState(exports.ebApi.setView(this.state, EbMode.Closed))
+            : (e) => this.setState(exports.ebApi.setView(this.state, EbMode.User));
         // which panel to show
         let panel = null;
         if (view === EbMode.Workspace) {
-            panel = React.createElement(exports.EarthbarWorkspacePage, null);
+            panel = React.createElement(exports.EarthbarWorkspacePage, { ebState: this.state });
         }
         else if (view === EbMode.User) {
-            panel = React.createElement(exports.EarthbarUserPage, null);
+            panel = React.createElement(exports.EarthbarUserPage, { ebState: this.state });
         }
         // style to hide children when a panel is open
         let sChildren = view === EbMode.Closed
             ? {}
             : { visibility: 'hidden' };
-        return React.createElement("div", null,
-            React.createElement("div", { className: 'flexRow' },
-                React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: onClickWorkspaceTab }, "+gardening.pals"),
-                React.createElement("div", { className: 'flexItem', style: { flexGrow: 1 } }),
-                React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: onClickUserTab }, "@suzy.bxxxx...")),
-            React.createElement("div", { style: { position: 'relative' } },
-                React.createElement("div", { style: { position: 'absolute', zIndex: 99, left: 0, right: 0 } }, panel),
-                React.createElement("div", { style: sChildren }, this.props.children)));
+        return (React.createElement(exports.EarthstarCtx.Provider, { value: this.state.workspace },
+            React.createElement("div", null,
+                React.createElement("div", { className: 'flexRow' },
+                    React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: onClickWorkspaceTab }, "+gardening.pals"),
+                    React.createElement("div", { className: 'flexItem', style: { flexGrow: 1 } }),
+                    React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: onClickUserTab }, "@suzy.bxxxx...")),
+                React.createElement("div", { style: { position: 'relative' } },
+                    React.createElement("div", { style: { position: 'absolute', zIndex: 99, left: 0, right: 0 } }, panel),
+                    React.createElement("div", { style: sChildren }, this.props.children)))));
     }
 }
 exports.Earthbar = Earthbar;
-exports.EarthbarWorkspacePage = (props) => React.createElement("div", { style: { padding: 'var(--s0)', color: 'var(--cWhite)', background: 'var(--cWorkspace)' } },
-    "Hello this is the workspace config page",
-    React.createElement("br", null),
-    React.createElement("br", null),
-    "Hello this is the workspace config page",
-    React.createElement("br", null),
-    React.createElement("br", null),
-    "Hello this is the workspace config page");
+exports.EarthbarWorkspacePage = (props) => {
+    let sPanel = {
+        padding: 'var(--s0)',
+        // change colors
+        '--cBackground': 'var(--cWorkspace)',
+        '--cText': 'var(--cWhite)',
+        // apply color variables
+        background: 'var(--cBackground)',
+        color: 'var(--cText)',
+    };
+    return React.createElement("div", { className: 'stack', style: sPanel },
+        React.createElement("div", null,
+            React.createElement("button", { className: 'button' }, "Sync")),
+        React.createElement("div", { className: 'faint' }, "Pubs (one per line)"),
+        React.createElement("div", null,
+            React.createElement("textarea", { className: 'indent', style: { width: '80%' } }, "https:...")),
+        React.createElement("hr", { className: 'faint' }),
+        React.createElement("div", { className: 'faint' }, "Other workspaces"),
+        React.createElement("div", { className: 'stack indent' },
+            React.createElement("div", { className: 'bold' }, "+bar.pals"),
+            React.createElement("div", { className: 'bold' }, "+foo.stuff"),
+            React.createElement("div", null, "\u00A0"),
+            React.createElement("div", { className: 'bold' }, "Join workspace"),
+            React.createElement("div", { className: 'bold' }, "Create new workspace")));
+};
 exports.EarthbarUserPage = (props) => React.createElement("div", { style: { padding: 'var(--s0)', color: 'var(--cWhite)', background: 'var(--cUser)' } },
     "Hello this is the user config page",
     React.createElement("br", null),
@@ -29080,39 +29187,5 @@ exports.EarthbarUserPage = (props) => React.createElement("div", { style: { padd
     React.createElement("br", null),
     React.createElement("br", null),
     "Hello this is the user config page");
-//================================================================================
-// LAYOUTS
-exports.App = (props) => React.createElement("div", { style: { padding: 'var(--s0)' } },
-    "1 Hello this is the app content",
-    React.createElement("br", null),
-    React.createElement("br", null),
-    "2 Hello this is the app content",
-    React.createElement("br", null),
-    React.createElement("br", null),
-    "3 Hello this is the app content",
-    React.createElement("br", null),
-    React.createElement("br", null),
-    "4 Hello this is the app content",
-    React.createElement("br", null),
-    React.createElement("br", null),
-    "5 Hello this is the app content",
-    React.createElement("br", null),
-    React.createElement("br", null),
-    "6 Hello this is the app content",
-    React.createElement("br", null),
-    React.createElement("br", null),
-    "7 Hello this is the app content",
-    React.createElement("br", null),
-    React.createElement("br", null),
-    "8 Hello this is the app content",
-    React.createElement("br", null),
-    React.createElement("br", null),
-    "9 Hello this is the app content");
-exports.PageColumn = (props) => React.createElement("div", { className: 'pageColumn' }, props.children);
-//================================================================================
-// MAIN
-ReactDOM.render(React.createElement(exports.PageColumn, null,
-    React.createElement(Earthbar, null,
-        React.createElement(exports.App, null))), document.getElementById('react-slot'));
 
-},{"react":10,"react-dom":7}]},{},[17]);
+},{"react":10}]},{},[17]);
