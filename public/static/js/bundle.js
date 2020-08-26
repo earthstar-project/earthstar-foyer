@@ -1,4 +1,439 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+(function (global, factory) {
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+  typeof define === 'function' && define.amd ? define(['exports'], factory) :
+  (global = global || self, factory(global['fast-equals'] = {}));
+}(this, function (exports) { 'use strict';
+
+  var HAS_WEAKSET_SUPPORT = typeof WeakSet === 'function';
+  var keys = Object.keys;
+  /**
+   * @function addToCache
+   *
+   * add object to cache if an object
+   *
+   * @param value the value to potentially add to cache
+   * @param cache the cache to add to
+   */
+  function addToCache(value, cache) {
+      if (value && typeof value === 'object') {
+          cache.add(value);
+      }
+  }
+  /**
+   * @function hasPair
+   *
+   * @description
+   * does the `pairToMatch` exist in the list of `pairs` provided based on the
+   * `isEqual` check
+   *
+   * @param pairs the pairs to compare against
+   * @param pairToMatch the pair to match
+   * @param isEqual the equality comparator used
+   * @param meta the meta provided
+   * @returns does the pair exist in the pairs provided
+   */
+  function hasPair(pairs, pairToMatch, isEqual, meta) {
+      var length = pairs.length;
+      var pair;
+      for (var index = 0; index < length; index++) {
+          pair = pairs[index];
+          if (isEqual(pair[0], pairToMatch[0], meta) &&
+              isEqual(pair[1], pairToMatch[1], meta)) {
+              return true;
+          }
+      }
+      return false;
+  }
+  /**
+   * @function hasValue
+   *
+   * @description
+   * does the `valueToMatch` exist in the list of `values` provided based on the
+   * `isEqual` check
+   *
+   * @param values the values to compare against
+   * @param valueToMatch the value to match
+   * @param isEqual the equality comparator used
+   * @param meta the meta provided
+   * @returns does the value exist in the values provided
+   */
+  function hasValue(values, valueToMatch, isEqual, meta) {
+      var length = values.length;
+      for (var index = 0; index < length; index++) {
+          if (isEqual(values[index], valueToMatch, meta)) {
+              return true;
+          }
+      }
+      return false;
+  }
+  /**
+   * @function sameValueZeroEqual
+   *
+   * @description
+   * are the values passed strictly equal or both NaN
+   *
+   * @param a the value to compare against
+   * @param b the value to test
+   * @returns are the values equal by the SameValueZero principle
+   */
+  function sameValueZeroEqual(a, b) {
+      return a === b || (a !== a && b !== b);
+  }
+  /**
+   * @function isPlainObject
+   *
+   * @description
+   * is the value a plain object
+   *
+   * @param value the value to test
+   * @returns is the value a plain object
+   */
+  function isPlainObject(value) {
+      return value.constructor === Object || value.constructor == null;
+  }
+  /**
+   * @function isPromiseLike
+   *
+   * @description
+   * is the value promise-like (meaning it is thenable)
+   *
+   * @param value the value to test
+   * @returns is the value promise-like
+   */
+  function isPromiseLike(value) {
+      return !!value && typeof value.then === 'function';
+  }
+  /**
+   * @function isReactElement
+   *
+   * @description
+   * is the value passed a react element
+   *
+   * @param value the value to test
+   * @returns is the value a react element
+   */
+  function isReactElement(value) {
+      return !!(value && value.$$typeof);
+  }
+  /**
+   * @function getNewCacheFallback
+   *
+   * @description
+   * in cases where WeakSet is not supported, creates a new custom
+   * object that mimics the necessary API aspects for cache purposes
+   *
+   * @returns the new cache object
+   */
+  function getNewCacheFallback() {
+      return Object.create({
+          _values: [],
+          add: function (value) {
+              this._values.push(value);
+          },
+          has: function (value) {
+              return this._values.indexOf(value) !== -1;
+          },
+      });
+  }
+  /**
+   * @function getNewCache
+   *
+   * @description
+   * get a new cache object to prevent circular references
+   *
+   * @returns the new cache object
+   */
+  var getNewCache = (function (canUseWeakMap) {
+      if (canUseWeakMap) {
+          return function _getNewCache() {
+              return new WeakSet();
+          };
+      }
+      return getNewCacheFallback;
+  })(HAS_WEAKSET_SUPPORT);
+  /**
+   * @function createCircularEqualCreator
+   *
+   * @description
+   * create a custom isEqual handler specific to circular objects
+   *
+   * @param [isEqual] the isEqual comparator to use instead of isDeepEqual
+   * @returns the method to create the `isEqual` function
+   */
+  function createCircularEqualCreator(isEqual) {
+      return function createCircularEqual(comparator) {
+          var _comparator = isEqual || comparator;
+          return function circularEqual(a, b, cache) {
+              if (cache === void 0) { cache = getNewCache(); }
+              var hasA = cache.has(a);
+              var hasB = cache.has(b);
+              if (hasA || hasB) {
+                  return hasA && hasB;
+              }
+              addToCache(a, cache);
+              addToCache(b, cache);
+              return _comparator(a, b, cache);
+          };
+      };
+  }
+  /**
+   * @function toPairs
+   *
+   * @description
+   * convert the map passed into pairs (meaning an array of [key, value] tuples)
+   *
+   * @param map the map to convert to [key, value] pairs (entries)
+   * @returns the [key, value] pairs
+   */
+  function toPairs(map) {
+      var pairs = new Array(map.size);
+      var index = 0;
+      map.forEach(function (value, key) {
+          pairs[index++] = [key, value];
+      });
+      return pairs;
+  }
+  /**
+   * @function toValues
+   *
+   * @description
+   * convert the set passed into values
+   *
+   * @param set the set to convert to values
+   * @returns the values
+   */
+  function toValues(set) {
+      var values = new Array(set.size);
+      var index = 0;
+      set.forEach(function (value) {
+          values[index++] = value;
+      });
+      return values;
+  }
+  /**
+   * @function areArraysEqual
+   *
+   * @description
+   * are the arrays equal in value
+   *
+   * @param a the array to test
+   * @param b the array to test against
+   * @param isEqual the comparator to determine equality
+   * @param meta the meta object to pass through
+   * @returns are the arrays equal
+   */
+  function areArraysEqual(a, b, isEqual, meta) {
+      var length = a.length;
+      if (b.length !== length) {
+          return false;
+      }
+      for (var index = 0; index < length; index++) {
+          if (!isEqual(a[index], b[index], meta)) {
+              return false;
+          }
+      }
+      return true;
+  }
+  /**
+   * @function areMapsEqual
+   *
+   * @description
+   * are the maps equal in value
+   *
+   * @param a the map to test
+   * @param b the map to test against
+   * @param isEqual the comparator to determine equality
+   * @param meta the meta map to pass through
+   * @returns are the maps equal
+   */
+  function areMapsEqual(a, b, isEqual, meta) {
+      if (a.size !== b.size) {
+          return false;
+      }
+      var pairsA = toPairs(a);
+      var pairsB = toPairs(b);
+      var length = pairsA.length;
+      for (var index = 0; index < length; index++) {
+          if (!hasPair(pairsB, pairsA[index], isEqual, meta) ||
+              !hasPair(pairsA, pairsB[index], isEqual, meta)) {
+              return false;
+          }
+      }
+      return true;
+  }
+  var OWNER = '_owner';
+  var hasOwnProperty = Function.prototype.bind.call(Function.prototype.call, Object.prototype.hasOwnProperty);
+  /**
+   * @function areObjectsEqual
+   *
+   * @description
+   * are the objects equal in value
+   *
+   * @param a the object to test
+   * @param b the object to test against
+   * @param isEqual the comparator to determine equality
+   * @param meta the meta object to pass through
+   * @returns are the objects equal
+   */
+  function areObjectsEqual(a, b, isEqual, meta) {
+      var keysA = keys(a);
+      var length = keysA.length;
+      if (keys(b).length !== length) {
+          return false;
+      }
+      var key;
+      for (var index = 0; index < length; index++) {
+          key = keysA[index];
+          if (!hasOwnProperty(b, key)) {
+              return false;
+          }
+          if (key === OWNER && isReactElement(a)) {
+              if (!isReactElement(b)) {
+                  return false;
+              }
+          }
+          else if (!isEqual(a[key], b[key], meta)) {
+              return false;
+          }
+      }
+      return true;
+  }
+  /**
+   * @function areRegExpsEqual
+   *
+   * @description
+   * are the regExps equal in value
+   *
+   * @param a the regExp to test
+   * @param b the regExp to test agains
+   * @returns are the regExps equal
+   */
+  function areRegExpsEqual(a, b) {
+      return (a.source === b.source &&
+          a.global === b.global &&
+          a.ignoreCase === b.ignoreCase &&
+          a.multiline === b.multiline &&
+          a.unicode === b.unicode &&
+          a.sticky === b.sticky &&
+          a.lastIndex === b.lastIndex);
+  }
+  /**
+   * @function areSetsEqual
+   *
+   * @description
+   * are the sets equal in value
+   *
+   * @param a the set to test
+   * @param b the set to test against
+   * @param isEqual the comparator to determine equality
+   * @param meta the meta set to pass through
+   * @returns are the sets equal
+   */
+  function areSetsEqual(a, b, isEqual, meta) {
+      if (a.size !== b.size) {
+          return false;
+      }
+      var valuesA = toValues(a);
+      var valuesB = toValues(b);
+      var length = valuesA.length;
+      for (var index = 0; index < length; index++) {
+          if (!hasValue(valuesB, valuesA[index], isEqual, meta) ||
+              !hasValue(valuesA, valuesB[index], isEqual, meta)) {
+              return false;
+          }
+      }
+      return true;
+  }
+
+  var isArray = Array.isArray;
+  var HAS_MAP_SUPPORT = typeof Map === 'function';
+  var HAS_SET_SUPPORT = typeof Set === 'function';
+  var OBJECT_TYPEOF = 'object';
+  function createComparator(createIsEqual) {
+      var isEqual = 
+      /* eslint-disable no-use-before-define */
+      typeof createIsEqual === 'function'
+          ? createIsEqual(comparator)
+          : comparator;
+      /* eslint-enable */
+      /**
+       * @function comparator
+       *
+       * @description
+       * compare the value of the two objects and return true if they are equivalent in values
+       *
+       * @param a the value to test against
+       * @param b the value to test
+       * @param [meta] an optional meta object that is passed through to all equality test calls
+       * @returns are a and b equivalent in value
+       */
+      function comparator(a, b, meta) {
+          if (sameValueZeroEqual(a, b)) {
+              return true;
+          }
+          if (a && b && typeof a === OBJECT_TYPEOF && typeof b === OBJECT_TYPEOF) {
+              if (isPlainObject(a) && isPlainObject(b)) {
+                  return areObjectsEqual(a, b, isEqual, meta);
+              }
+              var arrayA = isArray(a);
+              var arrayB = isArray(b);
+              if (arrayA || arrayB) {
+                  return arrayA === arrayB && areArraysEqual(a, b, isEqual, meta);
+              }
+              var aDate = a instanceof Date;
+              var bDate = b instanceof Date;
+              if (aDate || bDate) {
+                  return aDate === bDate && sameValueZeroEqual(a.getTime(), b.getTime());
+              }
+              var aRegExp = a instanceof RegExp;
+              var bRegExp = b instanceof RegExp;
+              if (aRegExp || bRegExp) {
+                  return aRegExp === bRegExp && areRegExpsEqual(a, b);
+              }
+              if (isPromiseLike(a) || isPromiseLike(b)) {
+                  return a === b;
+              }
+              if (HAS_MAP_SUPPORT) {
+                  var aMap = a instanceof Map;
+                  var bMap = b instanceof Map;
+                  if (aMap || bMap) {
+                      return aMap === bMap && areMapsEqual(a, b, isEqual, meta);
+                  }
+              }
+              if (HAS_SET_SUPPORT) {
+                  var aSet = a instanceof Set;
+                  var bSet = b instanceof Set;
+                  if (aSet || bSet) {
+                      return aSet === bSet && areSetsEqual(a, b, isEqual, meta);
+                  }
+              }
+              return areObjectsEqual(a, b, isEqual, meta);
+          }
+          return false;
+      }
+      return comparator;
+  }
+
+  // comparator
+  var deepEqual = createComparator();
+  var shallowEqual = createComparator(function () { return sameValueZeroEqual; });
+  var circularDeepEqual = createComparator(createCircularEqualCreator());
+  var circularShallowEqual = createComparator(createCircularEqualCreator(sameValueZeroEqual));
+
+  exports.circularDeepEqual = circularDeepEqual;
+  exports.circularShallowEqual = circularShallowEqual;
+  exports.createCustomEqual = createComparator;
+  exports.deepEqual = deepEqual;
+  exports.sameValueZeroEqual = sameValueZeroEqual;
+  exports.shallowEqual = shallowEqual;
+
+  Object.defineProperty(exports, '__esModule', { value: true });
+
+}));
+
+
+},{}],2:[function(require,module,exports){
 /*
 object-assign
 (c) Sindre Sorhus
@@ -90,7 +525,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 	return to;
 };
 
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -276,7 +711,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -382,7 +817,7 @@ checkPropTypes.resetWarningCache = function() {
 module.exports = checkPropTypes;
 
 }).call(this,require('_process'))
-},{"./lib/ReactPropTypesSecret":4,"_process":2}],4:[function(require,module,exports){
+},{"./lib/ReactPropTypesSecret":5,"_process":3}],5:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -396,7 +831,7 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
 module.exports = ReactPropTypesSecret;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 (function (process){
 /** @license React v16.13.1
  * react-dom.development.js
@@ -25412,7 +25847,7 @@ exports.version = ReactVersion;
 }
 
 }).call(this,require('_process'))
-},{"_process":2,"object-assign":1,"prop-types/checkPropTypes":3,"react":10,"scheduler":15,"scheduler/tracing":16}],6:[function(require,module,exports){
+},{"_process":3,"object-assign":2,"prop-types/checkPropTypes":4,"react":11,"scheduler":16,"scheduler/tracing":17}],7:[function(require,module,exports){
 /** @license React v16.13.1
  * react-dom.production.min.js
  *
@@ -25706,7 +26141,7 @@ exports.flushSync=function(a,b){if((W&(fj|gj))!==V)throw Error(u(187));var c=W;W
 exports.unmountComponentAtNode=function(a){if(!gk(a))throw Error(u(40));return a._reactRootContainer?(Nj(function(){ik(null,null,a,!1,function(){a._reactRootContainer=null;a[Od]=null})}),!0):!1};exports.unstable_batchedUpdates=Mj;exports.unstable_createPortal=function(a,b){return kk(a,b,2<arguments.length&&void 0!==arguments[2]?arguments[2]:null)};
 exports.unstable_renderSubtreeIntoContainer=function(a,b,c,d){if(!gk(c))throw Error(u(200));if(null==a||void 0===a._reactInternalFiber)throw Error(u(38));return ik(a,b,c,!1,d)};exports.version="16.13.1";
 
-},{"object-assign":1,"react":10,"scheduler":15}],7:[function(require,module,exports){
+},{"object-assign":2,"react":11,"scheduler":16}],8:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -25748,7 +26183,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react-dom.development.js":5,"./cjs/react-dom.production.min.js":6,"_process":2}],8:[function(require,module,exports){
+},{"./cjs/react-dom.development.js":6,"./cjs/react-dom.production.min.js":7,"_process":3}],9:[function(require,module,exports){
 (function (process){
 /** @license React v16.13.1
  * react.development.js
@@ -27664,7 +28099,7 @@ exports.version = ReactVersion;
 }
 
 }).call(this,require('_process'))
-},{"_process":2,"object-assign":1,"prop-types/checkPropTypes":3}],9:[function(require,module,exports){
+},{"_process":3,"object-assign":2,"prop-types/checkPropTypes":4}],10:[function(require,module,exports){
 /** @license React v16.13.1
  * react.production.min.js
  *
@@ -27691,7 +28126,7 @@ key:d,ref:g,props:e,_owner:k}};exports.createContext=function(a,b){void 0===b&&(
 exports.lazy=function(a){return{$$typeof:A,_ctor:a,_status:-1,_result:null}};exports.memo=function(a,b){return{$$typeof:z,type:a,compare:void 0===b?null:b}};exports.useCallback=function(a,b){return Z().useCallback(a,b)};exports.useContext=function(a,b){return Z().useContext(a,b)};exports.useDebugValue=function(){};exports.useEffect=function(a,b){return Z().useEffect(a,b)};exports.useImperativeHandle=function(a,b,c){return Z().useImperativeHandle(a,b,c)};
 exports.useLayoutEffect=function(a,b){return Z().useLayoutEffect(a,b)};exports.useMemo=function(a,b){return Z().useMemo(a,b)};exports.useReducer=function(a,b,c){return Z().useReducer(a,b,c)};exports.useRef=function(a){return Z().useRef(a)};exports.useState=function(a){return Z().useState(a)};exports.version="16.13.1";
 
-},{"object-assign":1}],10:[function(require,module,exports){
+},{"object-assign":2}],11:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -27702,7 +28137,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react.development.js":8,"./cjs/react.production.min.js":9,"_process":2}],11:[function(require,module,exports){
+},{"./cjs/react.development.js":9,"./cjs/react.production.min.js":10,"_process":3}],12:[function(require,module,exports){
 (function (process){
 /** @license React v0.19.1
  * scheduler-tracing.development.js
@@ -28055,7 +28490,7 @@ exports.unstable_wrap = unstable_wrap;
 }
 
 }).call(this,require('_process'))
-},{"_process":2}],12:[function(require,module,exports){
+},{"_process":3}],13:[function(require,module,exports){
 /** @license React v0.19.1
  * scheduler-tracing.production.min.js
  *
@@ -28067,7 +28502,7 @@ exports.unstable_wrap = unstable_wrap;
 
 'use strict';var b=0;exports.__interactionsRef=null;exports.__subscriberRef=null;exports.unstable_clear=function(a){return a()};exports.unstable_getCurrent=function(){return null};exports.unstable_getThreadID=function(){return++b};exports.unstable_subscribe=function(){};exports.unstable_trace=function(a,d,c){return c()};exports.unstable_unsubscribe=function(){};exports.unstable_wrap=function(a){return a};
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 (function (process){
 /** @license React v0.19.1
  * scheduler.development.js
@@ -28929,7 +29364,7 @@ exports.unstable_wrapCallback = unstable_wrapCallback;
 }
 
 }).call(this,require('_process'))
-},{"_process":2}],14:[function(require,module,exports){
+},{"_process":3}],15:[function(require,module,exports){
 /** @license React v0.19.1
  * scheduler.production.min.js
  *
@@ -28952,7 +29387,7 @@ exports.unstable_getCurrentPriorityLevel=function(){return R};exports.unstable_g
 exports.unstable_scheduleCallback=function(a,b,c){var d=exports.unstable_now();if("object"===typeof c&&null!==c){var e=c.delay;e="number"===typeof e&&0<e?d+e:d;c="number"===typeof c.timeout?c.timeout:Y(a)}else c=Y(a),e=d;c=e+c;a={id:P++,callback:b,priorityLevel:a,startTime:e,expirationTime:c,sortIndex:-1};e>d?(a.sortIndex=e,J(O,a),null===L(N)&&a===L(O)&&(U?h():U=!0,g(W,e-d))):(a.sortIndex=c,J(N,a),T||S||(T=!0,f(X)));return a};
 exports.unstable_shouldYield=function(){var a=exports.unstable_now();V(a);var b=L(N);return b!==Q&&null!==Q&&null!==b&&null!==b.callback&&b.startTime<=a&&b.expirationTime<Q.expirationTime||k()};exports.unstable_wrapCallback=function(a){var b=R;return function(){var c=R;R=b;try{return a.apply(this,arguments)}finally{R=c}}};
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -28963,7 +29398,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/scheduler.development.js":13,"./cjs/scheduler.production.min.js":14,"_process":2}],16:[function(require,module,exports){
+},{"./cjs/scheduler.development.js":14,"./cjs/scheduler.production.min.js":15,"_process":3}],17:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -28974,7 +29409,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/scheduler-tracing.development.js":11,"./cjs/scheduler-tracing.production.min.js":12,"_process":2}],17:[function(require,module,exports){
+},{"./cjs/scheduler-tracing.development.js":12,"./cjs/scheduler-tracing.production.min.js":13,"_process":3}],18:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -29057,7 +29492,7 @@ ReactDOM.render(React.createElement(exports.PageColumn, null,
     React.createElement(earthbar_1.Earthbar, null,
         React.createElement(LobbyApp, null))), document.getElementById('react-slot'));
 
-},{"./earthbar":18,"react":10,"react-dom":7}],18:[function(require,module,exports){
+},{"./earthbar":19,"react":11,"react-dom":8}],19:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -29080,30 +29515,92 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EarthbarUserPage = exports.EarthbarWorkspacePage = exports.Earthbar = exports.ebApi = exports.EbMode = exports.EarthstarCtx = void 0;
+const fast_equals_1 = require("fast-equals");
 const React = __importStar(require("react"));
-let logEarthbar = (...args) => console.log('Hello |', ...args);
+const util_1 = require("./util");
+let logEarthbarMain = (...args) => console.log('earthbar main |', ...args);
+let logEarthbarApi = (...args) => console.log('earthbar api |', ...args);
 //================================================================================
 // EARTHBAR TYPES
 exports.EarthstarCtx = React.createContext(null);
 var EbMode;
 (function (EbMode) {
-    EbMode[EbMode["Closed"] = 0] = "Closed";
-    EbMode[EbMode["Workspace"] = 1] = "Workspace";
-    EbMode[EbMode["User"] = 2] = "User";
+    EbMode["Closed"] = "CLOSED";
+    EbMode["Workspace"] = "WORKSPACE";
+    EbMode["User"] = "USER";
 })(EbMode = exports.EbMode || (exports.EbMode = {}));
 exports.ebApi = {
     initial: () => {
         return {
             mode: EbMode.Closed,
-            currentUser: null,
-            currentWorkspace: null,
-            otherUsers: [],
-            otherWorkspaces: [],
+            currentUser: {
+                authorAddress: '@suzy.bxxxxx',
+                displayName: 'Suzy',
+            },
+            currentWorkspace: {
+                workspaceAddress: '+gardening.foo',
+                pubs: ['https://mypub.org', 'https://my-gardening-pub.glitch.com'],
+            },
+            otherUsers: [
+                {
+                    authorAddress: '@fern.bxxxxx',
+                    displayName: 'Fernie',
+                },
+            ],
+            otherWorkspaces: [
+                {
+                    workspaceAddress: '+sailing.foo',
+                    pubs: ['https://pub.sailing.org'],
+                },
+                {
+                    workspaceAddress: '+solarpunk.foo',
+                    pubs: ['https://mypub.org', 'https://my-solarpunk-pub.glitch.com'],
+                },
+            ],
             workspace: null,
         };
     },
-    setView: (state, mode) => {
+    setMode: (state, mode) => {
+        logEarthbarApi('setMode', mode);
+        // nop
+        if (mode === state.mode) {
+            return state;
+        }
         return Object.assign(Object.assign({}, state), { mode: mode });
+    },
+    setPubs: (state, pubs) => {
+        logEarthbarApi('setPubs', pubs);
+        if (state.currentWorkspace === null) {
+            console.warn("can't set pubs because current workspace is null");
+            return state;
+        }
+        // nop
+        if (pubs === state.currentWorkspace.pubs) {
+            return state;
+        }
+        return Object.assign(Object.assign({}, state), { currentWorkspace: Object.assign(Object.assign({}, state.currentWorkspace), { pubs: pubs }) });
+    },
+    switchWorkspace: (state, workspaceConfig) => {
+        logEarthbarApi('setWorkspaceConfig', workspaceConfig);
+        // nop
+        if (fast_equals_1.deepEqual(workspaceConfig, state.currentWorkspace)) {
+            return state;
+        }
+        // remove from other workspaces
+        let otherWorkspaces;
+        if (workspaceConfig === null) {
+            otherWorkspaces = [...state.otherWorkspaces];
+        }
+        else {
+            otherWorkspaces = state.otherWorkspaces.filter(o => o.workspaceAddress !== workspaceConfig.workspaceAddress);
+        }
+        // remember current workspace if there is one
+        if (state.currentWorkspace !== null) {
+            otherWorkspaces.push(state.currentWorkspace);
+        }
+        let newState = Object.assign(Object.assign({}, state), { currentWorkspace: workspaceConfig, otherWorkspaces: util_1.sortByField(otherWorkspaces, 'workspaceAddress') });
+        logEarthbarApi(state, newState);
+        return newState;
     },
 };
 //================================================================================
@@ -29114,7 +29611,8 @@ class Earthbar extends React.Component {
         this.state = exports.ebApi.initial();
     }
     render() {
-        logEarthbar('render');
+        var _a, _b;
+        logEarthbarMain(`render in ${this.state.mode} mode`);
         let view = this.state.mode;
         // tab styles
         let sWorkspaceTab = view === EbMode.Workspace
@@ -29125,18 +29623,18 @@ class Earthbar extends React.Component {
             : { color: 'var(--cUser)', background: 'none' };
         // tab click actions
         let onClickWorkspaceTab = view === EbMode.Workspace
-            ? (e) => this.setState(exports.ebApi.setView(this.state, EbMode.Closed))
-            : (e) => this.setState(exports.ebApi.setView(this.state, EbMode.Workspace));
+            ? (e) => this.setState(exports.ebApi.setMode(this.state, EbMode.Closed))
+            : (e) => this.setState(exports.ebApi.setMode(this.state, EbMode.Workspace));
         let onClickUserTab = view === EbMode.User
-            ? (e) => this.setState(exports.ebApi.setView(this.state, EbMode.Closed))
-            : (e) => this.setState(exports.ebApi.setView(this.state, EbMode.User));
+            ? (e) => this.setState(exports.ebApi.setMode(this.state, EbMode.Closed))
+            : (e) => this.setState(exports.ebApi.setMode(this.state, EbMode.User));
         // which panel to show
         let panel = null;
         if (view === EbMode.Workspace) {
-            panel = React.createElement(exports.EarthbarWorkspacePage, { ebState: this.state });
+            panel = React.createElement(exports.EarthbarWorkspacePage, { ebStateOwner: this, ebState: this.state });
         }
         else if (view === EbMode.User) {
-            panel = React.createElement(exports.EarthbarUserPage, { ebState: this.state });
+            panel = React.createElement(exports.EarthbarUserPage, { ebStateOwner: this, ebState: this.state });
         }
         // style to hide children when a panel is open
         let sChildren = view === EbMode.Closed
@@ -29145,9 +29643,9 @@ class Earthbar extends React.Component {
         return (React.createElement(exports.EarthstarCtx.Provider, { value: this.state.workspace },
             React.createElement("div", null,
                 React.createElement("div", { className: 'flexRow' },
-                    React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: onClickWorkspaceTab }, "+gardening.pals"),
+                    React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: onClickWorkspaceTab }, ((_a = this.state.currentWorkspace) === null || _a === void 0 ? void 0 : _a.workspaceAddress) || 'Add a workspace'),
                     React.createElement("div", { className: 'flexItem', style: { flexGrow: 1 } }),
-                    React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: onClickUserTab }, "@suzy.bxxxx...")),
+                    React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: onClickUserTab }, ((_b = this.state.currentUser) === null || _b === void 0 ? void 0 : _b.authorAddress) || 'Guest')),
                 React.createElement("div", { style: { position: 'relative' } },
                     React.createElement("div", { style: { position: 'absolute', zIndex: 99, left: 0, right: 0 } }, panel),
                     React.createElement("div", { style: sChildren }, this.props.children)))));
@@ -29164,20 +29662,34 @@ exports.EarthbarWorkspacePage = (props) => {
         background: 'var(--cBackground)',
         color: 'var(--cText)',
     };
+    let ebState = props.ebState;
+    let pubText = '';
+    if (ebState.currentWorkspace !== null) {
+        pubText = ebState.currentWorkspace.pubs.join('\n');
+    }
     return React.createElement("div", { className: 'stack', style: sPanel },
-        React.createElement("div", null,
-            React.createElement("button", { className: 'button' }, "Sync")),
-        React.createElement("div", { className: 'faint' }, "Pubs (one per line)"),
-        React.createElement("div", null,
-            React.createElement("textarea", { className: 'indent', style: { width: '80%' } }, "https:...")),
-        React.createElement("hr", { className: 'faint' }),
-        React.createElement("div", { className: 'faint' }, "Other workspaces"),
+        ebState.currentWorkspace === null
+            ? React.createElement("div", { className: 'faint' }, "Choose a workspace:")
+            : [
+                React.createElement("div", { key: 'a' },
+                    React.createElement("button", { className: 'button' }, "Sync")),
+                React.createElement("div", { key: 'b', className: 'faint' }, "Pubs (one per line)"),
+                React.createElement("div", { key: 'c' },
+                    React.createElement("textarea", { className: 'indent', style: { width: '80%' }, rows: 3, value: pubText, onChange: (e) => {
+                            let pubs = e.target.value.split('\n').map(x => x.trim()).filter(x => x !== '');
+                            props.ebStateOwner.setState(exports.ebApi.setPubs(ebState, pubs));
+                        } })),
+                React.createElement("hr", { key: 'd', className: 'faint' }),
+                React.createElement("div", { key: 'e', className: 'faint' }, "Other workspaces"),
+            ],
         React.createElement("div", { className: 'stack indent' },
-            React.createElement("div", { className: 'bold' }, "+bar.pals"),
-            React.createElement("div", { className: 'bold' }, "+foo.stuff"),
-            React.createElement("div", null, "\u00A0"),
-            React.createElement("div", { className: 'bold' }, "Join workspace"),
-            React.createElement("div", { className: 'bold' }, "Create new workspace")));
+            ebState.otherWorkspaces.map(wsConfig => React.createElement("a", { href: "#", className: 'linkbutton block', key: wsConfig.workspaceAddress, onClick: (e) => {
+                    let newState = exports.ebApi.switchWorkspace(ebState, wsConfig);
+                    props.ebStateOwner.setState(newState);
+                } }, wsConfig.workspaceAddress)),
+            ebState.otherWorkspaces ? React.createElement("div", null, "\u00A0") : null,
+            React.createElement("a", { href: "#", className: 'linkbutton block' }, "Join workspace"),
+            React.createElement("a", { href: "#", className: 'linkbutton block' }, "Create new workspace")));
 };
 exports.EarthbarUserPage = (props) => React.createElement("div", { style: { padding: 'var(--s0)', color: 'var(--cWhite)', background: 'var(--cUser)' } },
     "Hello this is the user config page",
@@ -29188,4 +29700,42 @@ exports.EarthbarUserPage = (props) => React.createElement("div", { style: { padd
     React.createElement("br", null),
     "Hello this is the user config page");
 
-},{"react":10}]},{},[17]);
+},{"./util":20,"fast-equals":1,"react":11}],20:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.sortByField = exports.sortFnByField = void 0;
+exports.sortFnByField = (field) => {
+    return (a, b) => {
+        if (a[field] > b[field]) {
+            return 1;
+        }
+        if (a[field] < b[field]) {
+            return -1;
+        }
+        return 0;
+    };
+};
+exports.sortByField = (arr, field) => {
+    return arr.sort(exports.sortFnByField(field));
+};
+/*
+export let arrayHasMatch = <T extends Ob>(arr: T[], x: T, field: string): boolean => {
+    for (let a of arr) {
+        if (a[field] === x[field]) { return true; }
+    }
+    return false;
+}
+*/
+/*
+export let removeDupesAndSort = <T extends Ob>(arr: T[], field: string): void => {
+    let keyMap: Ob = {};
+    for (let x of arr) {
+        keyMap[x[field]] = true;
+    }
+    let keys = Object.keys(keyMap);
+    keys.sort();
+    // TODO:...
+}
+*/
+
+},{}]},{},[18]);

@@ -123,3 +123,14 @@ textarea::before {
     padding-left: var(--s0);
     padding-right: var(--s0);
 }
+
+/* for <a> that look like text and act as buttons */
+.block { display: block; }
+.linkbutton {
+    font-weight: bold;
+    text-decoration: none;
+    color: var(--cText);
+}
+.linkbutton.hover {
+    background: red;
+}

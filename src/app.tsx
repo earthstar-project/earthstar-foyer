@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import {
-    IStorage
+    IStorage,
 } from 'earthstar';
 import {
     Earthbar,

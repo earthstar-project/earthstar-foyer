@@ -1,3 +1,4 @@
+import { deepEqual } from 'fast-equals';
 import * as React from 'react';
 
 import {
@@ -6,8 +7,10 @@ import {
 } from 'earthstar';
 
 import { Workspace } from './workspace';
+import { sortByField } from './util';
 
-let logEarthbar = (...args : any[]) => console.log('Hello |', ...args);
+let logEarthbarMain = (...args : any[]) => console.log('earthbar main |', ...args);
+let logEarthbarApi = (...args : any[]) => console.log('earthbar api |', ...args);
 
 //================================================================================
 // EARTHBAR TYPES
@@ -23,9 +26,9 @@ export interface WorkspaceConfig {
     pubs: string[],
 }
 export enum EbMode {
-    Closed,
-    Workspace,
-    User,
+    Closed = 'CLOSED',
+    Workspace = 'WORKSPACE',
+    User = 'USER',
 }
 
 //================================================================================
@@ -47,20 +50,90 @@ export let ebApi = {
     initial: (): EbState => {
         return {
             mode: EbMode.Closed,
-            currentUser: null,
-            currentWorkspace: null,
-            otherUsers: [],
-            otherWorkspaces: [],
+            currentUser: {
+                authorAddress: '@suzy.bxxxxx',
+                displayName: 'Suzy',
+            },
+            currentWorkspace: {
+                workspaceAddress: '+gardening.foo',
+                pubs: ['https://mypub.org', 'https://my-gardening-pub.glitch.com'],
+            },
+            otherUsers: [
+                {
+                    authorAddress: '@fern.bxxxxx',
+                    displayName: 'Fernie',
+                },
+            ],
+            otherWorkspaces: [
+                {
+                    workspaceAddress: '+sailing.foo',
+                    pubs: ['https://pub.sailing.org'],
+                },
+                {
+                    workspaceAddress: '+solarpunk.foo',
+                    pubs: ['https://mypub.org', 'https://my-solarpunk-pub.glitch.com'],
+                },
+            ],
             workspace: null,
         }
     },
-    setView: (state: EbState, mode: EbMode) : EbState => {
+    setMode: (state: EbState, mode: EbMode): EbState => {
+        logEarthbarApi('setMode', mode);
+
+        // nop
+        if (mode === state.mode) { return state; }
+
         return {...state, mode: mode};
+    },
+    setPubs: (state: EbState, pubs: string[]): EbState => {
+        logEarthbarApi('setPubs', pubs);
+        if (state.currentWorkspace === null) {
+            console.warn("can't set pubs because current workspace is null");
+            return state;
+        }
+
+        // nop
+        if (pubs === state.currentWorkspace.pubs) { return state; }
+
+        return {
+            ...state,
+            currentWorkspace: {
+                ...state.currentWorkspace,
+                pubs: pubs,
+            }
+        }
+    },
+    switchWorkspace: (state: EbState, workspaceConfig: WorkspaceConfig | null): EbState => {
+        logEarthbarApi('setWorkspaceConfig', workspaceConfig);
+
+        // nop
+        if (deepEqual(workspaceConfig, state.currentWorkspace)) { return state; }
+
+        // remove from other workspaces
+        let otherWorkspaces : WorkspaceConfig[];
+        if (workspaceConfig === null) {
+            otherWorkspaces = [...state.otherWorkspaces];
+        } else {
+            otherWorkspaces = state.otherWorkspaces.filter(o => o.workspaceAddress !== workspaceConfig.workspaceAddress);
+        }
+        // remember current workspace if there is one
+        if (state.currentWorkspace !== null) {
+            otherWorkspaces.push(state.currentWorkspace);
+        }
+        let newState = {
+            ...state,
+            currentWorkspace: workspaceConfig,
+            otherWorkspaces: sortByField(otherWorkspaces, 'workspaceAddress'),
+        }
+        logEarthbarApi(state, newState);
+        return newState;
     },
 };
 
+
 export interface EbPanelProps {
-    ebState: EbState,
+    ebStateOwner: Earthbar,  // the main component that holds the state
+    ebState: EbState,  // the state itself
 }
 
 //================================================================================
@@ -72,7 +145,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         this.state = ebApi.initial();
     }
     render() {
-        logEarthbar('render');
+        logEarthbarMain(`render in ${this.state.mode} mode`);
         let view = this.state.mode;
 
         // tab styles
@@ -88,19 +161,19 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         // tab click actions
         let onClickWorkspaceTab =
             view === EbMode.Workspace
-            ? (e: any) => this.setState(ebApi.setView(this.state, EbMode.Closed))
-            : (e: any) => this.setState(ebApi.setView(this.state, EbMode.Workspace));
+            ? (e: any) => this.setState(ebApi.setMode(this.state, EbMode.Closed))
+            : (e: any) => this.setState(ebApi.setMode(this.state, EbMode.Workspace));
         let onClickUserTab =
             view === EbMode.User
-            ? (e: any) => this.setState(ebApi.setView(this.state, EbMode.Closed))
-            : (e: any) => this.setState(ebApi.setView(this.state, EbMode.User));
+            ? (e: any) => this.setState(ebApi.setMode(this.state, EbMode.Closed))
+            : (e: any) => this.setState(ebApi.setMode(this.state, EbMode.User));
 
         // which panel to show
         let panel : JSX.Element | null = null;
         if (view === EbMode.Workspace) {
-            panel = <EarthbarWorkspacePage ebState={this.state} />;
+            panel = <EarthbarWorkspacePage ebStateOwner={this} ebState={this.state} />;
         } else if (view === EbMode.User) {
-            panel = <EarthbarUserPage ebState={this.state} />;
+            panel = <EarthbarUserPage ebStateOwner={this} ebState={this.state} />;
         }
 
         // style to hide children when a panel is open
@@ -114,11 +187,11 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                 <div>
                     <div className='flexRow'>
                         <button className='flexItem earthbarTab' style={sWorkspaceTab} onClick={onClickWorkspaceTab}>
-                            +gardening.pals
+                            {this.state.currentWorkspace?.workspaceAddress || 'Add a workspace'}
                         </button>
                         <div className='flexItem' style={{flexGrow: 1}} />
                         <button className='flexItem earthbarTab' style={sUserTab} onClick={onClickUserTab}>
-                            @suzy.bxxxx...
+                            {this.state.currentUser?.authorAddress || 'Guest' }
                         </button>
                     </div>
                     <div style={{position: 'relative'}}>
@@ -141,22 +214,46 @@ export const EarthbarWorkspacePage: React.FunctionComponent<EbPanelProps> = (pro
         background: 'var(--cBackground)',
         color: 'var(--cText)',
     } as React.CSSProperties;
+    let ebState = props.ebState;
+    let pubText = '';
+    if (ebState.currentWorkspace !== null) {
+        pubText = ebState.currentWorkspace.pubs.join('\n');
+    }
     return <div className='stack' style={sPanel}>
-        <div>
-            <button className='button'>Sync</button>
-        </div>
-        <div className='faint'>Pubs (one per line)</div>
-        <div>
-            <textarea className='indent' style={{width: '80%'}}>https:...</textarea>
-        </div>
-        <hr className='faint' />
-        <div className='faint'>Other workspaces</div>
+        {ebState.currentWorkspace === null
+          ? <div className='faint'>Choose a workspace:</div>
+          : [
+                <div key='a'>
+                    <button className='button'>Sync</button>
+                </div>,
+                <div key='b' className='faint'>Pubs (one per line)</div>,
+                <div key='c'>
+                    <textarea className='indent' style={{width: '80%'}} rows={3}
+                        value={pubText}
+                        onChange={(e) => {
+                            let pubs = e.target.value.split('\n').map(x => x.trim()).filter(x => x !== '');
+                            props.ebStateOwner.setState(ebApi.setPubs(ebState, pubs))
+                        }}
+                        />
+                </div>,
+                <hr key='d' className='faint' />,
+                <div key='e' className='faint'>Other workspaces</div>,
+            ]
+        }
         <div className='stack indent'>
-            <div className='bold'>+bar.pals</div>
-            <div className='bold'>+foo.stuff</div>
-            <div>&nbsp;</div>
-            <div className='bold'>Join workspace</div>
-            <div className='bold'>Create new workspace</div>
+            {ebState.otherWorkspaces.map(wsConfig =>
+                <a href="#" className='linkbutton block' key={wsConfig.workspaceAddress}
+                    onClick={(e) => {
+                        let newState = ebApi.switchWorkspace(ebState, wsConfig);
+                        props.ebStateOwner.setState(newState);
+                    }}
+                    >
+                    {wsConfig.workspaceAddress}
+                </a>
+            )}
+            {ebState.otherWorkspaces ? <div>&nbsp;</div> : null}
+            <a href="#" className='linkbutton block'>Join workspace</a>
+            <a href="#" className='linkbutton block'>Create new workspace</a>
         </div>
     </div>;
 }
