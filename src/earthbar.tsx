@@ -5,13 +5,15 @@ import {
     AuthorAddress,
     WorkspaceAddress,
     Emitter,
+    StorageMemory,
+    ValidatorEs4,
 } from 'earthstar';
 
 import { Workspace } from './workspace';
 import { sortByField } from './util';
 
-let logEarthbarMain = (...args : any[]) => console.log('earthbar main |', ...args);
-let logEarthbarApi = (...args : any[]) => console.log('earthbar api |', ...args);
+let logEarthbar = (...args : any[]) => console.log('earthbar view |', ...args);
+let logEarthbarStore = (...args : any[]) => console.log('    earthbar store |', ...args);
 
 //================================================================================
 // EARTHBAR TYPES & STORE
@@ -65,18 +67,22 @@ export class EarthbarStore {
                 pubs: ['https://mypub.org', 'https://my-solarpunk-pub.glitch.com'],
             },
         ];
+        this.workspace = new Workspace(
+            new StorageMemory([ValidatorEs4], this.currentWorkspace.workspaceAddress),
+            null // author keypair
+        );
     }
     _bump() {
         this.onChange.send(null);
     }
     setMode(mode: EbMode): void {
-        logEarthbarApi('setMode', mode);
+        logEarthbarStore('setMode', mode);
         if (mode === this.mode) { return; }
         this.mode = mode;
         this._bump();
     }
     setPubs(pubs: string[]): void {
-        logEarthbarApi('setPubs', pubs);
+        logEarthbarStore('setPubs', pubs);
         if (this.currentWorkspace === null) {
             console.warn("can't set pubs because current workspace is null");
             return;
@@ -86,7 +92,7 @@ export class EarthbarStore {
         this._bump();
     }
     switchWorkspace(workspaceConfig: WorkspaceConfig | null): void {
-        logEarthbarApi('setWorkspaceConfig', workspaceConfig);
+        logEarthbarStore('setWorkspaceConfig', workspaceConfig);
         // nop
         if (deepEqual(workspaceConfig, this.currentWorkspace)) { return; }
         // remove from other workspaces
@@ -99,6 +105,14 @@ export class EarthbarStore {
         }
         sortByField(this.otherWorkspaces, 'workspaceAddress');
         this.currentWorkspace = workspaceConfig;
+        if (workspaceConfig === null) {
+            this.workspace = null;
+        } else {
+            this.workspace = new Workspace(
+                new StorageMemory([ValidatorEs4], workspaceConfig.workspaceAddress),
+                null // author keypair
+            );
+        }
         this._bump();
     }
 }
@@ -132,7 +146,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
     }
     render() {
         let store = this.state.store;
-        logEarthbarMain(`render in ${store.mode} mode`);
+        logEarthbar(`render in ${store.mode} mode`);
         let view = store.mode;
 
         // tab styles

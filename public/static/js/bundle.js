@@ -67862,11 +67862,16 @@ exports.PageColumn = exports.LobbyApp = void 0;
 const React = __importStar(require("react"));
 const ReactDOM = __importStar(require("react-dom"));
 const earthbar_1 = require("./earthbar");
+//================================================================================
+// LAYOUTS
+let logLobbyApp = (...args) => console.log('lobby view |', ...args);
 class LobbyApp extends React.Component {
     constructor(props) {
         super(props);
     }
     render() {
+        logLobbyApp('render');
+        let workspace = this.context;
         return React.createElement("div", { style: { padding: 'var(--s0)' } },
             "1 Hello this is the app content",
             React.createElement("br", null),
@@ -67892,7 +67897,33 @@ class LobbyApp extends React.Component {
             "8 Hello this is the app content",
             React.createElement("br", null),
             React.createElement("br", null),
-            React.createElement("pre", null));
+            "1 Hello this is the app content",
+            React.createElement("br", null),
+            React.createElement("br", null),
+            "2 Hello this is the app content",
+            React.createElement("br", null),
+            React.createElement("br", null),
+            "3 Hello this is the app content",
+            React.createElement("br", null),
+            React.createElement("br", null),
+            "4 Hello this is the app content",
+            React.createElement("br", null),
+            React.createElement("br", null),
+            "5 Hello this is the app content",
+            React.createElement("br", null),
+            React.createElement("br", null),
+            "6 Hello this is the app content",
+            React.createElement("br", null),
+            React.createElement("br", null),
+            "7 Hello this is the app content",
+            React.createElement("br", null),
+            React.createElement("br", null),
+            "8 Hello this is the app content",
+            React.createElement("br", null),
+            React.createElement("br", null),
+            React.createElement("pre", null,
+                "workspace: ",
+                workspace === null ? 'null' : workspace.address));
     }
 }
 exports.LobbyApp = LobbyApp;
@@ -67945,9 +67976,10 @@ exports.EarthbarUserPage = exports.EarthbarWorkspacePage = exports.Earthbar = ex
 const fast_equals_1 = require("fast-equals");
 const React = __importStar(require("react"));
 const earthstar_1 = require("earthstar");
+const workspace_1 = require("./workspace");
 const util_1 = require("./util");
-let logEarthbarMain = (...args) => console.log('earthbar main |', ...args);
-let logEarthbarApi = (...args) => console.log('earthbar api |', ...args);
+let logEarthbar = (...args) => console.log('earthbar view |', ...args);
+let logEarthbarStore = (...args) => console.log('    earthbar store |', ...args);
 //================================================================================
 // EARTHBAR TYPES & STORE
 exports.EarthstarCtx = React.createContext(null);
@@ -67990,12 +68022,14 @@ class EarthbarStore {
                 pubs: ['https://mypub.org', 'https://my-solarpunk-pub.glitch.com'],
             },
         ];
+        this.workspace = new workspace_1.Workspace(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], this.currentWorkspace.workspaceAddress), null // author keypair
+        );
     }
     _bump() {
         this.onChange.send(null);
     }
     setMode(mode) {
-        logEarthbarApi('setMode', mode);
+        logEarthbarStore('setMode', mode);
         if (mode === this.mode) {
             return;
         }
@@ -68003,7 +68037,7 @@ class EarthbarStore {
         this._bump();
     }
     setPubs(pubs) {
-        logEarthbarApi('setPubs', pubs);
+        logEarthbarStore('setPubs', pubs);
         if (this.currentWorkspace === null) {
             console.warn("can't set pubs because current workspace is null");
             return;
@@ -68015,7 +68049,7 @@ class EarthbarStore {
         this._bump();
     }
     switchWorkspace(workspaceConfig) {
-        logEarthbarApi('setWorkspaceConfig', workspaceConfig);
+        logEarthbarStore('setWorkspaceConfig', workspaceConfig);
         // nop
         if (fast_equals_1.deepEqual(workspaceConfig, this.currentWorkspace)) {
             return;
@@ -68030,6 +68064,13 @@ class EarthbarStore {
         }
         util_1.sortByField(this.otherWorkspaces, 'workspaceAddress');
         this.currentWorkspace = workspaceConfig;
+        if (workspaceConfig === null) {
+            this.workspace = null;
+        }
+        else {
+            this.workspace = new workspace_1.Workspace(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], workspaceConfig.workspaceAddress), null // author keypair
+            );
+        }
         this._bump();
     }
 }
@@ -68052,7 +68093,7 @@ class Earthbar extends React.Component {
     render() {
         var _a, _b;
         let store = this.state.store;
-        logEarthbarMain(`render in ${store.mode} mode`);
+        logEarthbar(`render in ${store.mode} mode`);
         let view = store.mode;
         // tab styles
         let sWorkspaceTab = view === EbMode.Workspace
@@ -68137,7 +68178,7 @@ exports.EarthbarUserPage = (props) => React.createElement("div", { style: { padd
     React.createElement("br", null),
     "Hello this is the user config page");
 
-},{"./util":267,"earthstar":100,"fast-equals":132,"react":220}],267:[function(require,module,exports){
+},{"./util":267,"./workspace":268,"earthstar":100,"fast-equals":132,"react":220}],267:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sortByField = exports.sortFnByField = void 0;
@@ -68175,4 +68216,21 @@ export let removeDupesAndSort = <T extends Ob>(arr: T[], field: string): void =>
 }
 */
 
-},{}]},{},[265]);
+},{}],268:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Workspace = void 0;
+const earthstar_1 = require("earthstar");
+class Workspace {
+    constructor(storage, authorKeypair) {
+        this.storage = storage;
+        this.address = storage.workspace;
+        this.authorKeypair = authorKeypair;
+        this.syncer = new earthstar_1.Syncer(storage);
+        this.layerAbout = new earthstar_1.LayerAbout(storage);
+        this.layerWiki = new earthstar_1.LayerWiki(storage);
+    }
+}
+exports.Workspace = Workspace;
+
+},{"earthstar":100}]},{},[265]);
