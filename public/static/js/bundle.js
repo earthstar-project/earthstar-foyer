@@ -67924,7 +67924,8 @@ class LobbyApp extends React.Component {
             React.createElement("br", null),
             React.createElement("pre", null,
                 "workspace address: ",
-                (workspace === null || workspace === void 0 ? void 0 : workspace.address) || 'Choose a workspace',
+                (workspace === null || workspace === void 0 ? void 0 : workspace.address) || 'Choose a workspace'),
+            React.createElement("pre", null,
                 "user address: ",
                 ((_a = workspace === null || workspace === void 0 ? void 0 : workspace.authorKeypair) === null || _a === void 0 ? void 0 : _a.address) || 'Guest'));
     }

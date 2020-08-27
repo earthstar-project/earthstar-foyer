@@ -41,10 +41,8 @@ export class LobbyApp extends React.Component<LobbyProps, LobbyState> {
             6 Hello this is the app content<br/><br/>
             7 Hello this is the app content<br/><br/>
             8 Hello this is the app content<br/><br/>
-            <pre>
-                workspace address: {workspace?.address || 'Choose a workspace'}
-                user address: {workspace?.authorKeypair?.address || 'Guest'}
-            </pre>
+            <pre>workspace address: {workspace?.address || 'Choose a workspace'}</pre>
+            <pre>user address: {workspace?.authorKeypair?.address || 'Guest'}</pre>
         </div>;
     }
 };
