@@ -7,10 +7,11 @@ import {
     Emitter,
     StorageMemory,
     ValidatorEs4,
+    AuthorKeypair,
 } from 'earthstar';
 
 import { Workspace } from './workspace';
-import { sortByField } from './util';
+import { sortByField, ellipsifyUserAddress as ellipsifyAddress } from './util';
 
 let logEarthbar = (...args : any[]) => console.log('earthbar view |', ...args);
 let logEarthbarStore = (...args : any[]) => console.log('    earthbar store |', ...args);
@@ -21,8 +22,8 @@ let logEarthbarStore = (...args : any[]) => console.log('    earthbar store |', 
 export let EarthstarCtx = React.createContext<Workspace | null>(null);
 
 export interface UserConfig {
-    authorAddress: AuthorAddress,
-    displayName: string,
+    authorKeypair: AuthorKeypair,
+    displayName: string | null,
 }
 export interface WorkspaceConfig {
     workspaceAddress: WorkspaceAddress,
@@ -44,32 +45,45 @@ export class EarthbarStore {
     onChange: Emitter<null> = new Emitter<null>();
     constructor() {
         this.currentUser = {
-            authorAddress: '@suzy.bxxxxx',
+            authorKeypair: {
+                address: '@suzy.bzrjm4jnvr5luvbgls5ryqrq7jolqw3v5p2cmpabcsoczyhdrdjga',
+                secret: 'bugskupxnwtjt56rsyusoh5oo5x74uoy3kikftv32swmskvw36m7a',
+            },
             displayName: 'Suzy',
         };
         this.currentWorkspace = {
-            workspaceAddress: '+gardening.foo',
+            workspaceAddress: '+gardening.w092jf0q9fj09',
             pubs: ['https://mypub.org', 'https://my-gardening-pub.glitch.com'],
         };
         this.otherUsers = [
             {
-                authorAddress: '@fern.bxxxxx',
+                authorKeypair: {
+                    address: '@fern.bx3ujqftyiqds7ohbeuet3d4iqzombh6qpc2zlx2l2isssc5jgoza',
+                    secret: 'bspk7zvtwkj6wemo6rngkxdrvkiruo4p2yhmmnjzds2uydoix7odq'
+                },
                 displayName: 'Fernie',
+            },
+            {
+                authorKeypair: {
+                    address: '@zzzz.bgbultxgtqupc4zpyjpbno3zxg5xbk27v2cvgdpbieqlox7syzzxq',
+                    secret: 'bvoowi3xqsidznc7fef4o4jcs3dycgr7yiqkbrxivg6bidjubcokq'
+                },
+                displayName: null,
             },
         ];
         this.otherWorkspaces = [
             {
-                workspaceAddress: '+sailing.foo',
+                workspaceAddress: '+sailing.pals',
                 pubs: ['https://pub.sailing.org'],
             },
             {
-                workspaceAddress: '+solarpunk.foo',
+                workspaceAddress: '+solarpunk.j0p9ja83j38',
                 pubs: ['https://mypub.org', 'https://my-solarpunk-pub.glitch.com'],
             },
         ];
         this.workspace = new Workspace(
             new StorageMemory([ValidatorEs4], this.currentWorkspace.workspaceAddress),
-            null // author keypair
+            this.currentUser === null ? null : this.currentUser.authorKeypair,
         );
     }
     _bump() {
@@ -110,7 +124,7 @@ export class EarthbarStore {
         } else {
             this.workspace = new Workspace(
                 new StorageMemory([ValidatorEs4], workspaceConfig.workspaceAddress),
-                null // author keypair
+                this.currentUser === null ? null : this.currentUser.authorKeypair,
             );
         }
         this._bump();
@@ -172,9 +186,9 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         // which panel to show
         let panel : JSX.Element | null = null;
         if (view === EbMode.Workspace) {
-            panel = <EarthbarWorkspacePage store={store} />;
+            panel = <EarthbarWorkspacePanel store={store} />;
         } else if (view === EbMode.User) {
-            panel = <EarthbarUserPage store={store} />;
+            panel = <EarthbarUserPanel store={store} />;
         }
 
         // style to hide children when a panel is open
@@ -183,16 +197,26 @@ export class Earthbar extends React.Component<EbProps, EbState> {
             ? { }
             : { visibility: 'hidden' };
 
+        let workspaceString = 'Add a workspace';
+        if (store.currentWorkspace) {
+            workspaceString = ellipsifyAddress(store.currentWorkspace.workspaceAddress);
+        }
+
+        let userString = 'Guest';
+        if (store.currentUser) {
+            userString = ellipsifyAddress(store.currentUser.authorKeypair.address);
+        }
+
         return (
             <EarthstarCtx.Provider value={store.workspace}>
                 <div>
                     <div className='flexRow'>
                         <button className='flexItem earthbarTab' style={sWorkspaceTab} onClick={onClickWorkspaceTab}>
-                            {store.currentWorkspace?.workspaceAddress || 'Add a workspace'}
+                            {workspaceString}
                         </button>
                         <div className='flexItem' style={{flexGrow: 1}} />
                         <button className='flexItem earthbarTab' style={sUserTab} onClick={onClickUserTab}>
-                            {store.currentUser?.authorAddress || 'Guest' }
+                            {userString}
                         </button>
                     </div>
                     <div style={{position: 'relative'}}>
@@ -205,22 +229,43 @@ export class Earthbar extends React.Component<EbProps, EbState> {
     }
 }
 
-export const EarthbarWorkspacePage: React.FunctionComponent<EbPanelProps> = (props) => {
-    let sPanel = {
-        padding: 'var(--s0)',
-        // change colors
-        '--cBackground': 'var(--cWorkspace)',
-        '--cText': 'var(--cWhite)',
-        // apply color variables
-        background: 'var(--cBackground)',
-        color: 'var(--cText)',
-    } as React.CSSProperties;
+//================================================================================
+// EARTHBAR PANELS
+
+let sWorkspacePanel : React.CSSProperties = {
+    padding: 'var(--s0)',
+    // change colors
+    '--cBackground': 'var(--cWorkspace)',
+    '--cText': 'var(--cWhite)',
+    // apply color variables
+    background: 'var(--cBackground)',
+    color: 'var(--cText)',
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 'var(--slightlyRound)',
+    borderBottomLeftRadius: 'var(--slightlyRound)',
+    borderBottomRightRadius: 'var(--slightlyRound)',
+} as React.CSSProperties;
+let sUserPanel : React.CSSProperties = {
+    padding: 'var(--s0)',
+    // change colors
+    '--cBackground': 'var(--cUser)',
+    '--cText': 'var(--cWhite)',
+    // apply color variables
+    background: 'var(--cBackground)',
+    color: 'var(--cText)',
+    borderTopLeftRadius: 'var(--slightlyRound)',
+    borderTopRightRadius: 0,
+    borderBottomLeftRadius: 'var(--slightlyRound)',
+    borderBottomRightRadius: 'var(--slightlyRound)',
+} as React.CSSProperties;
+
+export const EarthbarWorkspacePanel: React.FunctionComponent<EbPanelProps> = (props) => {
     let store = props.store;
     let pubText = '';
     if (store.currentWorkspace !== null) {
         pubText = store.currentWorkspace.pubs.join('\n');
     }
-    return <div className='stack' style={sPanel}>
+    return <div className='stack' style={sWorkspacePanel}>
         {store.currentWorkspace === null
           ? <div className='faint'>Choose a workspace:</div>
           : [
@@ -256,8 +301,8 @@ export const EarthbarWorkspacePage: React.FunctionComponent<EbPanelProps> = (pro
     </div>;
 }
 
-export const EarthbarUserPage: React.FunctionComponent<EbPanelProps> = (props) =>
-    <div style={{padding: 'var(--s0)', color: 'var(--cWhite)', background: 'var(--cUser)'}}>
+export const EarthbarUserPanel: React.FunctionComponent<EbPanelProps> = (props) =>
+    <div style={sUserPanel}>
         Hello this is the user config page<br/><br/>
         Hello this is the user config page<br/><br/>
         Hello this is the user config page

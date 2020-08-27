@@ -67870,6 +67870,7 @@ class LobbyApp extends React.Component {
         super(props);
     }
     render() {
+        var _a;
         logLobbyApp('render');
         let workspace = this.context;
         return React.createElement("div", { style: { padding: 'var(--s0)' } },
@@ -67922,8 +67923,10 @@ class LobbyApp extends React.Component {
             React.createElement("br", null),
             React.createElement("br", null),
             React.createElement("pre", null,
-                "workspace: ",
-                workspace === null ? 'null' : workspace.address));
+                "workspace address: ",
+                (workspace === null || workspace === void 0 ? void 0 : workspace.address) || 'Choose a workspace',
+                "user address: ",
+                ((_a = workspace === null || workspace === void 0 ? void 0 : workspace.authorKeypair) === null || _a === void 0 ? void 0 : _a.address) || 'Guest'));
     }
 }
 exports.LobbyApp = LobbyApp;
@@ -67972,7 +67975,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EarthbarUserPage = exports.EarthbarWorkspacePage = exports.Earthbar = exports.EarthbarStore = exports.EbMode = exports.EarthstarCtx = void 0;
+exports.EarthbarUserPanel = exports.EarthbarWorkspacePanel = exports.Earthbar = exports.EarthbarStore = exports.EbMode = exports.EarthstarCtx = void 0;
 const fast_equals_1 = require("fast-equals");
 const React = __importStar(require("react"));
 const earthstar_1 = require("earthstar");
@@ -67999,31 +68002,43 @@ class EarthbarStore {
         this.workspace = null;
         this.onChange = new earthstar_1.Emitter();
         this.currentUser = {
-            authorAddress: '@suzy.bxxxxx',
+            authorKeypair: {
+                address: '@suzy.bzrjm4jnvr5luvbgls5ryqrq7jolqw3v5p2cmpabcsoczyhdrdjga',
+                secret: 'bugskupxnwtjt56rsyusoh5oo5x74uoy3kikftv32swmskvw36m7a',
+            },
             displayName: 'Suzy',
         };
         this.currentWorkspace = {
-            workspaceAddress: '+gardening.foo',
+            workspaceAddress: '+gardening.w092jf0q9fj09',
             pubs: ['https://mypub.org', 'https://my-gardening-pub.glitch.com'],
         };
         this.otherUsers = [
             {
-                authorAddress: '@fern.bxxxxx',
+                authorKeypair: {
+                    address: '@fern.bx3ujqftyiqds7ohbeuet3d4iqzombh6qpc2zlx2l2isssc5jgoza',
+                    secret: 'bspk7zvtwkj6wemo6rngkxdrvkiruo4p2yhmmnjzds2uydoix7odq'
+                },
                 displayName: 'Fernie',
+            },
+            {
+                authorKeypair: {
+                    address: '@zzzz.bgbultxgtqupc4zpyjpbno3zxg5xbk27v2cvgdpbieqlox7syzzxq',
+                    secret: 'bvoowi3xqsidznc7fef4o4jcs3dycgr7yiqkbrxivg6bidjubcokq'
+                },
+                displayName: null,
             },
         ];
         this.otherWorkspaces = [
             {
-                workspaceAddress: '+sailing.foo',
+                workspaceAddress: '+sailing.pals',
                 pubs: ['https://pub.sailing.org'],
             },
             {
-                workspaceAddress: '+solarpunk.foo',
+                workspaceAddress: '+solarpunk.j0p9ja83j38',
                 pubs: ['https://mypub.org', 'https://my-solarpunk-pub.glitch.com'],
             },
         ];
-        this.workspace = new workspace_1.Workspace(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], this.currentWorkspace.workspaceAddress), null // author keypair
-        );
+        this.workspace = new workspace_1.Workspace(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], this.currentWorkspace.workspaceAddress), this.currentUser === null ? null : this.currentUser.authorKeypair);
     }
     _bump() {
         this.onChange.send(null);
@@ -68068,8 +68083,7 @@ class EarthbarStore {
             this.workspace = null;
         }
         else {
-            this.workspace = new workspace_1.Workspace(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], workspaceConfig.workspaceAddress), null // author keypair
-            );
+            this.workspace = new workspace_1.Workspace(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], workspaceConfig.workspaceAddress), this.currentUser === null ? null : this.currentUser.authorKeypair);
         }
         this._bump();
     }
@@ -68091,7 +68105,6 @@ class Earthbar extends React.Component {
         }
     }
     render() {
-        var _a, _b;
         let store = this.state.store;
         logEarthbar(`render in ${store.mode} mode`);
         let view = store.mode;
@@ -68112,43 +68125,70 @@ class Earthbar extends React.Component {
         // which panel to show
         let panel = null;
         if (view === EbMode.Workspace) {
-            panel = React.createElement(exports.EarthbarWorkspacePage, { store: store });
+            panel = React.createElement(exports.EarthbarWorkspacePanel, { store: store });
         }
         else if (view === EbMode.User) {
-            panel = React.createElement(exports.EarthbarUserPage, { store: store });
+            panel = React.createElement(exports.EarthbarUserPanel, { store: store });
         }
         // style to hide children when a panel is open
         let sChildren = view === EbMode.Closed
             ? {}
             : { visibility: 'hidden' };
+        let workspaceString = 'Add a workspace';
+        if (store.currentWorkspace) {
+            workspaceString = util_1.ellipsifyUserAddress(store.currentWorkspace.workspaceAddress);
+        }
+        let userString = 'Guest';
+        if (store.currentUser) {
+            userString = util_1.ellipsifyUserAddress(store.currentUser.authorKeypair.address);
+        }
         return (React.createElement(exports.EarthstarCtx.Provider, { value: store.workspace },
             React.createElement("div", null,
                 React.createElement("div", { className: 'flexRow' },
-                    React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: onClickWorkspaceTab }, ((_a = store.currentWorkspace) === null || _a === void 0 ? void 0 : _a.workspaceAddress) || 'Add a workspace'),
+                    React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: onClickWorkspaceTab }, workspaceString),
                     React.createElement("div", { className: 'flexItem', style: { flexGrow: 1 } }),
-                    React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: onClickUserTab }, ((_b = store.currentUser) === null || _b === void 0 ? void 0 : _b.authorAddress) || 'Guest')),
+                    React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: onClickUserTab }, userString)),
                 React.createElement("div", { style: { position: 'relative' } },
                     React.createElement("div", { style: { position: 'absolute', zIndex: 99, left: 0, right: 0 } }, panel),
                     React.createElement("div", { style: sChildren }, this.props.children)))));
     }
 }
 exports.Earthbar = Earthbar;
-exports.EarthbarWorkspacePage = (props) => {
-    let sPanel = {
-        padding: 'var(--s0)',
-        // change colors
-        '--cBackground': 'var(--cWorkspace)',
-        '--cText': 'var(--cWhite)',
-        // apply color variables
-        background: 'var(--cBackground)',
-        color: 'var(--cText)',
-    };
+//================================================================================
+// EARTHBAR PANELS
+let sWorkspacePanel = {
+    padding: 'var(--s0)',
+    // change colors
+    '--cBackground': 'var(--cWorkspace)',
+    '--cText': 'var(--cWhite)',
+    // apply color variables
+    background: 'var(--cBackground)',
+    color: 'var(--cText)',
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 'var(--slightlyRound)',
+    borderBottomLeftRadius: 'var(--slightlyRound)',
+    borderBottomRightRadius: 'var(--slightlyRound)',
+};
+let sUserPanel = {
+    padding: 'var(--s0)',
+    // change colors
+    '--cBackground': 'var(--cUser)',
+    '--cText': 'var(--cWhite)',
+    // apply color variables
+    background: 'var(--cBackground)',
+    color: 'var(--cText)',
+    borderTopLeftRadius: 'var(--slightlyRound)',
+    borderTopRightRadius: 0,
+    borderBottomLeftRadius: 'var(--slightlyRound)',
+    borderBottomRightRadius: 'var(--slightlyRound)',
+};
+exports.EarthbarWorkspacePanel = (props) => {
     let store = props.store;
     let pubText = '';
     if (store.currentWorkspace !== null) {
         pubText = store.currentWorkspace.pubs.join('\n');
     }
-    return React.createElement("div", { className: 'stack', style: sPanel },
+    return React.createElement("div", { className: 'stack', style: sWorkspacePanel },
         store.currentWorkspace === null
             ? React.createElement("div", { className: 'faint' }, "Choose a workspace:")
             : [
@@ -68169,7 +68209,7 @@ exports.EarthbarWorkspacePage = (props) => {
             React.createElement("a", { href: "#", className: 'linkbutton block' }, "Join workspace"),
             React.createElement("a", { href: "#", className: 'linkbutton block' }, "Create new workspace")));
 };
-exports.EarthbarUserPage = (props) => React.createElement("div", { style: { padding: 'var(--s0)', color: 'var(--cWhite)', background: 'var(--cUser)' } },
+exports.EarthbarUserPanel = (props) => React.createElement("div", { style: sUserPanel },
     "Hello this is the user config page",
     React.createElement("br", null),
     React.createElement("br", null),
@@ -68181,7 +68221,7 @@ exports.EarthbarUserPage = (props) => React.createElement("div", { style: { padd
 },{"./util":267,"./workspace":268,"earthstar":100,"fast-equals":132,"react":220}],267:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sortByField = exports.sortFnByField = void 0;
+exports.ellipsifyUserAddress = exports.sortByField = exports.sortFnByField = void 0;
 exports.sortFnByField = (field) => {
     return (a, b) => {
         if (a[field] > b[field]) {
@@ -68195,6 +68235,19 @@ exports.sortFnByField = (field) => {
 };
 exports.sortByField = (arr, field) => {
     return arr.sort(exports.sortFnByField(field));
+};
+exports.ellipsifyUserAddress = (s) => {
+    // assume s has zero or one periods
+    // truncate the part after the period
+    let chars = 8;
+    let [a, b] = s.split('.');
+    if (b === undefined) {
+        return a;
+    }
+    if (b.length > chars) {
+        b = b.slice(0, chars) + '...';
+    }
+    return a + '.' + b;
 };
 /*
 export let arrayHasMatch = <T extends Ob>(arr: T[], x: T, field: string): boolean => {

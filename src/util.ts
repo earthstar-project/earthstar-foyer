@@ -13,6 +13,18 @@ export let sortByField = <T extends Ob>(arr: T[], field: string): T[] => {
     return arr.sort(sortFnByField(field));
 }
 
+export let ellipsifyUserAddress = (s : string) : string => {
+    // assume s has zero or one periods
+    // truncate the part after the period
+    let chars = 8;
+    let [a, b] = s.split('.');
+    if (b === undefined) { return a; }
+    if (b.length > chars) {
+        b = b.slice(0, chars) + '...'
+    }
+    return a + '.' + b;
+}
+
 /*
 export let arrayHasMatch = <T extends Ob>(arr: T[], x: T, field: string): boolean => {
     for (let a of arr) {

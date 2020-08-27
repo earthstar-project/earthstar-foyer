@@ -16,6 +16,7 @@
     --s4: calc(var(--s3) * var(--ratio));
     --s5: calc(var(--s4) * var(--ratio));
     --round: var(--s0);
+    --slightlyRound: var(--s-2);
     --test-border-width: 0px;
 
     /* colors */
@@ -90,7 +91,7 @@ textarea {
     margin: none;
     font-family: monospace;
     width: 100%;
-    border-radius: var(--s-2);
+    border-radius: var(--slightlyRound);
 }
 
 /*
