@@ -3,9 +3,9 @@ import * as ReactDOM from 'react-dom';
 
 import {
     Earthbar,
-    EarthstarCtx,
+    EarthstarKitCtx,
 } from './earthbar';
-import { Workspace } from './workspace';
+import { Kit } from './kit';
 
 //================================================================================
 // LAYOUTS
@@ -17,13 +17,13 @@ export interface LobbyProps {
 export interface LobbyState {
 }
 export class LobbyApp extends React.Component<LobbyProps, LobbyState> {
-    static contextType = EarthstarCtx;
+    static contextType = EarthstarKitCtx;
     constructor(props: LobbyProps) {
         super(props);
     }
     render() {
         logLobbyApp('render');
-        let workspace = this.context as (Workspace | null);
+        let kit = this.context as (Kit | null);
         return <div style={{padding: 'var(--s0)'}}>
             1 Hello this is the app content<br/><br/>
             2 Hello this is the app content<br/><br/>
@@ -41,8 +41,8 @@ export class LobbyApp extends React.Component<LobbyProps, LobbyState> {
             6 Hello this is the app content<br/><br/>
             7 Hello this is the app content<br/><br/>
             8 Hello this is the app content<br/><br/>
-            <pre>workspace address: {workspace?.address || 'Choose a workspace'}</pre>
-            <pre>user address: {workspace?.authorKeypair?.address || 'Guest'}</pre>
+            <pre>workspace address: {kit?.workspaceAddress || 'Choose a workspace'}</pre>
+            <pre>user address: {kit?.authorKeypair?.address || 'Guest'}</pre>
         </div>;
     }
 };

@@ -10,7 +10,7 @@ import {
     AuthorKeypair,
 } from 'earthstar';
 
-import { Workspace } from './workspace';
+import { Kit } from './kit';
 import { sortByField, ellipsifyUserAddress as ellipsifyAddress } from './util';
 
 let logEarthbar = (...args : any[]) => console.log('earthbar view |', ...args);
@@ -19,7 +19,7 @@ let logEarthbarStore = (...args : any[]) => console.log('    earthbar store |', 
 //================================================================================
 // EARTHBAR TYPES & STORE
 
-export let EarthstarCtx = React.createContext<Workspace | null>(null);
+export let EarthstarKitCtx = React.createContext<Kit | null>(null);
 
 export interface UserConfig {
     authorKeypair: AuthorKeypair,
@@ -41,7 +41,7 @@ export class EarthbarStore {
     currentWorkspace: WorkspaceConfig | null = null;
     otherUsers: UserConfig[] = [];
     otherWorkspaces: WorkspaceConfig[] = [];
-    workspace: Workspace | null = null;
+    kit: Kit | null = null;
     onChange: Emitter<null> = new Emitter<null>();
     constructor() {
         this.currentUser = {
@@ -81,7 +81,7 @@ export class EarthbarStore {
                 pubs: ['https://mypub.org', 'https://my-solarpunk-pub.glitch.com'],
             },
         ];
-        this.workspace = new Workspace(
+        this.kit = new Kit(
             new StorageMemory([ValidatorEs4], this.currentWorkspace.workspaceAddress),
             this.currentUser === null ? null : this.currentUser.authorKeypair,
         );
@@ -120,9 +120,9 @@ export class EarthbarStore {
         sortByField(this.otherWorkspaces, 'workspaceAddress');
         this.currentWorkspace = workspaceConfig;
         if (workspaceConfig === null) {
-            this.workspace = null;
+            this.kit = null;
         } else {
-            this.workspace = new Workspace(
+            this.kit = new Kit(
                 new StorageMemory([ValidatorEs4], workspaceConfig.workspaceAddress),
                 this.currentUser === null ? null : this.currentUser.authorKeypair,
             );
@@ -208,7 +208,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         }
 
         return (
-            <EarthstarCtx.Provider value={store.workspace}>
+            <EarthstarKitCtx.Provider value={store.kit}>
                 <div>
                     <div className='flexRow'>
                         <button className='flexItem earthbarTab' style={sWorkspaceTab} onClick={onClickWorkspaceTab}>
@@ -224,7 +224,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                         <div style={sChildren}>{this.props.children}</div>
                     </div>
                 </div>
-            </EarthstarCtx.Provider>
+            </EarthstarKitCtx.Provider>
         );
     }
 }
