@@ -261,11 +261,17 @@ let sUserPanel : React.CSSProperties = {
 
 export const EarthbarWorkspacePanel: React.FunctionComponent<EbPanelProps> = (props) => {
     let store = props.store;
+
     let pubText = '';
+    let allWorkspaces : WorkspaceConfig[] = store.otherWorkspaces;
     if (store.currentWorkspace !== null) {
         pubText = store.currentWorkspace.pubs.join('\n');
+        allWorkspaces = [...allWorkspaces, store.currentWorkspace];
+        sortByField(allWorkspaces, 'workspaceAddress');
     }
+
     return <div className='stack' style={sWorkspacePanel}>
+        {/* current workspace details */}
         {store.currentWorkspace === null
           ? <div className='faint'>Choose a workspace:</div>
           : [
@@ -286,14 +292,19 @@ export const EarthbarWorkspacePanel: React.FunctionComponent<EbPanelProps> = (pr
                 <div key='e' className='faint'>Other workspaces</div>,
             ]
         }
+        {/* list of workspaces */}
         <div className='stack indent'>
-            {store.otherWorkspaces.map(wsConfig =>
-                <a href="#" className='linkbutton block' key={wsConfig.workspaceAddress}
+            {allWorkspaces.map(wsConfig => {
+                let isCurrent = wsConfig.workspaceAddress === store.currentWorkspace?.workspaceAddress;
+                let style : React.CSSProperties = isCurrent
+                  ? {fontStyle: 'italic', background: 'rgba(255,255,255,0.2)'}
+                  : {};
+                return <a href="#" style={style} className='linkbutton block' key={wsConfig.workspaceAddress}
                     onClick={(e) => store.switchWorkspace(wsConfig)}
                     >
                     {wsConfig.workspaceAddress}
-                </a>
-            )}
+                </a>;
+            })}
             {store.otherWorkspaces ? <div>&nbsp;</div> : null}
             <a href="#" className='linkbutton block'>Join workspace</a>
             <a href="#" className='linkbutton block'>Create new workspace</a>

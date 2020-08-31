@@ -68186,8 +68186,11 @@ let sUserPanel = {
 exports.EarthbarWorkspacePanel = (props) => {
     let store = props.store;
     let pubText = '';
+    let allWorkspaces = store.otherWorkspaces;
     if (store.currentWorkspace !== null) {
         pubText = store.currentWorkspace.pubs.join('\n');
+        allWorkspaces = [...allWorkspaces, store.currentWorkspace];
+        util_1.sortByField(allWorkspaces, 'workspaceAddress');
     }
     return React.createElement("div", { className: 'stack', style: sWorkspacePanel },
         store.currentWorkspace === null
@@ -68205,7 +68208,14 @@ exports.EarthbarWorkspacePanel = (props) => {
                 React.createElement("div", { key: 'e', className: 'faint' }, "Other workspaces"),
             ],
         React.createElement("div", { className: 'stack indent' },
-            store.otherWorkspaces.map(wsConfig => React.createElement("a", { href: "#", className: 'linkbutton block', key: wsConfig.workspaceAddress, onClick: (e) => store.switchWorkspace(wsConfig) }, wsConfig.workspaceAddress)),
+            allWorkspaces.map(wsConfig => {
+                var _a;
+                let isCurrent = wsConfig.workspaceAddress === ((_a = store.currentWorkspace) === null || _a === void 0 ? void 0 : _a.workspaceAddress);
+                let style = isCurrent
+                    ? { fontStyle: 'italic', background: 'rgba(255,255,255,0.2)' }
+                    : {};
+                return React.createElement("a", { href: "#", style: style, className: 'linkbutton block', key: wsConfig.workspaceAddress, onClick: (e) => store.switchWorkspace(wsConfig) }, wsConfig.workspaceAddress);
+            }),
             store.otherWorkspaces ? React.createElement("div", null, "\u00A0") : null,
             React.createElement("a", { href: "#", className: 'linkbutton block' }, "Join workspace"),
             React.createElement("a", { href: "#", className: 'linkbutton block' }, "Create new workspace")));
