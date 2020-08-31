@@ -68064,6 +68064,29 @@ class EarthbarStore {
         this.currentWorkspace.pubs = pubs;
         this._bump();
     }
+    addPub(pub) {
+        logEarthbarStore('addPub', pub);
+        if (this.currentWorkspace === null) {
+            console.warn("can't add pub because current workspace is null");
+            return;
+        }
+        if (this.currentWorkspace.pubs.indexOf(pub) !== -1) {
+            // already exists
+            return;
+        }
+        this.currentWorkspace.pubs.push(pub);
+        this.currentWorkspace.pubs.sort();
+        this._bump();
+    }
+    removePub(pub) {
+        logEarthbarStore('removePub', pub);
+        if (this.currentWorkspace === null) {
+            console.warn("can't remove pub because current workspace is null");
+            return;
+        }
+        this.currentWorkspace.pubs = this.currentWorkspace.pubs.filter(p => p !== pub);
+        this._bump();
+    }
     switchWorkspace(workspaceConfig) {
         logEarthbarStore('setWorkspaceConfig', workspaceConfig);
         // nop
@@ -68205,10 +68228,10 @@ exports.EarthbarWorkspacePanel = (props) => {
                             React.createElement("button", { className: 'button' }, "Sync")),
                         store.currentWorkspace.pubs.map(pub => React.createElement("div", { key: pub, className: 'flexRow' },
                             React.createElement("div", { className: 'flexItem', style: { flexGrow: 1 } }, pub),
-                            React.createElement("button", { className: 'flexItem linkbutton' }, "X"))),
+                            React.createElement("button", { className: 'flexItem linkbutton', onClick: () => store.removePub(pub) }, "\u2715"))),
                         React.createElement("div", { className: 'flexRow' },
-                            React.createElement("input", { className: 'flexItem', type: "text", defaultValue: "http://..." }),
-                            React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' } }, "Add"))))),
+                            React.createElement("input", { className: 'flexItem', type: "text", placeholder: "http://..." }),
+                            React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, onClick: () => store.addPub('TODO') }, "Add"))))),
         React.createElement("hr", { className: 'faint' }),
         React.createElement("div", { className: 'faint' }, "Switch workspace:"),
         React.createElement("div", { className: 'stack indent' },

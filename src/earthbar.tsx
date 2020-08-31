@@ -105,6 +105,29 @@ export class EarthbarStore {
         this.currentWorkspace.pubs = pubs;
         this._bump();
     }
+    addPub(pub: string): void {
+        logEarthbarStore('addPub', pub);
+        if (this.currentWorkspace === null) {
+            console.warn("can't add pub because current workspace is null");
+            return;
+        }
+        if (this.currentWorkspace.pubs.indexOf(pub) !== -1) {
+            // already exists
+            return;
+        }
+        this.currentWorkspace.pubs.push(pub);
+        this.currentWorkspace.pubs.sort();
+        this._bump();
+    }
+    removePub(pub: string): void {
+        logEarthbarStore('removePub', pub);
+        if (this.currentWorkspace === null) {
+            console.warn("can't remove pub because current workspace is null");
+            return;
+        }
+        this.currentWorkspace.pubs = this.currentWorkspace.pubs.filter(p => p !== pub);
+        this._bump();
+    }
     switchWorkspace(workspaceConfig: WorkspaceConfig | null): void {
         logEarthbarStore('setWorkspaceConfig', workspaceConfig);
         // nop
@@ -284,12 +307,21 @@ export const EarthbarWorkspacePanel: React.FunctionComponent<EbPanelProps> = (pr
                         {store.currentWorkspace.pubs.map(pub =>
                             <div key={pub} className='flexRow'>
                                 <div className='flexItem' style={{flexGrow: 1}}>{pub}</div>
-                                <button className='flexItem linkbutton'>X</button>
+                                <button className='flexItem linkbutton'
+                                    onClick={() => store.removePub(pub)}
+                                    >
+                                    &#x2715;
+                                </button>
                             </div>
                         )}
                         <div className='flexRow'>
-                            <input className='flexItem' type="text" defaultValue="http://..." />
-                            <button className='button flexItem' style={{marginLeft: 'var(--s-1)'}}>Add</button>
+                            <input className='flexItem' type="text" placeholder="http://..." />
+                            <button className='button flexItem'
+                                style={{marginLeft: 'var(--s-1)'}}
+                                onClick={() => store.addPub('TODO')}
+                                >
+                                Add
+                            </button>
                         </div>
                     </div>
                 </div>
