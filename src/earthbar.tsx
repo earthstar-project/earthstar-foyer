@@ -53,7 +53,10 @@ export class EarthbarStore {
         };
         this.currentWorkspace = {
             workspaceAddress: '+gardening.w092jf0q9fj09',
-            pubs: ['https://mypub.org', 'https://my-gardening-pub.glitch.com'],
+            pubs: [
+                'https://my-gardening-pub.glitch.com',
+                'https://mypub.org',
+            ],
         };
         this.otherUsers = [
             {
@@ -74,11 +77,16 @@ export class EarthbarStore {
         this.otherWorkspaces = [
             {
                 workspaceAddress: '+sailing.pals',
-                pubs: ['https://pub.sailing.org'],
+                pubs: [
+                    'https://pub.sailing.org'
+                ],
             },
             {
                 workspaceAddress: '+solarpunk.j0p9ja83j38',
-                pubs: ['https://mypub.org', 'https://my-solarpunk-pub.glitch.com'],
+                pubs: [
+                    'https://my-solarpunk-pub.glitch.com',
+                    'https://mypub.org',
+                ],
             },
         ];
         this.kit = new Kit(
@@ -282,71 +290,91 @@ let sUserPanel : React.CSSProperties = {
     borderBottomRightRadius: 'var(--slightlyRound)',
 } as React.CSSProperties;
 
-export const EarthbarWorkspacePanel: React.FunctionComponent<EbPanelProps> = (props) => {
-    let store = props.store;
-
-    let pubs: string[] = [];
-    let allWorkspaces: WorkspaceConfig[] = store.otherWorkspaces;
-    if (store.currentWorkspace !== null) {
-        pubs = store.currentWorkspace.pubs;
-        allWorkspaces = [...allWorkspaces, store.currentWorkspace];
-        sortByField(allWorkspaces, 'workspaceAddress');
+interface EbWorkspacePanelState {
+    newPubInput: string;
+}
+export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWorkspacePanelState> {
+    constructor(props: EbPanelProps) {
+        super(props)
+        this.state = {newPubInput: ''}
     }
+    handleAddPub() {
+        let newPub = this.state.newPubInput.trim();
+        if (newPub.length > 0) {
+            this.props.store.addPub(newPub);
+            this.setState({ newPubInput: '' });
+        }
+    }
+    render() {
+        let store = this.props.store;
 
-    return <div className='stack' style={sWorkspacePanel}>
-        {/* current workspace details */}
-        {store.currentWorkspace === null
-          ? null
-          : <div className='stack'>
-                <div className='faint'>This workspace:</div>
-                <div className='stack indent'>
-                    <pre>{store.currentWorkspace.workspaceAddress}</pre>
-                    <div className='faint'>Pubs:</div>
+        let pubs: string[] = [];
+        let allWorkspaces: WorkspaceConfig[] = store.otherWorkspaces;
+        if (store.currentWorkspace !== null) {
+            pubs = store.currentWorkspace.pubs;
+            allWorkspaces = [...allWorkspaces, store.currentWorkspace];
+            sortByField(allWorkspaces, 'workspaceAddress');
+        }
+
+        return <div className='stack' style={sWorkspacePanel}>
+            {/* current workspace details */}
+            {store.currentWorkspace === null
+            ? null
+            : <div className='stack'>
+                    <div className='faint'>This workspace:</div>
                     <div className='stack indent'>
-                        <div><button className='button'>Sync</button></div>
-                        {store.currentWorkspace.pubs.map(pub =>
-                            <div key={pub} className='flexRow'>
-                                <div className='flexItem' style={{flexGrow: 1}}>{pub}</div>
-                                <button className='flexItem linkbutton'
-                                    onClick={() => store.removePub(pub)}
+                        <pre>{store.currentWorkspace.workspaceAddress}</pre>
+                        <div className='faint'>Pubs:</div>
+                        <div className='stack indent'>
+                            <div><button className='button'>Sync</button></div>
+                            {store.currentWorkspace.pubs.map(pub =>
+                                <div key={pub} className='flexRow'>
+                                    <div className='flexItem' style={{flexGrow: 1}}>{pub}</div>
+                                    <button className='flexItem linkbutton'
+                                        onClick={() => store.removePub(pub)}
+                                        >
+                                        &#x2715;
+                                    </button>
+                                </div>
+                            )}
+                            <form className='flexRow' onSubmit={() => this.handleAddPub()}>
+                                <input className='flexItem' type="text"
+                                    placeholder="http://..."
+                                    value={this.state.newPubInput}
+                                    onChange={(e) => this.setState({ newPubInput: e.target.value })}
+                                    />
+                                <button className='button flexItem'
+                                    style={{marginLeft: 'var(--s-1)'}}
+                                    type='submit'
                                     >
-                                    &#x2715;
+                                    Add
                                 </button>
-                            </div>
-                        )}
-                        <div className='flexRow'>
-                            <input className='flexItem' type="text" placeholder="http://..." />
-                            <button className='button flexItem'
-                                style={{marginLeft: 'var(--s-1)'}}
-                                onClick={() => store.addPub('TODO')}
-                                >
-                                Add
-                            </button>
+                            </form>
                         </div>
                     </div>
                 </div>
+            }
+            <hr className='faint' />
+            {/* list of workspaces */}
+            <div className='faint'>Switch workspace:</div>
+            <div className='stack indent'>
+                {allWorkspaces.map(wsConfig => {
+                    let isCurrent = wsConfig.workspaceAddress === store.currentWorkspace?.workspaceAddress;
+                    let style : React.CSSProperties = isCurrent
+                    ? {fontStyle: 'italic', background: 'rgba(255,255,255,0.2)'}
+                    : {};
+                    return <a href="#" style={style} className='linkbutton block' key={wsConfig.workspaceAddress}
+                        onClick={(e) => store.switchWorkspace(wsConfig)}
+                        >
+                        {wsConfig.workspaceAddress}
+                    </a>;
+                })}
+                {store.otherWorkspaces ? <div>&nbsp;</div> : null}
+                <a href="#" className='linkbutton block'>Join workspace</a>
+                <a href="#" className='linkbutton block'>Create new workspace</a>
             </div>
-        }
-        <hr className='faint' />
-        {/* list of workspaces */}
-        <div className='faint'>Switch workspace:</div>
-        <div className='stack indent'>
-            {allWorkspaces.map(wsConfig => {
-                let isCurrent = wsConfig.workspaceAddress === store.currentWorkspace?.workspaceAddress;
-                let style : React.CSSProperties = isCurrent
-                  ? {fontStyle: 'italic', background: 'rgba(255,255,255,0.2)'}
-                  : {};
-                return <a href="#" style={style} className='linkbutton block' key={wsConfig.workspaceAddress}
-                    onClick={(e) => store.switchWorkspace(wsConfig)}
-                    >
-                    {wsConfig.workspaceAddress}
-                </a>;
-            })}
-            {store.otherWorkspaces ? <div>&nbsp;</div> : null}
-            <a href="#" className='linkbutton block'>Join workspace</a>
-            <a href="#" className='linkbutton block'>Create new workspace</a>
-        </div>
-    </div>;
+        </div>;
+    }
 }
 
 export const EarthbarUserPanel: React.FunctionComponent<EbPanelProps> = (props) =>

@@ -68011,7 +68011,10 @@ class EarthbarStore {
         };
         this.currentWorkspace = {
             workspaceAddress: '+gardening.w092jf0q9fj09',
-            pubs: ['https://mypub.org', 'https://my-gardening-pub.glitch.com'],
+            pubs: [
+                'https://my-gardening-pub.glitch.com',
+                'https://mypub.org',
+            ],
         };
         this.otherUsers = [
             {
@@ -68032,11 +68035,16 @@ class EarthbarStore {
         this.otherWorkspaces = [
             {
                 workspaceAddress: '+sailing.pals',
-                pubs: ['https://pub.sailing.org'],
+                pubs: [
+                    'https://pub.sailing.org'
+                ],
             },
             {
                 workspaceAddress: '+solarpunk.j0p9ja83j38',
-                pubs: ['https://mypub.org', 'https://my-solarpunk-pub.glitch.com'],
+                pubs: [
+                    'https://my-solarpunk-pub.glitch.com',
+                    'https://mypub.org',
+                ],
             },
         ];
         this.kit = new kit_1.Kit(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], this.currentWorkspace.workspaceAddress), this.currentUser === null ? null : this.currentUser.authorKeypair);
@@ -68149,7 +68157,7 @@ class Earthbar extends React.Component {
         // which panel to show
         let panel = null;
         if (view === EbMode.Workspace) {
-            panel = React.createElement(exports.EarthbarWorkspacePanel, { store: store });
+            panel = React.createElement(EarthbarWorkspacePanel, { store: store });
         }
         else if (view === EbMode.User) {
             panel = React.createElement(exports.EarthbarUserPanel, { store: store });
@@ -68206,47 +68214,61 @@ let sUserPanel = {
     borderBottomLeftRadius: 'var(--slightlyRound)',
     borderBottomRightRadius: 'var(--slightlyRound)',
 };
-exports.EarthbarWorkspacePanel = (props) => {
-    let store = props.store;
-    let pubs = [];
-    let allWorkspaces = store.otherWorkspaces;
-    if (store.currentWorkspace !== null) {
-        pubs = store.currentWorkspace.pubs;
-        allWorkspaces = [...allWorkspaces, store.currentWorkspace];
-        util_1.sortByField(allWorkspaces, 'workspaceAddress');
+class EarthbarWorkspacePanel extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { newPubInput: '' };
     }
-    return React.createElement("div", { className: 'stack', style: sWorkspacePanel },
-        store.currentWorkspace === null
-            ? null
-            : React.createElement("div", { className: 'stack' },
-                React.createElement("div", { className: 'faint' }, "This workspace:"),
-                React.createElement("div", { className: 'stack indent' },
-                    React.createElement("pre", null, store.currentWorkspace.workspaceAddress),
-                    React.createElement("div", { className: 'faint' }, "Pubs:"),
+    handleAddPub() {
+        let newPub = this.state.newPubInput.trim();
+        if (newPub.length > 0) {
+            this.props.store.addPub(newPub);
+            this.setState({ newPubInput: '' });
+        }
+    }
+    render() {
+        let store = this.props.store;
+        let pubs = [];
+        let allWorkspaces = store.otherWorkspaces;
+        if (store.currentWorkspace !== null) {
+            pubs = store.currentWorkspace.pubs;
+            allWorkspaces = [...allWorkspaces, store.currentWorkspace];
+            util_1.sortByField(allWorkspaces, 'workspaceAddress');
+        }
+        return React.createElement("div", { className: 'stack', style: sWorkspacePanel },
+            store.currentWorkspace === null
+                ? null
+                : React.createElement("div", { className: 'stack' },
+                    React.createElement("div", { className: 'faint' }, "This workspace:"),
                     React.createElement("div", { className: 'stack indent' },
-                        React.createElement("div", null,
-                            React.createElement("button", { className: 'button' }, "Sync")),
-                        store.currentWorkspace.pubs.map(pub => React.createElement("div", { key: pub, className: 'flexRow' },
-                            React.createElement("div", { className: 'flexItem', style: { flexGrow: 1 } }, pub),
-                            React.createElement("button", { className: 'flexItem linkbutton', onClick: () => store.removePub(pub) }, "\u2715"))),
-                        React.createElement("div", { className: 'flexRow' },
-                            React.createElement("input", { className: 'flexItem', type: "text", placeholder: "http://..." }),
-                            React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, onClick: () => store.addPub('TODO') }, "Add"))))),
-        React.createElement("hr", { className: 'faint' }),
-        React.createElement("div", { className: 'faint' }, "Switch workspace:"),
-        React.createElement("div", { className: 'stack indent' },
-            allWorkspaces.map(wsConfig => {
-                var _a;
-                let isCurrent = wsConfig.workspaceAddress === ((_a = store.currentWorkspace) === null || _a === void 0 ? void 0 : _a.workspaceAddress);
-                let style = isCurrent
-                    ? { fontStyle: 'italic', background: 'rgba(255,255,255,0.2)' }
-                    : {};
-                return React.createElement("a", { href: "#", style: style, className: 'linkbutton block', key: wsConfig.workspaceAddress, onClick: (e) => store.switchWorkspace(wsConfig) }, wsConfig.workspaceAddress);
-            }),
-            store.otherWorkspaces ? React.createElement("div", null, "\u00A0") : null,
-            React.createElement("a", { href: "#", className: 'linkbutton block' }, "Join workspace"),
-            React.createElement("a", { href: "#", className: 'linkbutton block' }, "Create new workspace")));
-};
+                        React.createElement("pre", null, store.currentWorkspace.workspaceAddress),
+                        React.createElement("div", { className: 'faint' }, "Pubs:"),
+                        React.createElement("div", { className: 'stack indent' },
+                            React.createElement("div", null,
+                                React.createElement("button", { className: 'button' }, "Sync")),
+                            store.currentWorkspace.pubs.map(pub => React.createElement("div", { key: pub, className: 'flexRow' },
+                                React.createElement("div", { className: 'flexItem', style: { flexGrow: 1 } }, pub),
+                                React.createElement("button", { className: 'flexItem linkbutton', onClick: () => store.removePub(pub) }, "\u2715"))),
+                            React.createElement("form", { className: 'flexRow', onSubmit: () => this.handleAddPub() },
+                                React.createElement("input", { className: 'flexItem', type: "text", placeholder: "http://...", value: this.state.newPubInput, onChange: (e) => this.setState({ newPubInput: e.target.value }) }),
+                                React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit' }, "Add"))))),
+            React.createElement("hr", { className: 'faint' }),
+            React.createElement("div", { className: 'faint' }, "Switch workspace:"),
+            React.createElement("div", { className: 'stack indent' },
+                allWorkspaces.map(wsConfig => {
+                    var _a;
+                    let isCurrent = wsConfig.workspaceAddress === ((_a = store.currentWorkspace) === null || _a === void 0 ? void 0 : _a.workspaceAddress);
+                    let style = isCurrent
+                        ? { fontStyle: 'italic', background: 'rgba(255,255,255,0.2)' }
+                        : {};
+                    return React.createElement("a", { href: "#", style: style, className: 'linkbutton block', key: wsConfig.workspaceAddress, onClick: (e) => store.switchWorkspace(wsConfig) }, wsConfig.workspaceAddress);
+                }),
+                store.otherWorkspaces ? React.createElement("div", null, "\u00A0") : null,
+                React.createElement("a", { href: "#", className: 'linkbutton block' }, "Join workspace"),
+                React.createElement("a", { href: "#", className: 'linkbutton block' }, "Create new workspace")));
+    }
+}
+exports.EarthbarWorkspacePanel = EarthbarWorkspacePanel;
 exports.EarthbarUserPanel = (props) => React.createElement("div", { style: sUserPanel },
     "Hello this is the user config page",
     React.createElement("br", null),
