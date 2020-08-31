@@ -68185,28 +68185,32 @@ let sUserPanel = {
 };
 exports.EarthbarWorkspacePanel = (props) => {
     let store = props.store;
-    let pubText = '';
+    let pubs = [];
     let allWorkspaces = store.otherWorkspaces;
     if (store.currentWorkspace !== null) {
-        pubText = store.currentWorkspace.pubs.join('\n');
+        pubs = store.currentWorkspace.pubs;
         allWorkspaces = [...allWorkspaces, store.currentWorkspace];
         util_1.sortByField(allWorkspaces, 'workspaceAddress');
     }
     return React.createElement("div", { className: 'stack', style: sWorkspacePanel },
         store.currentWorkspace === null
-            ? React.createElement("div", { className: 'faint' }, "Choose a workspace:")
-            : [
-                React.createElement("div", { key: 'a' },
-                    React.createElement("button", { className: 'button' }, "Sync")),
-                React.createElement("div", { key: 'b', className: 'faint' }, "Pubs (one per line)"),
-                React.createElement("div", { key: 'c' },
-                    React.createElement("textarea", { className: 'indent', style: { width: '80%' }, rows: 3, value: pubText, onChange: (e) => {
-                            let pubs = e.target.value.split('\n').map(x => x.trim()).filter(x => x !== '');
-                            store.setPubs(pubs);
-                        } })),
-                React.createElement("hr", { key: 'd', className: 'faint' }),
-                React.createElement("div", { key: 'e', className: 'faint' }, "Other workspaces"),
-            ],
+            ? null
+            : React.createElement("div", { className: 'stack' },
+                React.createElement("div", { className: 'faint' }, "This workspace:"),
+                React.createElement("div", { className: 'stack indent' },
+                    React.createElement("pre", null, store.currentWorkspace.workspaceAddress),
+                    React.createElement("div", { className: 'faint' }, "Pubs:"),
+                    React.createElement("div", { className: 'stack indent' },
+                        React.createElement("div", null,
+                            React.createElement("button", { className: 'button' }, "Sync")),
+                        store.currentWorkspace.pubs.map(pub => React.createElement("div", { key: pub, className: 'flexRow' },
+                            React.createElement("div", { className: 'flexItem', style: { flexGrow: 1 } }, pub),
+                            React.createElement("button", { className: 'flexItem linkbutton' }, "X"))),
+                        React.createElement("div", { className: 'flexRow' },
+                            React.createElement("input", { className: 'flexItem', type: "text", defaultValue: "http://..." }),
+                            React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' } }, "Add"))))),
+        React.createElement("hr", { className: 'faint' }),
+        React.createElement("div", { className: 'faint' }, "Switch workspace:"),
         React.createElement("div", { className: 'stack indent' },
             allWorkspaces.map(wsConfig => {
                 var _a;

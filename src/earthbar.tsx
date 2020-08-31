@@ -262,10 +262,10 @@ let sUserPanel : React.CSSProperties = {
 export const EarthbarWorkspacePanel: React.FunctionComponent<EbPanelProps> = (props) => {
     let store = props.store;
 
-    let pubText = '';
-    let allWorkspaces : WorkspaceConfig[] = store.otherWorkspaces;
+    let pubs: string[] = [];
+    let allWorkspaces: WorkspaceConfig[] = store.otherWorkspaces;
     if (store.currentWorkspace !== null) {
-        pubText = store.currentWorkspace.pubs.join('\n');
+        pubs = store.currentWorkspace.pubs;
         allWorkspaces = [...allWorkspaces, store.currentWorkspace];
         sortByField(allWorkspaces, 'workspaceAddress');
     }
@@ -273,26 +273,31 @@ export const EarthbarWorkspacePanel: React.FunctionComponent<EbPanelProps> = (pr
     return <div className='stack' style={sWorkspacePanel}>
         {/* current workspace details */}
         {store.currentWorkspace === null
-          ? <div className='faint'>Choose a workspace:</div>
-          : [
-                <div key='a'>
-                    <button className='button'>Sync</button>
-                </div>,
-                <div key='b' className='faint'>Pubs (one per line)</div>,
-                <div key='c'>
-                    <textarea className='indent' style={{width: '80%'}} rows={3}
-                        value={pubText}
-                        onChange={(e) => {
-                            let pubs = e.target.value.split('\n').map(x => x.trim()).filter(x => x !== '');
-                            store.setPubs(pubs);
-                        }}
-                        />
-                </div>,
-                <hr key='d' className='faint' />,
-                <div key='e' className='faint'>Other workspaces</div>,
-            ]
+          ? null
+          : <div className='stack'>
+                <div className='faint'>This workspace:</div>
+                <div className='stack indent'>
+                    <pre>{store.currentWorkspace.workspaceAddress}</pre>
+                    <div className='faint'>Pubs:</div>
+                    <div className='stack indent'>
+                        <div><button className='button'>Sync</button></div>
+                        {store.currentWorkspace.pubs.map(pub =>
+                            <div key={pub} className='flexRow'>
+                                <div className='flexItem' style={{flexGrow: 1}}>{pub}</div>
+                                <button className='flexItem linkbutton'>X</button>
+                            </div>
+                        )}
+                        <div className='flexRow'>
+                            <input className='flexItem' type="text" defaultValue="http://..." />
+                            <button className='button flexItem' style={{marginLeft: 'var(--s-1)'}}>Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         }
+        <hr className='faint' />
         {/* list of workspaces */}
+        <div className='faint'>Switch workspace:</div>
         <div className='stack indent'>
             {allWorkspaces.map(wsConfig => {
                 let isCurrent = wsConfig.workspaceAddress === store.currentWorkspace?.workspaceAddress;

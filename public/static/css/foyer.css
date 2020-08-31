@@ -66,7 +66,7 @@ hr {
 }
 
 .indent {
-    margin-left: var(--s0);
+    margin-left: var(--s1);
 }
 
 .faint {
@@ -75,6 +75,19 @@ hr {
 
 .bold {
     font-weight: bold;
+}
+
+input[type=text] {
+    border: 2px solid var(--cText);
+    background: none;
+
+    color: var(--cText);
+
+    padding: var(--s-2);
+    margin: none;
+    font-family: monospace;
+    width: 100%;
+    border-radius: var(--slightlyRound);
 }
 
 textarea {
@@ -131,7 +144,8 @@ textarea::before {
     font-weight: bold;
     text-decoration: none;
     color: var(--cText);
+    background: none;
 }
-.linkbutton.hover {
+.linkbutton:hover {
     background: red;
 }
