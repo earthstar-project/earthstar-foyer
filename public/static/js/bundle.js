@@ -68374,9 +68374,28 @@ class EarthbarWorkspacePanel extends React.Component {
                                     " (Add pub server(s) to enable sync)")
                                 : React.createElement("div", null,
                                     React.createElement("button", { className: 'button' }, "Sync")),
-                            store.currentWorkspace.pubs.map(pub => React.createElement("div", { key: pub, className: 'flexRow' },
-                                React.createElement("div", { className: 'flexItem flexGrow-1' }, pub),
-                                React.createElement("button", { className: 'flexItem linkButton', onClick: () => store.removePub(pub) }, "\u2715"))),
+                            (store.kit === null ? [] : store.kit.syncer.state.pubs)
+                                .map(pub => {
+                                let icon = '';
+                                if (pub.syncState === 'idle') {
+                                    icon = '📡';
+                                }
+                                if (pub.syncState === 'syncing') {
+                                    icon = '⏳';
+                                }
+                                if (pub.syncState === 'success') {
+                                    icon = '✅';
+                                }
+                                if (pub.syncState === 'failure') {
+                                    icon = '❗️';
+                                }
+                                return React.createElement("div", { key: pub.domain, className: 'flexRow' },
+                                    React.createElement("div", { className: 'flexItem flexGrow-1' },
+                                        icon,
+                                        " ",
+                                        pub.domain),
+                                    React.createElement("button", { className: 'flexItem linkButton', onClick: () => store.removePub(pub.domain) }, "\u2715"));
+                            }),
                             React.createElement("form", { className: 'flexRow', onSubmit: () => this.handleAddPub() },
                                 React.createElement("input", { className: 'flexItem flexGrow-1', type: "text", placeholder: "http://...", value: this.state.newPubInput, onChange: (e) => this.setState({ newPubInput: e.target.value }) }),
                                 React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit' }, "Add Pub Server"))))),

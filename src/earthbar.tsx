@@ -430,6 +430,7 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
             : <div className='stack'>
                     <div className='faint'>Current workspace:</div>
                     <div className='stack indent'>
+                        {/* workspace address in a form easy to copy-paste */}
                         <pre>{store.currentWorkspace.workspaceAddress}</pre>
                         <div className='faint'>Pub Servers:</div>
                         <div className='stack indent'>
@@ -437,16 +438,29 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
                               ? <div><button className='button' disabled={true}>Sync</button> (Add pub server(s) to enable sync)</div>
                               : <div><button className='button'>Sync</button></div>
                             }
-                            {store.currentWorkspace.pubs.map(pub =>
-                                <div key={pub} className='flexRow'>
-                                    <div className='flexItem flexGrow-1'>{pub}</div>
-                                    <button className='flexItem linkButton'
-                                        onClick={() => store.removePub(pub)}
-                                        >
-                                        &#x2715;
-                                    </button>
-                                </div>
-                            )}
+                            {/*
+                                List of pubs.  We could get this from state.currentWorkspace.pubs
+                                but instead let's get it from the Kit we built, from the Syncer,
+                                because there we can also get current syncing status.
+                            */}
+                            {(store.kit === null ? [] : store.kit.syncer.state.pubs)
+                                .map(pub => {
+                                    let icon = '';
+                                    if (pub.syncState === 'idle'   ) { icon = '📡'; }
+                                    if (pub.syncState === 'syncing') { icon = '⏳'; }
+                                    if (pub.syncState === 'success') { icon = '✅'; }
+                                    if (pub.syncState === 'failure') { icon = '❗️'; }
+                                    return <div key={pub.domain} className='flexRow'>
+                                        <div className='flexItem flexGrow-1'>{icon} {pub.domain}</div>
+                                        <button className='flexItem linkButton'
+                                            onClick={() => store.removePub(pub.domain)}
+                                            >
+                                            &#x2715;
+                                        </button>
+                                    </div>
+                                })
+                            }
+                            {/* Form to add new pub */}
                             <form className='flexRow' onSubmit={() => this.handleAddPub()}>
                                 <input className='flexItem flexGrow-1' type="text"
                                     placeholder="http://..."
@@ -465,7 +479,7 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
                 </div>
             }
             <hr className='faint' />
-            {/* list of workspaces */}
+            {/* list of other workspaces */}
             <div className='faint'>Switch workspace:</div>
             <div className='stack indent'>
                 {allWorkspaces.map(wsConfig => {
@@ -487,6 +501,7 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
                     </div>
 
                 })}
+                {/* form to add new workspace */}
                 <form className='flexRow' onSubmit={() => this.handleAddWorkspace()}>
                     <input className='flexItem flexGrow-1' type="text"
                         placeholder="+foo.rjo34irqjf"
@@ -501,6 +516,7 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
                         Add Workspace
                     </button>
                 </form>
+                {/* validation error for new workspace form */}
                 {this.state.newWorkspaceError === null
                   ? null
                   : <div className='right'>{this.state.newWorkspaceError}</div>
