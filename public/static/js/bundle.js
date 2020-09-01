@@ -67868,9 +67868,11 @@ let logLobbyApp = (...args) => console.log('lobby view |', ...args);
 class LobbyApp extends React.Component {
     constructor(props) {
         super(props);
+        // note that this only re-renders when the overall Kit object changes.
+        // if we want more updates from inside the kit, we have to subscribe to them.
         this.unsubStorage = null;
         this.unsubSyncer = null;
-        logLobbyApp('--- constructor.  context:', this.context);
+        logLobbyApp('--- constructor.  kit:', props.kit);
     }
     _unsubFromKit() {
         logLobbyApp('--- unsub');
@@ -67882,7 +67884,7 @@ class LobbyApp extends React.Component {
         }
     }
     _resubscribeToKit() {
-        let kit = this.context;
+        let kit = this.props.kit;
         if (this.unsubStorage || this.unsubSyncer) {
             this._unsubFromKit();
         }
@@ -67904,21 +67906,20 @@ class LobbyApp extends React.Component {
         }
     }
     componentDidMount() {
-        logLobbyApp('--- componentDidMount.  context:', this.context);
+        logLobbyApp('--- componentDidMount.  kit:', this.props.kit);
         this._resubscribeToKit();
     }
     componentDidUpdate() {
-        logLobbyApp('--- componentDidUpdate.  context:', this.context);
-        //this._resubscribeToKit();
+        logLobbyApp('--- componentDidUpdate.  kit:', this.props.kit);
     }
     componentWillUnmount() {
-        logLobbyApp('--- componentWillUnmount.  context:', this.context);
+        logLobbyApp('--- componentWillUnmount.  kit:', this.props.kit);
         this._unsubFromKit();
     }
     render() {
         var _a;
         logLobbyApp('render');
-        let kit = this.context;
+        let kit = this.props.kit;
         return React.createElement("div", { style: { padding: 'var(--s0)' } },
             "1 Hello this is the app content",
             React.createElement("br", null),
@@ -67980,9 +67981,6 @@ class LobbyApp extends React.Component {
     }
 }
 exports.LobbyApp = LobbyApp;
-// note that this only re-renders when the overall Kit object changes.
-// if we want more updates from inside the kit, we have to subscribe to them.
-LobbyApp.contextType = earthbar_1.EarthstarKitCtx;
 ;
 /*
 export const App: React.FunctionComponent<any> = (props) =>
@@ -68002,8 +68000,7 @@ exports.PageColumn = (props) => React.createElement("div", { className: 'pageCol
 //================================================================================
 // MAIN
 ReactDOM.render(React.createElement(exports.PageColumn, null,
-    React.createElement(earthbar_1.Earthbar, null,
-        React.createElement(LobbyApp, null))), document.getElementById('react-slot'));
+    React.createElement(earthbar_1.Earthbar, { appMaker: (kit) => React.createElement(LobbyApp, { kit: kit }) })), document.getElementById('react-slot'));
 
 },{"./earthbar":266,"react":220,"react-dom":217}],266:[function(require,module,exports){
 "use strict";
@@ -68027,7 +68024,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EarthbarUserPanel = exports.EarthbarWorkspacePanel = exports.Earthbar = exports.EarthbarStore = exports.EbMode = exports.EarthstarKitCtx = void 0;
+exports.EarthbarUserPanel = exports.EarthbarWorkspacePanel = exports.Earthbar = exports.EarthbarStore = exports.EbMode = void 0;
 const fast_equals_1 = require("fast-equals");
 const React = __importStar(require("react"));
 const earthstar_1 = require("earthstar");
@@ -68035,9 +68032,6 @@ const kit_1 = require("./kit");
 const util_1 = require("./util");
 let logEarthbar = (...args) => console.log('earthbar view |', ...args);
 let logEarthbarStore = (...args) => console.log('    earthbar store |', ...args);
-//================================================================================
-// EARTHBAR TYPES & STORE
-exports.EarthstarKitCtx = React.createContext(null);
 var EbMode;
 (function (EbMode) {
     EbMode["Closed"] = "CLOSED";
@@ -68100,7 +68094,9 @@ class EarthbarStore {
         ];
         this._load();
         this._save();
-        this.kit = new kit_1.Kit(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], this.currentWorkspace.workspaceAddress), this.currentUser === null ? null : this.currentUser.authorKeypair, this.currentWorkspace.pubs);
+        if (this.currentWorkspace !== null) {
+            this.kit = new kit_1.Kit(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], this.currentWorkspace.workspaceAddress), this.currentUser === null ? null : this.currentUser.authorKeypair, this.currentWorkspace.pubs);
+        }
     }
     _bump() {
         this.onChange.send(null);
@@ -68124,10 +68120,6 @@ class EarthbarStore {
             }
             logEarthbarStore('_load from localStorage: parsing...');
             let parsed = JSON.parse(s);
-            if (!parsed.currentUser || !parsed.currentWorkspace || !parsed.otherUsers || !parsed.otherWorkspaces) {
-                logEarthbarStore('_load from localStorage: ...unexpected data format');
-                return;
-            }
             this.currentUser = parsed.currentUser;
             this.currentWorkspace = parsed.currentWorkspace;
             this.otherUsers = parsed.otherUsers;
@@ -68151,7 +68143,7 @@ class EarthbarStore {
     //--------------------------------------------------
     // PUBS OF CURRENT WORKSPACE
     addPub(pub) {
-        var _a, _b;
+        var _a;
         logEarthbarStore('addPub', pub);
         if (this.currentWorkspace === null) {
             console.warn("can't add pub because current workspace is null");
@@ -68165,12 +68157,11 @@ class EarthbarStore {
         this.currentWorkspace.pubs.push(pub);
         this.currentWorkspace.pubs.sort();
         (_a = this.kit) === null || _a === void 0 ? void 0 : _a.syncer.addPub(pub);
-        logEarthbarStore('syncer pub state:', (_b = this.kit) === null || _b === void 0 ? void 0 : _b.syncer.state.pubs);
         this._bump();
         this._save();
     }
     removePub(pub) {
-        var _a, _b;
+        var _a;
         logEarthbarStore('removePub', pub);
         if (this.currentWorkspace === null) {
             console.warn("can't remove pub because current workspace is null");
@@ -68179,7 +68170,6 @@ class EarthbarStore {
         // TODO: update kit.syncer's pubs?
         this.currentWorkspace.pubs = this.currentWorkspace.pubs.filter(p => p !== pub);
         (_a = this.kit) === null || _a === void 0 ? void 0 : _a.syncer.removePub(pub);
-        logEarthbarStore('syncer pub state:', (_b = this.kit) === null || _b === void 0 ? void 0 : _b.syncer.state.pubs);
         this._bump();
         this._save();
     }
@@ -68195,25 +68185,6 @@ class EarthbarStore {
         }
         return false;
     }
-    addWorkspace(workspaceAddress) {
-        logEarthbarStore('addWorkspace', workspaceAddress);
-        // don't allow adding the same workspace twice
-        if (this.hasWorkspace(workspaceAddress)) {
-            return;
-        }
-        // stash current workspace if there is one
-        if (this.currentWorkspace !== null) {
-            this.otherWorkspaces.push(this.currentWorkspace);
-        }
-        util_1.sortByField(this.otherWorkspaces, 'workspaceAddress');
-        // set new workspace as current
-        this.currentWorkspace = {
-            workspaceAddress: workspaceAddress,
-            pubs: [],
-        };
-        this._bump();
-        this._save();
-    }
     removeWorkspace(workspaceAddress) {
         var _a;
         logEarthbarStore('removeWorkspace', workspaceAddress);
@@ -68228,6 +68199,7 @@ class EarthbarStore {
         this._save();
     }
     switchWorkspace(workspaceConfig) {
+        // this also works to add a new workspace
         // TODO: don't use this to modify pubs of an existing workspace; it might cause duplicates
         // TODO: change this to only accept a workspaceAddress as input
         logEarthbarStore('setWorkspaceConfig', workspaceConfig);
@@ -68316,15 +68288,16 @@ class Earthbar extends React.Component {
         if (store.currentUser) {
             userString = util_1.ellipsifyUserAddress(store.currentUser.authorKeypair.address);
         }
-        return (React.createElement(exports.EarthstarKitCtx.Provider, { value: store.kit },
-            React.createElement("div", null,
-                React.createElement("div", { className: 'flexRow' },
-                    React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: onClickWorkspaceTab }, workspaceString),
-                    React.createElement("div", { className: 'flexItem', style: { flexGrow: 1 } }),
-                    React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: onClickUserTab }, userString)),
-                React.createElement("div", { style: { position: 'relative' } },
-                    React.createElement("div", { style: { position: 'absolute', zIndex: 99, left: 0, right: 0 } }, panel),
-                    React.createElement("div", { style: sChildren }, this.props.children)))));
+        return (React.createElement("div", null,
+            React.createElement("div", { className: 'flexRow' },
+                React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: onClickWorkspaceTab }, workspaceString),
+                React.createElement("div", { className: 'flexItem', style: { flexGrow: 1 } }),
+                React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: onClickUserTab }, userString)),
+            React.createElement("div", { style: { position: 'relative' } },
+                React.createElement("div", { style: { position: 'absolute', zIndex: 99, left: 0, right: 0 } }, panel),
+                React.createElement("div", { style: sChildren }, store.kit === null
+                    ? null // don't render the app when there's no kit (no workspace)
+                    : this.props.appMaker(store.kit)))));
     }
 }
 exports.Earthbar = Earthbar;
@@ -68394,7 +68367,11 @@ class EarthbarWorkspacePanel extends React.Component {
         let newWorkspace = this.state.newWorkspaceInput;
         let parsed = earthstar_1.ValidatorEs4.parseWorkspaceAddress(newWorkspace);
         if (earthstar_1.notErr(parsed)) {
-            this.props.store.addWorkspace(newWorkspace);
+            // can add a workspace by switching to it
+            this.props.store.switchWorkspace({
+                workspaceAddress: newWorkspace,
+                pubs: []
+            });
             this.setState({ newWorkspaceInput: '' });
         }
     }

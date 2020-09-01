@@ -2,7 +2,6 @@ import { deepEqual } from 'fast-equals';
 import * as React from 'react';
 
 import {
-    AuthorAddress,
     WorkspaceAddress,
     Emitter,
     StorageMemory,
@@ -20,8 +19,6 @@ let logEarthbarStore = (...args : any[]) => console.log('    earthbar store |', 
 
 //================================================================================
 // EARTHBAR TYPES & STORE
-
-export let EarthstarKitCtx = React.createContext<Kit | null>(null);
 
 export interface UserConfig {
     authorKeypair: AuthorKeypair,
@@ -93,11 +90,13 @@ export class EarthbarStore {
         ];
         this._load();
         this._save();
-        this.kit = new Kit(
-            new StorageMemory([ValidatorEs4], this.currentWorkspace.workspaceAddress),
-            this.currentUser === null ? null : this.currentUser.authorKeypair,
-            this.currentWorkspace.pubs,
-        );
+        if (this.currentWorkspace !== null) {
+            this.kit = new Kit(
+                new StorageMemory([ValidatorEs4], this.currentWorkspace.workspaceAddress),
+                this.currentUser === null ? null : this.currentUser.authorKeypair,
+                this.currentWorkspace.pubs,
+            );
+        }
     }
     _bump() {
         this.onChange.send(null);
@@ -121,10 +120,6 @@ export class EarthbarStore {
             }
             logEarthbarStore('_load from localStorage: parsing...');
             let parsed = JSON.parse(s);
-            if (!parsed.currentUser || !parsed.currentWorkspace || !parsed.otherUsers || !parsed.otherWorkspaces) {
-                logEarthbarStore('_load from localStorage: ...unexpected data format');
-                return;
-            }
             this.currentUser = parsed.currentUser;
             this.currentWorkspace = parsed.currentWorkspace;
             this.otherUsers = parsed.otherUsers;
@@ -158,7 +153,6 @@ export class EarthbarStore {
         this.currentWorkspace.pubs.push(pub);
         this.currentWorkspace.pubs.sort();
         this.kit?.syncer.addPub(pub);
-        logEarthbarStore('syncer pub state:', this.kit?.syncer.state.pubs);
         this._bump();
         this._save();
     }
@@ -171,7 +165,6 @@ export class EarthbarStore {
         // TODO: update kit.syncer's pubs?
         this.currentWorkspace.pubs = this.currentWorkspace.pubs.filter(p => p !== pub);
         this.kit?.syncer.removePub(pub);
-        logEarthbarStore('syncer pub state:', this.kit?.syncer.state.pubs);
         this._bump();
         this._save();
     }
@@ -181,23 +174,6 @@ export class EarthbarStore {
         if (this.currentWorkspace?.workspaceAddress === workspaceAddress) { return true; }
         if (this.otherWorkspaces.filter(wc => wc.workspaceAddress === workspaceAddress).length >= 1) { return true; }
         return false;
-    }
-    addWorkspace(workspaceAddress: WorkspaceAddress) {
-        logEarthbarStore('addWorkspace', workspaceAddress);
-        // don't allow adding the same workspace twice
-        if (this.hasWorkspace(workspaceAddress)) { return; }
-        // stash current workspace if there is one
-        if (this.currentWorkspace !== null) {
-            this.otherWorkspaces.push(this.currentWorkspace);
-        }
-        sortByField(this.otherWorkspaces, 'workspaceAddress');
-        // set new workspace as current
-        this.currentWorkspace = {
-            workspaceAddress: workspaceAddress,
-            pubs: [],  // pubs start out empty, I guess
-        }
-        this._bump();
-        this._save();
     }
     removeWorkspace(workspaceAddress: WorkspaceAddress) {
         logEarthbarStore('removeWorkspace', workspaceAddress);
@@ -211,6 +187,7 @@ export class EarthbarStore {
         this._save();
     }
     switchWorkspace(workspaceConfig: WorkspaceConfig | null): void {
+        // this also works to add a new workspace
         // TODO: don't use this to modify pubs of an existing workspace; it might cause duplicates
         // TODO: change this to only accept a workspaceAddress as input
         logEarthbarStore('setWorkspaceConfig', workspaceConfig);
@@ -252,6 +229,7 @@ export interface EbPanelProps {
 }
 
 export interface EbProps {
+    appMaker: (kit: Kit) => React.ReactNode,
 }
 
 export interface EbState {
@@ -324,23 +302,26 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         }
 
         return (
-            <EarthstarKitCtx.Provider value={store.kit}>
-                <div>
-                    <div className='flexRow'>
-                        <button className='flexItem earthbarTab' style={sWorkspaceTab} onClick={onClickWorkspaceTab}>
-                            {workspaceString}
-                        </button>
-                        <div className='flexItem' style={{flexGrow: 1}} />
-                        <button className='flexItem earthbarTab' style={sUserTab} onClick={onClickUserTab}>
-                            {userString}
-                        </button>
-                    </div>
-                    <div style={{position: 'relative'}}>
-                        <div style={{position: 'absolute', zIndex: 99, left: 0, right: 0}}>{panel}</div>
-                        <div style={sChildren}>{this.props.children}</div>
+            <div>
+                <div className='flexRow'>
+                    <button className='flexItem earthbarTab' style={sWorkspaceTab} onClick={onClickWorkspaceTab}>
+                        {workspaceString}
+                    </button>
+                    <div className='flexItem' style={{flexGrow: 1}} />
+                    <button className='flexItem earthbarTab' style={sUserTab} onClick={onClickUserTab}>
+                        {userString}
+                    </button>
+                </div>
+                <div style={{position: 'relative'}}>
+                    <div style={{position: 'absolute', zIndex: 99, left: 0, right: 0}}>{panel}</div>
+                    <div style={sChildren}>
+                        {store.kit === null
+                          ? null // don't render the app when there's no kit (no workspace)
+                          : this.props.appMaker(store.kit)
+                        }
                     </div>
                 </div>
-            </EarthstarKitCtx.Provider>
+            </div>
         );
     }
 }
@@ -418,7 +399,11 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
         let newWorkspace = this.state.newWorkspaceInput;
         let parsed = ValidatorEs4.parseWorkspaceAddress(newWorkspace);
         if (notErr(parsed)) {
-            this.props.store.addWorkspace(newWorkspace);
+            // can add a workspace by switching to it
+            this.props.store.switchWorkspace({
+                workspaceAddress: newWorkspace,
+                pubs: []
+            });
             this.setState({ newWorkspaceInput: '' });
         }
     }

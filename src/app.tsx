@@ -3,7 +3,6 @@ import * as ReactDOM from 'react-dom';
 
 import {
     Earthbar,
-    EarthstarKitCtx,
 } from './earthbar';
 import { Kit } from './kit';
 import { Thunk } from 'earthstar';
@@ -14,18 +13,18 @@ import { Thunk } from 'earthstar';
 let logLobbyApp = (...args : any[]) => console.log('lobby view |', ...args);
 
 export interface LobbyProps {
+    kit: Kit | null;
 }
 export interface LobbyState {
 }
 export class LobbyApp extends React.Component<LobbyProps, LobbyState> {
     // note that this only re-renders when the overall Kit object changes.
     // if we want more updates from inside the kit, we have to subscribe to them.
-    static contextType = EarthstarKitCtx;
     unsubStorage : Thunk | null = null;
     unsubSyncer : Thunk | null = null;
     constructor(props: LobbyProps) {
         super(props);
-        logLobbyApp('--- constructor.  context:', this.context);
+        logLobbyApp('--- constructor.  kit:', props.kit);
     }
     _unsubFromKit() {
         logLobbyApp('--- unsub');
@@ -33,7 +32,7 @@ export class LobbyApp extends React.Component<LobbyProps, LobbyState> {
         if (this.unsubSyncer) { this.unsubSyncer(); }
     }
     _resubscribeToKit() {
-        let kit = this.context as (Kit | null);
+        let kit = this.props.kit;
         if (this.unsubStorage || this.unsubSyncer) {
             this._unsubFromKit();
         }
@@ -54,20 +53,19 @@ export class LobbyApp extends React.Component<LobbyProps, LobbyState> {
         }
     }
     componentDidMount() {
-        logLobbyApp('--- componentDidMount.  context:', this.context);
+        logLobbyApp('--- componentDidMount.  kit:', this.props.kit);
         this._resubscribeToKit();
     }
     componentDidUpdate() {
-        logLobbyApp('--- componentDidUpdate.  context:', this.context);
-        //this._resubscribeToKit();
+        logLobbyApp('--- componentDidUpdate.  kit:', this.props.kit);
     }
     componentWillUnmount() {
-        logLobbyApp('--- componentWillUnmount.  context:', this.context);
+        logLobbyApp('--- componentWillUnmount.  kit:', this.props.kit);
         this._unsubFromKit();
     }
     render() {
         logLobbyApp('render');
-        let kit = this.context as (Kit | null);
+        let kit = this.props.kit;
         return <div style={{padding: 'var(--s0)'}}>
             1 Hello this is the app content<br/><br/>
             2 Hello this is the app content<br/><br/>
@@ -115,9 +113,7 @@ export const PageColumn: React.FunctionComponent<any> = (props) =>
 
 ReactDOM.render(
     <PageColumn>
-        <Earthbar>
-            <LobbyApp />
-        </Earthbar>
+        <Earthbar appMaker={(kit: Kit) => <LobbyApp kit={kit}/>}/>
     </PageColumn>,
     document.getElementById('react-slot')
 );
