@@ -89,6 +89,8 @@ export class EarthbarStore {
                 ],
             },
         ];
+        this._load();
+        this._save();
         this.kit = new Kit(
             new StorageMemory([ValidatorEs4], this.currentWorkspace.workspaceAddress),
             this.currentUser === null ? null : this.currentUser.authorKeypair,
@@ -96,6 +98,38 @@ export class EarthbarStore {
     }
     _bump() {
         this.onChange.send(null);
+    }
+    _save() {
+        logEarthbarStore('_save to localStorage');
+        localStorage.setItem('earthbar', JSON.stringify({
+            //mode: this.mode,
+            currentUser: this.currentUser,
+            currentWorkspace: this.currentWorkspace,
+            otherUsers: this.otherUsers,
+            otherWorkspaces: this.otherWorkspaces,
+        }));
+    }
+    _load() {
+        try {
+            let s = localStorage.getItem('earthbar');
+            if (s === null) {
+                logEarthbarStore('_load from localStorage: not found');
+                return;
+            }
+            logEarthbarStore('_load from localStorage: parsing...');
+            let parsed = JSON.parse(s);
+            if (!parsed.currentUser || !parsed.currentWorkspace || !parsed.otherUsers || !parsed.otherWorkspaces) {
+                logEarthbarStore('_load from localStorage: ...unexpected data format');
+                return;
+            }
+            this.currentUser = parsed.currentUser;
+            this.currentWorkspace = parsed.currentWorkspace;
+            this.otherUsers = parsed.otherUsers;
+            this.otherWorkspaces = parsed.otherWorkspaces;
+        } catch (e) {
+            logEarthbarStore('_load from localStorage: error:');
+            console.warn(e);
+        }
     }
     setMode(mode: EbMode): void {
         logEarthbarStore('setMode', mode);
@@ -112,6 +146,7 @@ export class EarthbarStore {
         if (deepEqual(pubs, this.currentWorkspace.pubs)) { return; }
         this.currentWorkspace.pubs = pubs;
         this._bump();
+        this._save();
     }
     addPub(pub: string): void {
         logEarthbarStore('addPub', pub);
@@ -126,6 +161,7 @@ export class EarthbarStore {
         this.currentWorkspace.pubs.push(pub);
         this.currentWorkspace.pubs.sort();
         this._bump();
+        this._save();
     }
     removePub(pub: string): void {
         logEarthbarStore('removePub', pub);
@@ -135,6 +171,7 @@ export class EarthbarStore {
         }
         this.currentWorkspace.pubs = this.currentWorkspace.pubs.filter(p => p !== pub);
         this._bump();
+        this._save();
     }
     switchWorkspace(workspaceConfig: WorkspaceConfig | null): void {
         logEarthbarStore('setWorkspaceConfig', workspaceConfig);
@@ -159,6 +196,7 @@ export class EarthbarStore {
             );
         }
         this._bump();
+        this._save();
     }
 }
 
