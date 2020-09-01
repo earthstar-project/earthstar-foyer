@@ -17,7 +17,7 @@ export interface LobbyProps {
 }
 export interface LobbyState {
 }
-export class LobbyApp extends React.Component<LobbyProps, LobbyState> {
+export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
     // note that this only re-renders when the overall Kit object changes.
     // if we want more updates from inside the kit, we have to subscribe to them.
     unsubStorage : Thunk | null = null;
@@ -53,14 +53,20 @@ export class LobbyApp extends React.Component<LobbyProps, LobbyState> {
         }
     }
     componentDidMount() {
-        logLobbyApp('--- componentDidMount.  kit:', this.props.kit);
+        logLobbyApp('--- componentDidMount.  about to subscribe.  kit:', this.props.kit);
         this._resubscribeToKit();
     }
-    componentDidUpdate() {
-        logLobbyApp('--- componentDidUpdate.  kit:', this.props.kit);
+    componentDidUpdate(prevProps: LobbyProps, prevState: LobbyState) {
+        // catch changes to the kit prop and resubscribe
+        if (prevProps.kit !== this.props.kit) {
+            logLobbyApp('--- componentDidUpdate.  kit changed.  resubscribing.');
+            this._resubscribeToKit();
+        } else {
+            logLobbyApp('--- componentDidUpdate.  kit has not changed.  no need to resubscribe.');
+        }
     }
     componentWillUnmount() {
-        logLobbyApp('--- componentWillUnmount.  kit:', this.props.kit);
+        logLobbyApp('--- componentWillUnmount.  will unsubscribe in a sec.  kit:', this.props.kit);
         this._unsubFromKit();
     }
     render() {
@@ -113,7 +119,7 @@ export const PageColumn: React.FunctionComponent<any> = (props) =>
 
 ReactDOM.render(
     <PageColumn>
-        <Earthbar appMaker={(kit: Kit) => <LobbyApp kit={kit}/>}/>
+        <Earthbar app={LobbyApp}/>
     </PageColumn>,
     document.getElementById('react-slot')
 );

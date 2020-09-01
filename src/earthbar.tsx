@@ -14,8 +14,8 @@ import {
 import { Kit } from './kit';
 import { sortByField, ellipsifyUserAddress as ellipsifyAddress } from './util';
 
-let logEarthbar = (...args : any[]) => console.log('earthbar view |', ...args);
-let logEarthbarStore = (...args : any[]) => console.log('    earthbar store |', ...args);
+let logEarthbar = (...args : any[]) => console.log('    earthbar view |', ...args);
+let logEarthbarStore = (...args : any[]) => console.log('        earthbar store |', ...args);
 
 //================================================================================
 // EARTHBAR TYPES & STORE
@@ -43,6 +43,7 @@ export class EarthbarStore {
     kit: Kit | null = null;
     onChange: Emitter<null> = new Emitter<null>();
     constructor() {
+        logEarthbarStore('constructor');
         this.currentUser = {
             authorKeypair: {
                 address: '@suzy.bzrjm4jnvr5luvbgls5ryqrq7jolqw3v5p2cmpabcsoczyhdrdjga',
@@ -97,8 +98,10 @@ export class EarthbarStore {
                 this.currentWorkspace.pubs,
             );
         }
+        logEarthbarStore('/constructor');
     }
     _bump() {
+        logEarthbarStore('_bump');
         this.onChange.send(null);
     }
     _save() {
@@ -190,7 +193,7 @@ export class EarthbarStore {
         // this also works to add a new workspace
         // TODO: don't use this to modify pubs of an existing workspace; it might cause duplicates
         // TODO: change this to only accept a workspaceAddress as input
-        logEarthbarStore('setWorkspaceConfig', workspaceConfig);
+        logEarthbarStore('switchWorkspace', workspaceConfig);
         // nop
         if (deepEqual(workspaceConfig, this.currentWorkspace)) { return; }
         // remove from otherWorkspaces in case it's there
@@ -229,7 +232,7 @@ export interface EbPanelProps {
 }
 
 export interface EbProps {
-    appMaker: (kit: Kit) => React.ReactNode,
+    app: React.ReactType,
 }
 
 export interface EbState {
@@ -301,6 +304,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
             userString = ellipsifyAddress(store.currentUser.authorKeypair.address);
         }
 
+        let App = this.props.app;
         return (
             <div>
                 <div className='flexRow'>
@@ -317,7 +321,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                     <div style={sChildren}>
                         {store.kit === null
                           ? null // don't render the app when there's no kit (no workspace)
-                          : this.props.appMaker(store.kit)
+                          : <App kit={store.kit} />
                         }
                     </div>
                 </div>

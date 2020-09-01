@@ -67865,7 +67865,7 @@ const earthbar_1 = require("./earthbar");
 //================================================================================
 // LAYOUTS
 let logLobbyApp = (...args) => console.log('lobby view |', ...args);
-class LobbyApp extends React.Component {
+class LobbyApp extends React.PureComponent {
     constructor(props) {
         super(props);
         // note that this only re-renders when the overall Kit object changes.
@@ -67906,14 +67906,21 @@ class LobbyApp extends React.Component {
         }
     }
     componentDidMount() {
-        logLobbyApp('--- componentDidMount.  kit:', this.props.kit);
+        logLobbyApp('--- componentDidMount.  about to subscribe.  kit:', this.props.kit);
         this._resubscribeToKit();
     }
-    componentDidUpdate() {
-        logLobbyApp('--- componentDidUpdate.  kit:', this.props.kit);
+    componentDidUpdate(prevProps, prevState) {
+        // catch changes to the kit prop and resubscribe
+        if (prevProps.kit !== this.props.kit) {
+            logLobbyApp('--- componentDidUpdate.  kit changed.  resubscribing.');
+            this._resubscribeToKit();
+        }
+        else {
+            logLobbyApp('--- componentDidUpdate.  kit has not changed.  no need to resubscribe.');
+        }
     }
     componentWillUnmount() {
-        logLobbyApp('--- componentWillUnmount.  kit:', this.props.kit);
+        logLobbyApp('--- componentWillUnmount.  will unsubscribe in a sec.  kit:', this.props.kit);
         this._unsubFromKit();
     }
     render() {
@@ -68000,7 +68007,7 @@ exports.PageColumn = (props) => React.createElement("div", { className: 'pageCol
 //================================================================================
 // MAIN
 ReactDOM.render(React.createElement(exports.PageColumn, null,
-    React.createElement(earthbar_1.Earthbar, { appMaker: (kit) => React.createElement(LobbyApp, { kit: kit }) })), document.getElementById('react-slot'));
+    React.createElement(earthbar_1.Earthbar, { app: LobbyApp })), document.getElementById('react-slot'));
 
 },{"./earthbar":266,"react":220,"react-dom":217}],266:[function(require,module,exports){
 "use strict";
@@ -68030,8 +68037,8 @@ const React = __importStar(require("react"));
 const earthstar_1 = require("earthstar");
 const kit_1 = require("./kit");
 const util_1 = require("./util");
-let logEarthbar = (...args) => console.log('earthbar view |', ...args);
-let logEarthbarStore = (...args) => console.log('    earthbar store |', ...args);
+let logEarthbar = (...args) => console.log('    earthbar view |', ...args);
+let logEarthbarStore = (...args) => console.log('        earthbar store |', ...args);
 var EbMode;
 (function (EbMode) {
     EbMode["Closed"] = "CLOSED";
@@ -68047,6 +68054,7 @@ class EarthbarStore {
         this.otherWorkspaces = [];
         this.kit = null;
         this.onChange = new earthstar_1.Emitter();
+        logEarthbarStore('constructor');
         this.currentUser = {
             authorKeypair: {
                 address: '@suzy.bzrjm4jnvr5luvbgls5ryqrq7jolqw3v5p2cmpabcsoczyhdrdjga',
@@ -68097,8 +68105,10 @@ class EarthbarStore {
         if (this.currentWorkspace !== null) {
             this.kit = new kit_1.Kit(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], this.currentWorkspace.workspaceAddress), this.currentUser === null ? null : this.currentUser.authorKeypair, this.currentWorkspace.pubs);
         }
+        logEarthbarStore('/constructor');
     }
     _bump() {
+        logEarthbarStore('_bump');
         this.onChange.send(null);
     }
     _save() {
@@ -68202,7 +68212,7 @@ class EarthbarStore {
         // this also works to add a new workspace
         // TODO: don't use this to modify pubs of an existing workspace; it might cause duplicates
         // TODO: change this to only accept a workspaceAddress as input
-        logEarthbarStore('setWorkspaceConfig', workspaceConfig);
+        logEarthbarStore('switchWorkspace', workspaceConfig);
         // nop
         if (fast_equals_1.deepEqual(workspaceConfig, this.currentWorkspace)) {
             return;
@@ -68288,6 +68298,7 @@ class Earthbar extends React.Component {
         if (store.currentUser) {
             userString = util_1.ellipsifyUserAddress(store.currentUser.authorKeypair.address);
         }
+        let App = this.props.app;
         return (React.createElement("div", null,
             React.createElement("div", { className: 'flexRow' },
                 React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: onClickWorkspaceTab }, workspaceString),
@@ -68297,7 +68308,7 @@ class Earthbar extends React.Component {
                 React.createElement("div", { style: { position: 'absolute', zIndex: 99, left: 0, right: 0 } }, panel),
                 React.createElement("div", { style: sChildren }, store.kit === null
                     ? null // don't render the app when there's no kit (no workspace)
-                    : this.props.appMaker(store.kit)))));
+                    : React.createElement(App, { kit: store.kit })))));
     }
 }
 exports.Earthbar = Earthbar;
