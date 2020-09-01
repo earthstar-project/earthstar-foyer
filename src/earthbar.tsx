@@ -96,6 +96,7 @@ export class EarthbarStore {
         this.kit = new Kit(
             new StorageMemory([ValidatorEs4], this.currentWorkspace.workspaceAddress),
             this.currentUser === null ? null : this.currentUser.authorKeypair,
+            this.currentWorkspace.pubs,
         );
     }
     _bump() {
@@ -150,12 +151,14 @@ export class EarthbarStore {
             return;
         }
         if (this.currentWorkspace.pubs.indexOf(pub) !== -1) {
-            // already exists
+            // pub already exists
             return;
         }
         // TODO: update kit.syncer's pubs?
         this.currentWorkspace.pubs.push(pub);
         this.currentWorkspace.pubs.sort();
+        this.kit?.syncer.addPub(pub);
+        logEarthbarStore('syncer pub state:', this.kit?.syncer.state.pubs);
         this._bump();
         this._save();
     }
@@ -167,6 +170,8 @@ export class EarthbarStore {
         }
         // TODO: update kit.syncer's pubs?
         this.currentWorkspace.pubs = this.currentWorkspace.pubs.filter(p => p !== pub);
+        this.kit?.syncer.removePub(pub);
+        logEarthbarStore('syncer pub state:', this.kit?.syncer.state.pubs);
         this._bump();
         this._save();
     }
@@ -224,11 +229,14 @@ export class EarthbarStore {
         this.currentWorkspace = workspaceConfig;
         // rebuild the kit
         if (workspaceConfig === null) {
+            logEarthbarStore(`rebuilding kit: it's null`);
             this.kit = null;
         } else {
+            logEarthbarStore(`rebuilding kit for ${workspaceConfig.workspaceAddress} with ${workspaceConfig.pubs.length} pubs`);
             this.kit = new Kit(
                 new StorageMemory([ValidatorEs4], workspaceConfig.workspaceAddress),
                 this.currentUser === null ? null : this.currentUser.authorKeypair,
+                workspaceConfig.pubs,
             );
         }
         this._bump();
@@ -258,7 +266,10 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         this.state = { store: new EarthbarStore() };
     }
     componentDidMount() {
-        this.unsub = this.state.store.onChange.subscribe((v) => this.forceUpdate());
+        this.unsub = this.state.store.onChange.subscribe((v) => {
+            logEarthbar('forceUpdate from EarthbarStore');
+            this.forceUpdate();
+        });
     }
     componentWillUnmount() {
         if (this.unsub) { this.unsub(); this.unsub = null; }
@@ -300,7 +311,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         let sChildren : React.CSSProperties =
             view === EbMode.Closed
             ? { }
-            : { visibility: 'hidden' };
+            : { /*visibility: 'hidden'*/ };
 
         let workspaceString = 'Add a workspace';
         if (store.currentWorkspace) {

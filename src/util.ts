@@ -1,4 +1,6 @@
 
+type Thunk = () => void;
+
 type SortFn<T> = (a: T, b: T) => number;
 type Ob = {[index: string]: any};
 
