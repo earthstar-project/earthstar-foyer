@@ -19353,12 +19353,25 @@ const crypto_1 = require("../crypto/crypto");
 // TODO: benchmark -- is sha256 too slow?
 // Consider using md5 instead since this is not security-critical.
 // Consider memoizing these functions for speed.
+let readUInt32BE = (buffer) => {
+    // take first 4 bytes of hash and convert to unsigned 32 bit integer (big-endian)
+    // copied here from core node because some browser polyfill can't handle it otherwise
+    // https://github.com/nodejs/node/blob/44161274821a2e81e7a5706c06cf8aa8bd2aa972/lib/internal/buffer.js#L291-L302
+    let offset = 0;
+    const first = buffer[offset];
+    const last = buffer[offset + 3];
+    if (first === undefined || last === undefined) {
+        throw '???';
+    }
+    return first * Math.pow(2, 24) +
+        buffer[++offset] * Math.pow(2, 16) +
+        buffer[++offset] * Math.pow(2, 8) +
+        last;
+};
 exports.detRandom = (s) => {
     // return a random-ish float between 0 and 1, deterministically derived from a hash of the string
     let hashBuffer = crypto_1.LowLevelCrypto.sha256(s);
-    // take first 4 bytes of hash and convert to unsigned 32 bit integer (big-endian)
-    // https://github.com/nodejs/node/blob/44161274821a2e81e7a5706c06cf8aa8bd2aa972/lib/internal/buffer.js#L291-L302
-    let randInt = hashBuffer.slice(4).readUInt32BE();
+    let randInt = readUInt32BE(hashBuffer);
     // divide by max possible value
     return randInt / Math.pow(2, 32);
 };
@@ -19386,6 +19399,7 @@ class Emitter {
         // callback will run at a time, assuming the event is
         // sent with "await send(...)" and not just "send(...)".
         this._callbacks = [];
+        this.changeKey = 'init'; // this becomes a new random value with every update
     }
     subscribe(cb) {
         this._callbacks.push(cb);
@@ -19396,6 +19410,7 @@ class Emitter {
     }
     send(t) {
         return tslib_1.__awaiter(this, void 0, void 0, function* () {
+            this.changeKey = '' + Math.random();
             for (let cb of this._callbacks) {
                 let result = cb(t);
                 if (result instanceof Promise) {
@@ -67866,62 +67881,10 @@ const earthbar_1 = require("./earthbar");
 // LAYOUTS
 let logLobbyApp = (...args) => console.log('lobby view |', ...args);
 class LobbyApp extends React.PureComponent {
+    // note that this only re-renders when the overall Kit object changes.
+    // if we want more updates from inside the kit, we have to subscribe to them.
     constructor(props) {
         super(props);
-        // note that this only re-renders when the overall Kit object changes.
-        // if we want more updates from inside the kit, we have to subscribe to them.
-        this.unsubStorage = null;
-        this.unsubSyncer = null;
-        logLobbyApp('--- constructor.  kit:', props.kit);
-    }
-    _unsubFromKit() {
-        logLobbyApp('--- unsub');
-        if (this.unsubStorage) {
-            this.unsubStorage();
-        }
-        if (this.unsubSyncer) {
-            this.unsubSyncer();
-        }
-    }
-    _resubscribeToKit() {
-        let kit = this.props.kit;
-        if (this.unsubStorage || this.unsubSyncer) {
-            this._unsubFromKit();
-        }
-        if (kit) {
-            logLobbyApp('--- subscribe to kit');
-            this.unsubStorage = kit.storage.onChange.subscribe(() => {
-                logLobbyApp('--- forceUpdate from kit.storage');
-                this.forceUpdate();
-            });
-            this.unsubSyncer = kit.syncer.onChange.subscribe(() => {
-                logLobbyApp('--- forceUpdate from kit.syncer');
-                this.forceUpdate();
-            });
-        }
-        else {
-            logLobbyApp('--- subscribe to kit (but it is null)');
-            this.unsubStorage = null;
-            this.unsubSyncer = null;
-        }
-    }
-    componentDidMount() {
-        logLobbyApp('--- componentDidMount.  about to subscribe.  kit:', this.props.kit);
-        this._resubscribeToKit();
-    }
-    componentDidUpdate(prevProps, prevState) {
-        // catch changes to the kit prop and resubscribe
-        if (prevProps.kit !== this.props.kit) {
-            logLobbyApp('--- componentDidUpdate.  kit changed.  resubscribing.');
-            this._resubscribeToKit();
-        }
-        else {
-            logLobbyApp('--- componentDidUpdate.  kit has not changed.  no need to resubscribe.');
-        }
-    }
-    componentWillUnmount() {
-        logLobbyApp('--- componentWillUnmount.  will unsubscribe in a sec.  kit:', this.props.kit);
-        this._unsubFromKit();
     }
     render() {
         var _a;
@@ -68308,7 +68271,8 @@ class Earthbar extends React.Component {
                 React.createElement("div", { style: { position: 'absolute', zIndex: 99, left: 0, right: 0 } }, panel),
                 React.createElement("div", { style: sChildren }, store.kit === null
                     ? null // don't render the app when there's no kit (no workspace)
-                    : React.createElement(App, { kit: store.kit })))));
+                    // TODO: how should the app specify if it cares about syncer changes or not?
+                    : React.createElement(App, { kit: store.kit, changeKey: store.kit.storage.onChange.changeKey + '_' + store.kit.syncer.onChange.changeKey })))));
     }
 }
 exports.Earthbar = Earthbar;

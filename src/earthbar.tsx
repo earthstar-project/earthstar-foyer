@@ -321,7 +321,8 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                     <div style={sChildren}>
                         {store.kit === null
                           ? null // don't render the app when there's no kit (no workspace)
-                          : <App kit={store.kit} />
+                          // TODO: how should the app specify if it cares about syncer changes or not?
+                          : <App kit={store.kit} changeKey={store.kit.storage.onChange.changeKey + '_' + store.kit.syncer.onChange.changeKey} />
                         }
                     </div>
                 </div>

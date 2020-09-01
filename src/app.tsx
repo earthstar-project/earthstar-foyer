@@ -13,6 +13,7 @@ import { Thunk } from 'earthstar';
 let logLobbyApp = (...args : any[]) => console.log('lobby view |', ...args);
 
 export interface LobbyProps {
+    changeKey: number | string;
     kit: Kit | null;
 }
 export interface LobbyState {
@@ -20,54 +21,8 @@ export interface LobbyState {
 export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
     // note that this only re-renders when the overall Kit object changes.
     // if we want more updates from inside the kit, we have to subscribe to them.
-    unsubStorage : Thunk | null = null;
-    unsubSyncer : Thunk | null = null;
     constructor(props: LobbyProps) {
         super(props);
-        logLobbyApp('--- constructor.  kit:', props.kit);
-    }
-    _unsubFromKit() {
-        logLobbyApp('--- unsub');
-        if (this.unsubStorage) { this.unsubStorage(); }
-        if (this.unsubSyncer) { this.unsubSyncer(); }
-    }
-    _resubscribeToKit() {
-        let kit = this.props.kit;
-        if (this.unsubStorage || this.unsubSyncer) {
-            this._unsubFromKit();
-        }
-        if (kit) {
-            logLobbyApp('--- subscribe to kit');
-            this.unsubStorage = kit.storage.onChange.subscribe(() => {
-                logLobbyApp('--- forceUpdate from kit.storage');
-                this.forceUpdate();
-            });
-            this.unsubSyncer = kit.syncer.onChange.subscribe(() => {
-                logLobbyApp('--- forceUpdate from kit.syncer');
-                this.forceUpdate();
-            });
-        } else {
-            logLobbyApp('--- subscribe to kit (but it is null)');
-            this.unsubStorage = null;
-            this.unsubSyncer = null;
-        }
-    }
-    componentDidMount() {
-        logLobbyApp('--- componentDidMount.  about to subscribe.  kit:', this.props.kit);
-        this._resubscribeToKit();
-    }
-    componentDidUpdate(prevProps: LobbyProps, prevState: LobbyState) {
-        // catch changes to the kit prop and resubscribe
-        if (prevProps.kit !== this.props.kit) {
-            logLobbyApp('--- componentDidUpdate.  kit changed.  resubscribing.');
-            this._resubscribeToKit();
-        } else {
-            logLobbyApp('--- componentDidUpdate.  kit has not changed.  no need to resubscribe.');
-        }
-    }
-    componentWillUnmount() {
-        logLobbyApp('--- componentWillUnmount.  will unsubscribe in a sec.  kit:', this.props.kit);
-        this._unsubFromKit();
     }
     render() {
         logLobbyApp('render');
