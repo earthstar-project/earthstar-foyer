@@ -8,6 +8,8 @@ import {
     StorageMemory,
     ValidatorEs4,
     AuthorKeypair,
+    isErr,
+    notErr,
 } from 'earthstar';
 
 import { Kit } from './kit';
@@ -131,38 +133,16 @@ export class EarthbarStore {
             console.warn(e);
         }
     }
+    //--------------------------------------------------
+    // VISUAL STATE
     setMode(mode: EbMode): void {
         logEarthbarStore('setMode', mode);
         if (mode === this.mode) { return; }
         this.mode = mode;
         this._bump();
     }
-    addWorkspace(workspaceAddress: WorkspaceAddress) {
-        logEarthbarStore('addWorkspace', workspaceAddress);
-        // stash current workspace if there is one
-        if (this.currentWorkspace !== null) {
-            this.otherWorkspaces.push(this.currentWorkspace);
-        }
-        sortByField(this.otherWorkspaces, 'workspaceAddress');
-        // set new workspace as current
-        this.currentWorkspace = {
-            workspaceAddress: workspaceAddress,
-            pubs: [],  // pubs start out empty, I guess
-        }
-        this._bump();
-        this._save();
-    }
-    removeWorkspace(workspaceAddress: WorkspaceAddress) {
-        logEarthbarStore('removeWorkspace', workspaceAddress);
-        if (this.currentWorkspace?.workspaceAddress === workspaceAddress) {
-            this.currentWorkspace = null;
-            this.kit = null;
-        } else {
-            this.otherWorkspaces = this.otherWorkspaces.filter(wc => wc.workspaceAddress !== workspaceAddress);
-        }
-        this._bump();
-        this._save();
-    }
+    //--------------------------------------------------
+    // PUBS OF CURRENT WORKSPACE
     addPub(pub: string): void {
         logEarthbarStore('addPub', pub);
         if (this.currentWorkspace === null) {
@@ -190,7 +170,44 @@ export class EarthbarStore {
         this._bump();
         this._save();
     }
+    //--------------------------------------------------
+    // WORKSPACES
+    hasWorkspace(workspaceAddress: WorkspaceAddress): boolean {
+        if (this.currentWorkspace?.workspaceAddress === workspaceAddress) { return true; }
+        if (this.otherWorkspaces.filter(wc => wc.workspaceAddress === workspaceAddress).length >= 1) { return true; }
+        return false;
+    }
+    addWorkspace(workspaceAddress: WorkspaceAddress) {
+        logEarthbarStore('addWorkspace', workspaceAddress);
+        // don't allow adding the same workspace twice
+        if (this.hasWorkspace(workspaceAddress)) { return; }
+        // stash current workspace if there is one
+        if (this.currentWorkspace !== null) {
+            this.otherWorkspaces.push(this.currentWorkspace);
+        }
+        sortByField(this.otherWorkspaces, 'workspaceAddress');
+        // set new workspace as current
+        this.currentWorkspace = {
+            workspaceAddress: workspaceAddress,
+            pubs: [],  // pubs start out empty, I guess
+        }
+        this._bump();
+        this._save();
+    }
+    removeWorkspace(workspaceAddress: WorkspaceAddress) {
+        logEarthbarStore('removeWorkspace', workspaceAddress);
+        if (this.currentWorkspace?.workspaceAddress === workspaceAddress) {
+            this.currentWorkspace = null;
+            this.kit = null;
+        } else {
+            this.otherWorkspaces = this.otherWorkspaces.filter(wc => wc.workspaceAddress !== workspaceAddress);
+        }
+        this._bump();
+        this._save();
+    }
     switchWorkspace(workspaceConfig: WorkspaceConfig | null): void {
+        // TODO: don't use this to modify pubs of an existing workspace; it might cause duplicates
+        // TODO: change this to only accept a workspaceAddress as input
         logEarthbarStore('setWorkspaceConfig', workspaceConfig);
         // nop
         if (deepEqual(workspaceConfig, this.currentWorkspace)) { return; }
@@ -350,6 +367,7 @@ let sUserPanel : React.CSSProperties = {
 interface EbWorkspacePanelState {
     newPubInput: string;
     newWorkspaceInput: string;
+    newWorkspaceError: null | string;
 }
 export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWorkspacePanelState> {
     constructor(props: EbPanelProps) {
@@ -357,6 +375,7 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
         this.state = {
             newPubInput: '',
             newWorkspaceInput: '',
+            newWorkspaceError: null,
         }
     }
     handleAddPub() {
@@ -366,9 +385,28 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
             this.setState({ newPubInput: '' });
         }
     }
+    handleEditNewWorkspace(val : string) {
+        if (val === '') {
+            this.setState({
+                newWorkspaceInput: '',
+                newWorkspaceError: null,
+            });
+            return;
+        }
+        let parsed = ValidatorEs4.parseWorkspaceAddress(val);
+        let err: string | null = null;
+        if (isErr(parsed)) {
+            err = parsed.message;
+        }
+        this.setState({
+            newWorkspaceInput: val,
+            newWorkspaceError: err,
+        });
+    }
     handleAddWorkspace() {
-        let newWorkspace = this.state.newWorkspaceInput.trim();
-        if (newWorkspace.length > 0) {
+        let newWorkspace = this.state.newWorkspaceInput;
+        let parsed = ValidatorEs4.parseWorkspaceAddress(newWorkspace);
+        if (notErr(parsed)) {
             this.props.store.addWorkspace(newWorkspace);
             this.setState({ newWorkspaceInput: '' });
         }
@@ -452,15 +490,20 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
                     <input className='flexItem flexGrow-1' type="text"
                         placeholder="+foo.rjo34irqjf"
                         value={this.state.newWorkspaceInput}
-                        onChange={(e) => this.setState({ newWorkspaceInput: e.target.value })}
+                        onChange={(e) => this.handleEditNewWorkspace(e.target.value)}
                         />
                     <button className='button flexItem'
                         style={{marginLeft: 'var(--s-1)'}}
                         type='submit'
+                        disabled={this.state.newWorkspaceError !== null}
                         >
                         Add Workspace
                     </button>
                 </form>
+                {this.state.newWorkspaceError === null
+                  ? null
+                  : <div className='right'>{this.state.newWorkspaceError}</div>
+                }
             </div>
         </div>;
     }

@@ -152,3 +152,7 @@ textarea::before {
 .linkButton:hover {
     background: red;
 }
+
+.right {
+    text-align: right;
+}
