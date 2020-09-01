@@ -137,14 +137,29 @@ export class EarthbarStore {
         this.mode = mode;
         this._bump();
     }
-    setPubs(pubs: string[]): void {
-        logEarthbarStore('setPubs', pubs);
-        if (this.currentWorkspace === null) {
-            console.warn("can't set pubs because current workspace is null");
-            return;
+    addWorkspace(workspaceAddress: WorkspaceAddress) {
+        logEarthbarStore('addWorkspace', workspaceAddress);
+        // stash current workspace if there is one
+        if (this.currentWorkspace !== null) {
+            this.otherWorkspaces.push(this.currentWorkspace);
         }
-        if (deepEqual(pubs, this.currentWorkspace.pubs)) { return; }
-        this.currentWorkspace.pubs = pubs;
+        sortByField(this.otherWorkspaces, 'workspaceAddress');
+        // set new workspace as current
+        this.currentWorkspace = {
+            workspaceAddress: workspaceAddress,
+            pubs: [],  // pubs start out empty, I guess
+        }
+        this._bump();
+        this._save();
+    }
+    removeWorkspace(workspaceAddress: WorkspaceAddress) {
+        logEarthbarStore('removeWorkspace', workspaceAddress);
+        if (this.currentWorkspace?.workspaceAddress === workspaceAddress) {
+            this.currentWorkspace = null;
+            this.kit = null;
+        } else {
+            this.otherWorkspaces = this.otherWorkspaces.filter(wc => wc.workspaceAddress !== workspaceAddress);
+        }
         this._bump();
         this._save();
     }
@@ -158,6 +173,7 @@ export class EarthbarStore {
             // already exists
             return;
         }
+        // TODO: update kit.syncer's pubs?
         this.currentWorkspace.pubs.push(pub);
         this.currentWorkspace.pubs.sort();
         this._bump();
@@ -169,6 +185,7 @@ export class EarthbarStore {
             console.warn("can't remove pub because current workspace is null");
             return;
         }
+        // TODO: update kit.syncer's pubs?
         this.currentWorkspace.pubs = this.currentWorkspace.pubs.filter(p => p !== pub);
         this._bump();
         this._save();
@@ -177,16 +194,18 @@ export class EarthbarStore {
         logEarthbarStore('setWorkspaceConfig', workspaceConfig);
         // nop
         if (deepEqual(workspaceConfig, this.currentWorkspace)) { return; }
-        // remove from other workspaces
+        // remove from otherWorkspaces in case it's there
         if (workspaceConfig !== null) {
             this.otherWorkspaces = this.otherWorkspaces.filter(o => o.workspaceAddress !== workspaceConfig.workspaceAddress);
         }
-        // remember current workspace if there is one
+        // stash current workspace if there is one
         if (this.currentWorkspace !== null) {
             this.otherWorkspaces.push(this.currentWorkspace);
         }
         sortByField(this.otherWorkspaces, 'workspaceAddress');
+        // save new workspace as current
         this.currentWorkspace = workspaceConfig;
+        // rebuild the kit
         if (workspaceConfig === null) {
             this.kit = null;
         } else {
@@ -330,17 +349,28 @@ let sUserPanel : React.CSSProperties = {
 
 interface EbWorkspacePanelState {
     newPubInput: string;
+    newWorkspaceInput: string;
 }
 export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWorkspacePanelState> {
     constructor(props: EbPanelProps) {
         super(props)
-        this.state = {newPubInput: ''}
+        this.state = {
+            newPubInput: '',
+            newWorkspaceInput: '',
+        }
     }
     handleAddPub() {
         let newPub = this.state.newPubInput.trim();
         if (newPub.length > 0) {
             this.props.store.addPub(newPub);
             this.setState({ newPubInput: '' });
+        }
+    }
+    handleAddWorkspace() {
+        let newWorkspace = this.state.newWorkspaceInput.trim();
+        if (newWorkspace.length > 0) {
+            this.props.store.addWorkspace(newWorkspace);
+            this.setState({ newWorkspaceInput: '' });
         }
     }
     render() {
@@ -359,16 +389,19 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
             {store.currentWorkspace === null
             ? null
             : <div className='stack'>
-                    <div className='faint'>This workspace:</div>
+                    <div className='faint'>Current workspace:</div>
                     <div className='stack indent'>
                         <pre>{store.currentWorkspace.workspaceAddress}</pre>
-                        <div className='faint'>Pubs:</div>
+                        <div className='faint'>Pub Servers:</div>
                         <div className='stack indent'>
-                            <div><button className='button'>Sync</button></div>
+                            {store.currentWorkspace.pubs.length === 0
+                              ? <div><button className='button' disabled={true}>Sync</button> (Add pub server(s) to enable sync)</div>
+                              : <div><button className='button'>Sync</button></div>
+                            }
                             {store.currentWorkspace.pubs.map(pub =>
                                 <div key={pub} className='flexRow'>
-                                    <div className='flexItem' style={{flexGrow: 1}}>{pub}</div>
-                                    <button className='flexItem linkbutton'
+                                    <div className='flexItem flexGrow-1'>{pub}</div>
+                                    <button className='flexItem linkButton'
                                         onClick={() => store.removePub(pub)}
                                         >
                                         &#x2715;
@@ -376,7 +409,7 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
                                 </div>
                             )}
                             <form className='flexRow' onSubmit={() => this.handleAddPub()}>
-                                <input className='flexItem' type="text"
+                                <input className='flexItem flexGrow-1' type="text"
                                     placeholder="http://..."
                                     value={this.state.newPubInput}
                                     onChange={(e) => this.setState({ newPubInput: e.target.value })}
@@ -385,7 +418,7 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
                                     style={{marginLeft: 'var(--s-1)'}}
                                     type='submit'
                                     >
-                                    Add
+                                    Add Pub Server
                                 </button>
                             </form>
                         </div>
@@ -401,15 +434,33 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
                     let style : React.CSSProperties = isCurrent
                     ? {fontStyle: 'italic', background: 'rgba(255,255,255,0.2)'}
                     : {};
-                    return <a href="#" style={style} className='linkbutton block' key={wsConfig.workspaceAddress}
-                        onClick={(e) => store.switchWorkspace(wsConfig)}
-                        >
-                        {wsConfig.workspaceAddress}
-                    </a>;
+                    return <div key={wsConfig.workspaceAddress} className='flexRow'>
+                        <a href="#" style={{...style, flexGrow: 1}} className='flexItem linkButton'
+                            onClick={(e) => store.switchWorkspace(wsConfig)}
+                            >
+                            {wsConfig.workspaceAddress}
+                        </a>
+                        <button className='flexItem linkButton'
+                            onClick={() => store.removeWorkspace(wsConfig.workspaceAddress)}
+                            >
+                            &#x2715;
+                        </button>
+                    </div>
+
                 })}
-                {store.otherWorkspaces ? <div>&nbsp;</div> : null}
-                <a href="#" className='linkbutton block'>Join workspace</a>
-                <a href="#" className='linkbutton block'>Create new workspace</a>
+                <form className='flexRow' onSubmit={() => this.handleAddWorkspace()}>
+                    <input className='flexItem flexGrow-1' type="text"
+                        placeholder="+foo.rjo34irqjf"
+                        value={this.state.newWorkspaceInput}
+                        onChange={(e) => this.setState({ newWorkspaceInput: e.target.value })}
+                        />
+                    <button className='button flexItem'
+                        style={{marginLeft: 'var(--s-1)'}}
+                        type='submit'
+                        >
+                        Add Workspace
+                    </button>
+                </form>
             </div>
         </div>;
     }

@@ -68095,16 +68095,31 @@ class EarthbarStore {
         this.mode = mode;
         this._bump();
     }
-    setPubs(pubs) {
-        logEarthbarStore('setPubs', pubs);
-        if (this.currentWorkspace === null) {
-            console.warn("can't set pubs because current workspace is null");
-            return;
+    addWorkspace(workspaceAddress) {
+        logEarthbarStore('addWorkspace', workspaceAddress);
+        // stash current workspace if there is one
+        if (this.currentWorkspace !== null) {
+            this.otherWorkspaces.push(this.currentWorkspace);
         }
-        if (fast_equals_1.deepEqual(pubs, this.currentWorkspace.pubs)) {
-            return;
+        util_1.sortByField(this.otherWorkspaces, 'workspaceAddress');
+        // set new workspace as current
+        this.currentWorkspace = {
+            workspaceAddress: workspaceAddress,
+            pubs: [],
+        };
+        this._bump();
+        this._save();
+    }
+    removeWorkspace(workspaceAddress) {
+        var _a;
+        logEarthbarStore('removeWorkspace', workspaceAddress);
+        if (((_a = this.currentWorkspace) === null || _a === void 0 ? void 0 : _a.workspaceAddress) === workspaceAddress) {
+            this.currentWorkspace = null;
+            this.kit = null;
         }
-        this.currentWorkspace.pubs = pubs;
+        else {
+            this.otherWorkspaces = this.otherWorkspaces.filter(wc => wc.workspaceAddress !== workspaceAddress);
+        }
         this._bump();
         this._save();
     }
@@ -68118,6 +68133,7 @@ class EarthbarStore {
             // already exists
             return;
         }
+        // TODO: update kit.syncer's pubs?
         this.currentWorkspace.pubs.push(pub);
         this.currentWorkspace.pubs.sort();
         this._bump();
@@ -68129,6 +68145,7 @@ class EarthbarStore {
             console.warn("can't remove pub because current workspace is null");
             return;
         }
+        // TODO: update kit.syncer's pubs?
         this.currentWorkspace.pubs = this.currentWorkspace.pubs.filter(p => p !== pub);
         this._bump();
         this._save();
@@ -68139,16 +68156,18 @@ class EarthbarStore {
         if (fast_equals_1.deepEqual(workspaceConfig, this.currentWorkspace)) {
             return;
         }
-        // remove from other workspaces
+        // remove from otherWorkspaces in case it's there
         if (workspaceConfig !== null) {
             this.otherWorkspaces = this.otherWorkspaces.filter(o => o.workspaceAddress !== workspaceConfig.workspaceAddress);
         }
-        // remember current workspace if there is one
+        // stash current workspace if there is one
         if (this.currentWorkspace !== null) {
             this.otherWorkspaces.push(this.currentWorkspace);
         }
         util_1.sortByField(this.otherWorkspaces, 'workspaceAddress');
+        // save new workspace as current
         this.currentWorkspace = workspaceConfig;
+        // rebuild the kit
         if (workspaceConfig === null) {
             this.kit = null;
         }
@@ -68256,13 +68275,23 @@ let sUserPanel = {
 class EarthbarWorkspacePanel extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { newPubInput: '' };
+        this.state = {
+            newPubInput: '',
+            newWorkspaceInput: '',
+        };
     }
     handleAddPub() {
         let newPub = this.state.newPubInput.trim();
         if (newPub.length > 0) {
             this.props.store.addPub(newPub);
             this.setState({ newPubInput: '' });
+        }
+    }
+    handleAddWorkspace() {
+        let newWorkspace = this.state.newWorkspaceInput.trim();
+        if (newWorkspace.length > 0) {
+            this.props.store.addWorkspace(newWorkspace);
+            this.setState({ newWorkspaceInput: '' });
         }
     }
     render() {
@@ -68278,19 +68307,23 @@ class EarthbarWorkspacePanel extends React.Component {
             store.currentWorkspace === null
                 ? null
                 : React.createElement("div", { className: 'stack' },
-                    React.createElement("div", { className: 'faint' }, "This workspace:"),
+                    React.createElement("div", { className: 'faint' }, "Current workspace:"),
                     React.createElement("div", { className: 'stack indent' },
                         React.createElement("pre", null, store.currentWorkspace.workspaceAddress),
-                        React.createElement("div", { className: 'faint' }, "Pubs:"),
+                        React.createElement("div", { className: 'faint' }, "Pub Servers:"),
                         React.createElement("div", { className: 'stack indent' },
-                            React.createElement("div", null,
-                                React.createElement("button", { className: 'button' }, "Sync")),
+                            store.currentWorkspace.pubs.length === 0
+                                ? React.createElement("div", null,
+                                    React.createElement("button", { className: 'button', disabled: true }, "Sync"),
+                                    " (Add pub server(s) to enable sync)")
+                                : React.createElement("div", null,
+                                    React.createElement("button", { className: 'button' }, "Sync")),
                             store.currentWorkspace.pubs.map(pub => React.createElement("div", { key: pub, className: 'flexRow' },
-                                React.createElement("div", { className: 'flexItem', style: { flexGrow: 1 } }, pub),
-                                React.createElement("button", { className: 'flexItem linkbutton', onClick: () => store.removePub(pub) }, "\u2715"))),
+                                React.createElement("div", { className: 'flexItem flexGrow-1' }, pub),
+                                React.createElement("button", { className: 'flexItem linkButton', onClick: () => store.removePub(pub) }, "\u2715"))),
                             React.createElement("form", { className: 'flexRow', onSubmit: () => this.handleAddPub() },
-                                React.createElement("input", { className: 'flexItem', type: "text", placeholder: "http://...", value: this.state.newPubInput, onChange: (e) => this.setState({ newPubInput: e.target.value }) }),
-                                React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit' }, "Add"))))),
+                                React.createElement("input", { className: 'flexItem flexGrow-1', type: "text", placeholder: "http://...", value: this.state.newPubInput, onChange: (e) => this.setState({ newPubInput: e.target.value }) }),
+                                React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit' }, "Add Pub Server"))))),
             React.createElement("hr", { className: 'faint' }),
             React.createElement("div", { className: 'faint' }, "Switch workspace:"),
             React.createElement("div", { className: 'stack indent' },
@@ -68300,11 +68333,13 @@ class EarthbarWorkspacePanel extends React.Component {
                     let style = isCurrent
                         ? { fontStyle: 'italic', background: 'rgba(255,255,255,0.2)' }
                         : {};
-                    return React.createElement("a", { href: "#", style: style, className: 'linkbutton block', key: wsConfig.workspaceAddress, onClick: (e) => store.switchWorkspace(wsConfig) }, wsConfig.workspaceAddress);
+                    return React.createElement("div", { key: wsConfig.workspaceAddress, className: 'flexRow' },
+                        React.createElement("a", { href: "#", style: Object.assign(Object.assign({}, style), { flexGrow: 1 }), className: 'flexItem linkButton', onClick: (e) => store.switchWorkspace(wsConfig) }, wsConfig.workspaceAddress),
+                        React.createElement("button", { className: 'flexItem linkButton', onClick: () => store.removeWorkspace(wsConfig.workspaceAddress) }, "\u2715"));
                 }),
-                store.otherWorkspaces ? React.createElement("div", null, "\u00A0") : null,
-                React.createElement("a", { href: "#", className: 'linkbutton block' }, "Join workspace"),
-                React.createElement("a", { href: "#", className: 'linkbutton block' }, "Create new workspace")));
+                React.createElement("form", { className: 'flexRow', onSubmit: () => this.handleAddWorkspace() },
+                    React.createElement("input", { className: 'flexItem flexGrow-1', type: "text", placeholder: "+foo.rjo34irqjf", value: this.state.newWorkspaceInput, onChange: (e) => this.setState({ newWorkspaceInput: e.target.value }) }),
+                    React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit' }, "Add Workspace"))));
     }
 }
 exports.EarthbarWorkspacePanel = EarthbarWorkspacePanel;

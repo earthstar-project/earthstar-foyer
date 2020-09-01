@@ -20,7 +20,7 @@
     --test-border-width: 0px;
 
     /* colors */
-    --cWorkspace: #50f;
+    --cWorkspace: #990ccc;
     --cUser: #088;
     --cWhite: #fff;
     --cBlack: #222;
@@ -59,6 +59,9 @@
 .flexItem {
     border: var(--test-border-width) solid #880;
 }
+.flexGrow-1 {
+    flex-grow: 1;
+}
 
 hr {
     border: none;
@@ -80,13 +83,10 @@ hr {
 input[type=text] {
     border: 2px solid var(--cText);
     background: none;
-
     color: var(--cText);
-
     padding: var(--s-2);
     margin: none;
     font-family: monospace;
-    width: 100%;
     border-radius: var(--slightlyRound);
 }
 
@@ -137,15 +137,18 @@ textarea::before {
     padding-left: var(--s0);
     padding-right: var(--s0);
 }
+.button:disabled {
+    opacity: 0.5;
+}
 
 /* for <a> that look like text and act as buttons */
 .block { display: block; }
-.linkbutton {
+.linkButton {
     font-weight: bold;
     text-decoration: none;
     color: var(--cText);
     background: none;
 }
-.linkbutton:hover {
+.linkButton:hover {
     background: red;
 }
