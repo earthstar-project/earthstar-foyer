@@ -27,6 +27,7 @@ export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
     render() {
         logLobbyApp('render');
         let kit = this.props.kit;
+        logLobbyApp('...docs:', kit?.storage.documents({ includeHistory: false }));
         return <div style={{padding: 'var(--s0)'}}>
             1 Hello this is the app content<br/><br/>
             2 Hello this is the app content<br/><br/>
@@ -44,6 +45,11 @@ export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
             6 Hello this is the app content<br/><br/>
             7 Hello this is the app content<br/><br/>
             8 Hello this is the app content<br/><br/>
+            {kit?.storage.documents({ includeHistory: false }).map(doc =>
+                <div key={doc.path}>
+                    <b>{doc.path}</b>: {doc.content}
+                </div>
+            )}
             <pre>workspace address: {kit?.workspaceAddress || '(no workspace)'}</pre>
             <pre>user address: {kit?.authorKeypair?.address || '(guest user)'}</pre>
             <pre>pubs: {(kit?.syncer.state.pubs.map(p => p.domain) || ['(none)']).join('\n')}</pre>

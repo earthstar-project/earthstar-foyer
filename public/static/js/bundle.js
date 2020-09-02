@@ -67890,6 +67890,7 @@ class LobbyApp extends React.PureComponent {
         var _a;
         logLobbyApp('render');
         let kit = this.props.kit;
+        logLobbyApp('...docs:', kit === null || kit === void 0 ? void 0 : kit.storage.documents({ includeHistory: false }));
         return React.createElement("div", { style: { padding: 'var(--s0)' } },
             "1 Hello this is the app content",
             React.createElement("br", null),
@@ -67938,7 +67939,11 @@ class LobbyApp extends React.PureComponent {
             React.createElement("br", null),
             "8 Hello this is the app content",
             React.createElement("br", null),
-            React.createElement("br", null),
+            React.createElement("br", null), kit === null || kit === void 0 ? void 0 :
+            kit.storage.documents({ includeHistory: false }).map(doc => React.createElement("div", { key: doc.path },
+                React.createElement("b", null, doc.path),
+                ": ",
+                doc.content)),
             React.createElement("pre", null,
                 "workspace address: ",
                 (kit === null || kit === void 0 ? void 0 : kit.workspaceAddress) || '(no workspace)'),
@@ -68030,7 +68035,7 @@ class EarthbarStore {
             displayName: 'Suzy',
         };
         this.currentWorkspace = {
-            workspaceAddress: '+gardening.pals',
+            workspaceAddress: '+lobbydev.a1',
             pubs: [
                 'https://earthstar-demo-pub-v5-a.glitch.me/',
             ],
@@ -68053,9 +68058,9 @@ class EarthbarStore {
         ];
         this.otherWorkspaces = [
             {
-                workspaceAddress: '+sailing.pj23p9faj',
+                workspaceAddress: '+gardening.pals',
                 pubs: [
-                    'https://pub.sailing.org/'
+                    'https://earthstar-demo-pub-v5-a.glitch.me/',
                 ],
             },
             {
@@ -68461,11 +68466,1837 @@ exports.EarthbarUserPanel = (props) => React.createElement("div", { style: sUser
     React.createElement("br", null),
     "Hello this is the user config page");
 
-},{"./kit":267,"./util":268,"earthstar":100,"fast-equals":132,"react":220}],267:[function(require,module,exports){
+},{"./kit":268,"./util":269,"earthstar":100,"fast-equals":132,"react":220}],267:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.exampleLobbyDocuments = void 0;
+exports.exampleLobbyDocuments = [
+    {
+        "content": "greetings from the lobby",
+        "contentHash": "ba653trshgcmlejql6hxlwymjxb3gjs2fbtaoulul34zvkxazx6wq",
+        "deleteAfter": null,
+        "timestamp": 1597055794280000,
+        "signature": "bh3ezlr5lnptwyius5ei73lziar2hllf4apvchtftrxdekywyusywb2ngkexjjqzyrokte5qq6z5ob56xiaqsrkwrindmbx5bi2ahoci",
+        "path": "/lobby/~@gwil.buj7knbfviria6fjjgg65325jw2nerczup2yb4bco2qrbrcgwadoa/1597055792576",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.buj7knbfviria6fjjgg65325jw2nerczup2yb4bco2qrbrcgwadoa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "ah, finally. Writing this from a new client I'm working on. Right now it's a textarea, a button that says 'post' and a list of all a workspace's documents' contents (trying saying that three times fast).\n\nAt the time of writing documents sync with a pub every time the local list of documents changes. I thought this would be the most friendly UX, but now I think this'll be the first thing I'll change. Being able to decide yourself when to push and pull data is a level of control we're rarely treated to, and maybe it feels way better than auto-syncing.",
+        "contentHash": "bx6kiujvyeqd34h3tbbxetnddcxy5fmythmgx4he2wy4qwmcuklrq",
+        "deleteAfter": null,
+        "timestamp": 1597056220354000,
+        "signature": "bnhtc6nsepl4fyq3vmwws5t7f3vbfe3ot3mlknrmkcxxhxixkyeg3rdsyn3x2aodt2wqzjl5ksnt6avywm6vzphmpjc44df2jn6o62bi",
+        "path": "/lobby/~@gwil.bkbh6ri25r5webtmw6qrnp6uriealwfzbhjx5dzkfdzvar5tzml4q/1597056218413",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.bkbh6ri25r5webtmw6qrnp6uriealwfzbhjx5dzkfdzvar5tzml4q"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Now I've made a sync button that only appears when you have created new documents locally.",
+        "contentHash": "bot4l4bkkuxj373w6zput7itulrvrfkzszshir2iqvaex2c2ptktq",
+        "deleteAfter": null,
+        "timestamp": 1597061983190000,
+        "signature": "bs4olnv7bozwoqqajammudda7aobbupbskc646k3kw7ovdfkod7xjg5k3gq54bzvyb2sqoafdnp7lojzpgmlti2t7o2xvw5tyjmu5cda",
+        "path": "/lobby/~@gwil.bgjhut73kfeniu3zhxa7gmzh5mihcn3v6wpolnwj3lahrfuuqzyva/1597061981469",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.bgjhut73kfeniu3zhxa7gmzh5mihcn3v6wpolnwj3lahrfuuqzyva"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "something I've noticed about being able to choose when you sync docs: makes it so that you can preview and edit (or even delete) new posts before they even leave your computer",
+        "contentHash": "b46khhxvseiicqmcju7jhojrhuey2zx2fuehbrv4it24xnv4hcqta",
+        "deleteAfter": null,
+        "timestamp": 1597062493273000,
+        "signature": "buj7civf4pdu6v3bklacvicn2e3k4zloqtni6douukfn2frd2s52y24wnnbfzzkx4ox3tnxlvrcvpzinnfclryvloyfropycgueeh6bq",
+        "path": "/lobby/~@gwil.bj5h4lde3vob7wguogz377odoa3fwruuc7vaqzpunefkse3uprmqa/1597062491759",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.bj5h4lde3vob7wguogz377odoa3fwruuc7vaqzpunefkse3uprmqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "the deleting in particular is nice. it leaves behind a tombstone, but, eh",
+        "contentHash": "bmazlhzd32kj6lrwreolxpgfwm5xcbmcsifw5m3fwphcif72xynjq",
+        "deleteAfter": null,
+        "timestamp": 1597066656883000,
+        "signature": "bmcmbfirqvixdymiz2jys4ck6w2lkdktnijay2ea32nzl5u7swakqpxgisgx3acezkz3h5xiigrav4nxrhdwvxumg3sjirk7flfnxoby",
+        "path": "/lobby/~@gwil.bkvadhzfim36d6qogujp4jykt6dfd2mnmddoi2ocu7aqnzpr77nya/1597066655834",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.bkvadhzfim36d6qogujp4jykt6dfd2mnmddoi2ocu7aqnzpr77nya"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "dealing with deleted documents: at first, I thought I'd filter out all documents with empty content client-side. Then I realised that this is an earthstar convention, so I can push the responsibility out into earthstar-graphql. Result: deleted documents no longer returned by default (you can include them with an argument), no client changes needed to get the behaviour I wanted, and if what counts as 'deleted' changes in future I can change it in one place: earthstar-graphql.",
+        "contentHash": "bi7rmoy6bpcr6jq6b6vor7zimmbxd7u2nr2a6z7inqgogbbze2ixq",
+        "deleteAfter": null,
+        "timestamp": 1597066889566000,
+        "signature": "bqfedwl6yucgy45qdkjep345nseberbv7b2ru3jca2lwu6ypkfywbkt2oxagk7d4uptpdmjpv4cnguwsvudylqr3zkynu2wxnaikecdq",
+        "path": "/lobby/~@gwil.b6e7fmj3ro4tvxezvwuu6mcqvfpblhdz56nvozkfvxcr2iuqy4ieq/1597066887848",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b6e7fmj3ro4tvxezvwuu6mcqvfpblhdz56nvozkfvxcr2iuqy4ieq"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "was wondering why I couldn't edit documents, but it was just earthstar working as intended: my author keypair was changing every time I refreshed the app. Now going to hardcode one so I can see if my editing interface works...",
+        "contentHash": "bsszeq2qhzsithgke3k3i7kd7qgr2w37arnwwkq3rjway5sarov2q",
+        "deleteAfter": null,
+        "timestamp": 1597068217985000,
+        "signature": "bf7eu2zfqrb62r5vm3dr6ngvjybohqrjwgrzrrdybmco4tuyc6fegacdhppkz7lobg6e3pso5kgdvxnahkxab7z67dwd63yefpjihucq",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597068216589",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "This message was edited before it left my computer!",
+        "contentHash": "bz5cptfrmamd64e7asalw3vngp43n7oj2tunlz7d3bv57232pkhla",
+        "deleteAfter": null,
+        "timestamp": 1597068255590000,
+        "signature": "bdktigg55cumbarlaxwowp5w7eazymf35z4rytgyyurbwl4ucvajtfpgxbvcf4ejrju77cf4lboyqy6j4qc6tcqnttpk3uir4t6iceca",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597068225605",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Just added basic UI for who posted something and when",
+        "contentHash": "bupgy6h6zh43k24gphgwqso425opdmnfi33n2p44bqbaz3whifdkq",
+        "deleteAfter": null,
+        "timestamp": 1597072998725000,
+        "signature": "bdg3iyt5kckog3hdb3t37dj4f24u5dxkhla7ogkvyfx3avpshidjkhvgijzqb7j447jf2uyfipatf62ck4o3qr6widlfel2namez76cq",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597072974741",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "and maybe that's displayed in internet time, possibly",
+        "contentHash": "bwyvzlobfkcg6qgc5fv7tjwk3hpcfxs5znjmdfz6okcoth6yefi5q",
+        "deleteAfter": null,
+        "timestamp": 1597073012198000,
+        "signature": "b4w7b3og6lys7q54ivwrw7wcsxxmnh4tsvlyncln4jeta7ohtntmj24lra44oiyzbffc53ciq2oeautuhmfkpuox7np3avvk3hg6ekda",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597073011214",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "it's kind of crazy how much I've gotten done since starting last friday. Is it because there's no server to worry about? The fabled benefits of GraphQL? Someone else having done a lot of work for me beforehand?",
+        "contentHash": "bkov34ubynkjlu3jzxjb45o6plrbipm5pepc6pmil3pmpqdsebbea",
+        "deleteAfter": null,
+        "timestamp": 1597073223008000,
+        "signature": "bpq632yjyoxrwfnkifxk5ri3i6twgasaedtbgnxwibdfc56kxzoawh3chwrdwjvkv3drm6lvivcps3hay2p5yu3fdz3avf75upgfpqcq",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597073221247",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "also, do emoji 'just work'? 😀 (yes they do)",
+        "contentHash": "bfy7w3akmb7e56la26r4jdpsr2nzib34g5emilnsxeh5535hseovq",
+        "deleteAfter": null,
+        "timestamp": 1597073340542000,
+        "signature": "bpnkao4mryifxdwakace4b775njoxyslkcw7ivvtmoyy3voaxzvluyxyr7tg3xzwqpjqzugwa7dqnr3hdbvfrjfqcebtlfvp5krf6ccy",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597073227293",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "now I'm wondering whether to add more features (e.g. not hardcoding the workspace and author into the app) or start styling stuff so this doesn't look like a forsaken wikipedia page.",
+        "contentHash": "bq4oeesgrh25wmav6spdy7t3lnqtdu3pa643q7ks6q5uxeiwa45da",
+        "deleteAfter": null,
+        "timestamp": 1597074667390000,
+        "signature": "b7jin7hqzc5t7skb3ouuiat3wcymzg72rxbwxvdturkpbozbbtwu2c2ypzmhk7fqw3duasrffgroc2wye43dkwoab4btfcsleafbzyaq",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597073864112",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "",
+        "contentHash": "b4oymiquy7qobjgx36tejs35zeqt24qpemsnzgtfeswmrw6csxbkq",
+        "deleteAfter": null,
+        "timestamp": 1597075126163000,
+        "signature": "b4ryybvf6gks6sz3nq72f65ydvawtypuxvp2ffwyzlforcsnywp2fepqpyjmcxk345hdpivckzjfph4ofyfwgnblqkltqjjmh53wo2dy",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597074926051",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "been working on handling author identity in the client today. Which has been hard, because it is really hot here and I slept poorly because of it.",
+        "contentHash": "bvemkdrctgoagvvxi4hdwkjaguhw4xeyzxgt3nx4s4sbucu7ovuha",
+        "deleteAfter": null,
+        "timestamp": 1597140416424000,
+        "signature": "bmlprcg4kkngvdxrlpgbobdl4fpwkgfp2xnwllrt4x647adox3extaw6igw5oeh2uumqtwbp7wssiypyomsdko7z2nhuoavvc6ygasba",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597140411376",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "I want this client to make it as easy to identify yourself as possible, and for you to have to do that as little as possible, while also being secure.",
+        "contentHash": "bunjht3cqi7hkqs3bdm6ooxqnj7svh4rb4yv3pnwzehtpiswmfhgq",
+        "deleteAfter": null,
+        "timestamp": 1597140635237000,
+        "signature": "bhrk3gy5equdwnxvl4dlfvmiwa5w6ugfkbfl4d7y2ftybaezyg55pbjf5be3awwl4rrbkxbmwugxbxguye67uu37gv4fga4ngqo4ycay",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597140633230",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "I was hemming and hawwing about storing it in LocalStorage... but nothing's perfect, and localstorage is secure enough in this context imo. Unless I want people to add their keypair every time they open the app I don't see any alternative.",
+        "contentHash": "bvknhhnyeunrhqym64oiqkfexjdv5yqeig2djnxpgr4vtohwnny3q",
+        "deleteAfter": null,
+        "timestamp": 1597142052573000,
+        "signature": "brk3a4e3qy76nt52m2s6vlxgwmxgg2oj5omzvsm2i4i7hab67cvnijp7owzg664jxefe5uxtddtnimpofh6ydnkbmi562zlvtdtmd2ci",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597142049082",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Right now there's a little thing in the corner of the page which you can drag a keypair.json onto or press to open a file upload dialog. It's kind of a fun way to log in, and it outsources keypair management to the user.",
+        "contentHash": "bonk2erfvjegkdjrabupzprshfkvjqlxv4fzotcen2l3ebaeh7a6q",
+        "deleteAfter": null,
+        "timestamp": 1597142245613000,
+        "signature": "b36p2bmtm2vqwe4jmhk6m7rnlunbooq6muhfxinsbetnh5qbeoarpp6kgiql76or6y5aci3g343kl6dxhp47idaxttjk3cx5am7aa6aq",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597142243526",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "I wonder whether those keypair.json files should get an alternative extension though, the .json extension means my computer renders a preview of the JSON, secret and all, right in the file icon.",
+        "contentHash": "bqtpfaksc5arf3kscjayci6wkrvzxx4436rkmeyrfluhavqpbm5la",
+        "deleteAfter": null,
+        "timestamp": 1597142288678000,
+        "signature": "bhel4pc4mapbj65frfkmuqxqoplh6fohxmkzyyznvdcd77fnkizkzczmhkekzdyijdcbsf2kljb6fuzwf7eracgxp4qbigcr2afpbydy",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597142285764",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "I no longer have a way to represent all the features I want to put in with zero styling, time to dive in.",
+        "contentHash": "b7lzneu3g23yionk5ogcwi3kahundkqihvcm2phnb5hf4raii2bha",
+        "deleteAfter": null,
+        "timestamp": 1597147474339000,
+        "signature": "b24t7utitvqc3fxjjdnpvn4j5oaquktlddbisphvesvuz4vp6uzkthekkhjzh5mh6zwqy6k7mwm4ldbh7uyyhqbyvsdkvgxx44su7ucy",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597147472592",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "I love designing and styling apps, but it always feels like opening a can of worms.",
+        "contentHash": "b74flbgattz4ohbjdstm2vqvc5ozj3wo22iird64s5yc7san6x2oa",
+        "deleteAfter": null,
+        "timestamp": 1597156367487000,
+        "signature": "bpn27sbu7bwarz6mwe756py36olewinz2lb72qpwjoqlizx6ezw2axxbo3yuqartink3e4ql273erj7d3kto2u2sfhuudn2vdv724iby",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597156361414",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "doing a lot of stuff that makes an app nice to use but makes the code a bit intimidating",
+        "contentHash": "bfb7x5vtgkh24o5cs23csvzixzrkq45mxbkdryiscl2geivxjxdaq",
+        "deleteAfter": null,
+        "timestamp": 1597307313934000,
+        "signature": "bory7fqc4qpn7223bclit5fmpfz7ckzrmeuhyv2gyqnolj2es2p5lotlosanjdzu5pyek7nvfrcphe7marrczhiv676o5yalb7zkiadq",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597242778946",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "quietly styling, adding little features... I want to share this with the earthstar channel on matrix.org today.",
+        "contentHash": "bghliweqcahtlvvbron5ljji2vf6whckdr2invu4wm7ci22a4b6ga",
+        "deleteAfter": null,
+        "timestamp": 1597310466401000,
+        "signature": "b3rko3j4mltz6hdljk2ricggm6cszwznuvpvbdkofmtsgkyevkjfsw4wj57jjlb2ure5ipsj6dwcfhxbzpn5msesietuoxcdrq2x5aai",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597310463692",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "I'd also like to comment this codebase if I have the time, as it's been totally made to my taste rather than any kind of approachability",
+        "contentHash": "b4gesuezzuwswqozmyawlaoc2oyxbrv7grzlqx37zjvrktcmri73a",
+        "deleteAfter": null,
+        "timestamp": 1597310540871000,
+        "signature": "bk7bagjoqikknwmrxsq22qagfvcg6yfinj25atuufanwp2jejvhxylq3b2x3mm6rvr5bwmimis43xn4sbkds7rukotcivwox2aw2t6dy",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597310538402",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "But I think most of all I'd like to make a LESSONSLEARNT.md where I write down the things I bumped into while making this.",
+        "contentHash": "beljkii2r57cenj7nbx37x2ju666zhz4ndbtggirlxp6qhmc77qfq",
+        "deleteAfter": null,
+        "timestamp": 1597314033011000,
+        "signature": "bdek3hxhas7gzxroo6vnch4mlg365ihbx7ij4worsjdey6nx4nz4zchcl2cqurrrqklmt4j4jynz2eccu6nhcll3iwfoa7o7rjgdngaa",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597310581272",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Feels great to deploy this thing online, upload my keypair, and start postin'",
+        "contentHash": "bn2qqa4jcuwe2jpxylwwh5blw4fo6lkhytigztlxu24llezk7ntdq",
+        "deleteAfter": null,
+        "timestamp": 1597318242717000,
+        "signature": "bd67rzh3tuja4ufqnyukkcl4rdvrmsbosil6rmgw7k3day6vcemon24iabucdxlbs6347ritqqaddbp5gxutaevflqp4jho7vlylq4cy",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597318241255.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "to the floor (of the lobby)",
+        "contentHash": "bg5ocnkkdxxqziclcqfgsgld33ttyw5e6c277xngfaq5f46srznxa",
+        "deleteAfter": null,
+        "timestamp": 1597321489934000,
+        "signature": "bt7p4x76p2dqivxs5zwyg5uufyrl37neh6gek2hxht4g32zd5cpo4sc4vopmapatlgzbsritkidfh7okktrqnydlqwzglwnmw2kv2wci",
+        "path": "/lobby/~@four.bpgboj5ktzjcecgfzd244oc7tqyuuoftih4xdmd4lwl72szv634ta/1597321486682.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@four.bpgboj5ktzjcecgfzd244oc7tqyuuoftih4xdmd4lwl72szv634ta"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "bepppppppp hi testing testing",
+        "contentHash": "berxbfnncuju5cmocu5cm67toqmfonxkscvjsacnax3thjvjrghta",
+        "deleteAfter": null,
+        "timestamp": 1597321490621000,
+        "signature": "bdn6n5i7nnhz7lzfecmmdmmesqm3r5xu7ydyacec3s3gvehra3bnnajfqjavj6bwepc4zkmygsjatt4ogikljnu7x3wpned6zlkwkoaa",
+        "path": "/lobby/~@bepp.bwhuksk5t5leumad2ry2lptnhj36bihgw5wiexvzncgfpknv75mja/1597321489061.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@bepp.bwhuksk5t5leumad2ry2lptnhj36bihgw5wiexvzncgfpknv75mja"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Most Exciting dWeb Projects - The Noonies 2020: https://noonies.tech/award/most-exciting-dweb-project",
+        "contentHash": "bew3fdgwby7w2x4uvohguhvkggv5vpl5hcmusjgcdu4rdmvumfyra",
+        "deleteAfter": null,
+        "timestamp": 1597322152128000,
+        "signature": "bzj5zeblolwpizen7o7wtxwobemykzs6riyewo6al3qvalcrsdrsxs7tup3djxzhoeoqbobfdtrbfn6xudf2gfaquyvs7dqrqfdupedy",
+        "path": "/lobby/~@four.bpgboj5ktzjcecgfzd244oc7tqyuuoftih4xdmd4lwl72szv634ta/1597322142596.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@four.bpgboj5ktzjcecgfzd244oc7tqyuuoftih4xdmd4lwl72szv634ta"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "I should mention! Earthstar works in the browser, so you can use this from your phone. The UI was built for small screens, really 😅",
+        "contentHash": "bqdm7xasq2dvuzulog5aelxugv6e4tjy4t2fzkinrbyzybqj3zh5a",
+        "deleteAfter": null,
+        "timestamp": 1597322254819000,
+        "signature": "bgxvuwewqazxbo3apbaetwi2r2fhl2twylrs4nhjddtkybjeyw7tl3wxzpl3qcm3bvmmhkufv33d6v7gieyjmqp3s42cc7sxfkfgzgca",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597322253741.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "hi four! hi bepp!",
+        "contentHash": "bcpxmfcfz5udrc3t2pbucouqdemk3lorbrwyjpuze2akpgagzlzcq",
+        "deleteAfter": null,
+        "timestamp": 1597322770299000,
+        "signature": "bsic56hoh35kigbljtdbkxwcaazaunufs4x2y3ofypusi5bj6skzoz653mrjvfljtjlycvtzwgv55islheptdyc7wzswsmhsmvfsq4ci",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597322766604.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "gwil, how hard is it to federate this with other earthstar pubs, do you reckon?",
+        "contentHash": "boxbhyd3pulam6ksraykw244v3kfr34wcgi6hx7gs2joxzpfv7zeq",
+        "deleteAfter": null,
+        "timestamp": 1597328550671000,
+        "signature": "bzlwgspisdt7ev74tvuw3v5i6zncoghsdwnqcfidrgcginarckgkshq6jnphqsmnrppwgfmomiq7xnfirinxuprr3lggmdvumn5afgdy",
+        "path": "/lobby/~@bepp.bwhuksk5t5leumad2ry2lptnhj36bihgw5wiexvzncgfpknv75mja/1597328545432.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@bepp.bwhuksk5t5leumad2ry2lptnhj36bihgw5wiexvzncgfpknv75mja"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "bepp: not hard. It's possible to configure the workspace and pub used right now using these variables: https://github.com/sgwilym/earthstar-lobby/blob/master/src/constants.tsx#L2\n\n",
+        "contentHash": "btrxhguyw7wvccdmhumq7tnvlh55aqlkdkoomyp2ubj6j655llvia",
+        "deleteAfter": null,
+        "timestamp": 1597329813364000,
+        "signature": "baui2lfryxusxm7egbyrjhnpvzcmdyddk7qzhfgma5tt2cj2alpj5uge3xoxcvd2euzt7ptzs4lt2qvahchon4xbww7oqcd4ej726kaa",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597329809024.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "bepp: On a pub level, the documents synced to my pub at https://glitch.com/~earthstar-graphql-pub can be synced to any existing earthstar pub (if they allow this workspace)",
+        "contentHash": "bdxmjwxnguq2fssj7anw5nzyh3nenk5ruksp5u737ap5te7l6ytkq",
+        "deleteAfter": null,
+        "timestamp": 1597329876795000,
+        "signature": "bamdekekbxltmrtq64jssyk5xhrislu3nhog625namsr5gm6wghq54lrvasgvpnhh4olyh5klkozxb7ottca7vgjso7e2n3seubgpkca",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597329876022.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "bepp: and on a 'lobby client' level, my next task for this client is to add UI so you can add your own workspaces and their preferred pubs.",
+        "contentHash": "b767n4kxhx2lltmnacmzxw4us7vjgkzo6zhtv5z342vihy3fjwzta",
+        "deleteAfter": null,
+        "timestamp": 1597329944816000,
+        "signature": "bfnkvjrmwut4wbtrtfaq5x55hvnn5fvygb6bjhz3wgo23r6a7we2uw5tizxnjkko6yryduk3ba2agdikxddfuzjufnwwipontevok2dq",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597329932877.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "rad :) thanks for yr answers! \n\np.s. i like the addition of beat time, never interacted with it in practice prior to this :~)",
+        "contentHash": "badmq5nuljdzj4sxlsgfhba5cxsooi7wrdwukljgrliknjuc6lkka",
+        "deleteAfter": null,
+        "timestamp": 1597333976225000,
+        "signature": "btfxsiriraifl3hcmp5xdrshgmuvvxcfsaoqls3na4mssy5sjwe6xvqjjn3btibichkycalqddng5qenywhml6qpikmfm3xlxvx5mybi",
+        "path": "/lobby/~@bepp.bwhuksk5t5leumad2ry2lptnhj36bihgw5wiexvzncgfpknv75mja/1597333974553.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@bepp.bwhuksk5t5leumad2ry2lptnhj36bihgw5wiexvzncgfpknv75mja"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "🌍🌟",
+        "contentHash": "bwkkhrybq3btc5lw6bc4ykpn26yu3ogtpmd7dgyu2iegl22iptyda",
+        "deleteAfter": null,
+        "timestamp": 1597335922898000,
+        "signature": "bdfbh6xoj6lb4snzivl5tbpet47h6zfo4a7vgjsnn6pn4juwq75dxip3nm7yposqqoqirteqmwtk3hadxo4s5aup2ul3atotdyzcaeda",
+        "path": "/lobby/~@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/1597335921238.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "hello world!",
+        "contentHash": "boue6lpnay5rnfowh7egxlc23ejr7uaomxrkcvnpd34ldxyeonsuq",
+        "deleteAfter": null,
+        "timestamp": 1597337987561000,
+        "signature": "bqpsu73fqvyckzoelfazqdiqvc7d2dxxysyq7v7cr75albeyvbcy7en6szqcxx6us5it4hlulfotac6vul2zvhujkdbd3aayksr7k4ca",
+        "path": "/lobby/~@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/1597335815293.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "🌷🌼🌺🌻",
+        "contentHash": "b5m2q6uzhcbtluqvpktfsdp5cbdgovtsqkead3u2hfamqqrnnctjq",
+        "deleteAfter": null,
+        "timestamp": 1597338073585000,
+        "signature": "b3nnaoqjnufjhrccyodohbkdfvttnijvprixw4gqrynl6tqlwoegpns5f46mlxnge4sie4trh2aztdogu3veewtdkgelrtguz2jzvicy",
+        "path": "/lobby/~@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/1597335926372.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "🍎🍌🍐",
+        "contentHash": "bk7d26uz6z354b6fjs5j2242rq3hrjchkf4cy2ybnmylupvjjg7xa",
+        "deleteAfter": null,
+        "timestamp": 1597338078669000,
+        "signature": "bpdrmfw2dyeqj3zhct4loed6m5f6oklkmcclnrxxwyrvsctueprbuvyzfnrs2cumcizxqvlxofpntbpufoeutmfyvtt6lngq3kujsmdy",
+        "path": "/lobby/~@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/1597337930726.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Hey cinnamon! 🌞",
+        "contentHash": "baplugr23vg3slqwx46ldnakcbvk6h6zfez26esgtk2h7gnuwp4qa",
+        "deleteAfter": null,
+        "timestamp": 1597340937876000,
+        "signature": "bbldmvtxympy4dv42qcr2j6lckmexr7h2js2nezlv7b2mjcgvrdibszzetvjgzvw5nivfvq6lnregjkk6xkromqdmyjdguml2oot5acy",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597340936571.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Hey! 🌒",
+        "contentHash": "by26r4rvgmluoujxrszfjoycg5adqv75ahxbpycfeuuaqk4t6mdcq",
+        "deleteAfter": null,
+        "timestamp": 1597348592248000,
+        "signature": "b5dx2prfwyl574vpgjsnlvlnrhgxeje5nu5l2uqa4fhhyrsp4cnsgb4oevg3bdhivvufs37edrnaigq3dhlsym753ok75nyndtxpceba",
+        "path": "/lobby/~@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/1597348590070.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "I love the thoughtful little touches in this UI!  The colorful underlines are nice\n\nI actually didn't know you could set underline color in CSS :)",
+        "contentHash": "bfzg2b7yoqqmq2pttt5rsqpraw4szcsrdalfzb3kewpykxdb6rzwq",
+        "deleteAfter": null,
+        "timestamp": 1597354950520000,
+        "signature": "bohikvieuedc5gb75kqfhbemhkdz7zubbs4b2wv5bju7oahvfyh4643amcjxwlhuu2uu62zbqodohszaffanu2opjvhrfwynvwhnigcy",
+        "path": "/lobby/~@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/1597354925632.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Hello friends, this is lovely!",
+        "contentHash": "bkgotx5cmff67fx6dl5pnneb47srkjggymphmmoe5lcfsjee7ek7a",
+        "deleteAfter": null,
+        "timestamp": 1597355419955000,
+        "signature": "bsy4knf2fknhwmmi3iqpuuagunrym4ovg4xm3zaheo3xndj66e2b4hpqtngturbopxkfm2xymdap4ffybiour3xnlecc3utcfrk7dcbi",
+        "path": "/lobby/~@zach.b2a2wgfzdhxvxtym77oo7msgxwle43ed6lm7tf7v6mlfucuquxjga/1597355418843.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@zach.b2a2wgfzdhxvxtym77oo7msgxwle43ed6lm7tf7v6mlfucuquxjga"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "hi zach! :)",
+        "contentHash": "baehlah7uy67witr2wgjrgexqas633vaz2upkv52oni2tkchdyaaq",
+        "deleteAfter": null,
+        "timestamp": 1597356394091000,
+        "signature": "b23chdswfvws6eel6snz43ddgcahuijwsm4mdvfeehcjdjpp55ogyliywdy3aphvlwvsgkr3ydgxfjqnq5xy4izqy423n57y3to7ikbq",
+        "path": "/lobby/~@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/1597356392565.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "cheers zach, and welcome! also thanks for the kind words cinnamon, making those little touches is one of the treats you get to give yourself when making something like this",
+        "contentHash": "bqrs5zu2yijhwijfm6m2olzlbyuidnjfzlghloobhxr3t2oy27a7q",
+        "deleteAfter": null,
+        "timestamp": 1597387744665000,
+        "signature": "b6sdz3j235zrkfsnjb7rrvhxwsebcgqsasemm5hbv3usxhcphdfwpjdffbasmkegbjfanvgvzodjrdjscy5tmtuldmkciisnedrvaqda",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597387743095.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "testing the zombie post issue cinnamon uncovered here: https://github.com/sgwilym/earthstar-lobby/issues/1",
+        "contentHash": "boulzzruo74ombz4if2ziwr3jxwgsk6utvlogae6rayxikkqvl7da",
+        "deleteAfter": null,
+        "timestamp": 1597393690849000,
+        "signature": "bgroe72muj6sykdlaifpuwwuicqzuc65qc5ja7qt5ir4ggcfs7xxlh4pfpuxvpad6x3cmmg7iphgidlpflqoevu37ta2xcdqje6nbaci",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597393619394.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "found the bug. Just need to add 'includeDeleted: true' on this line: https://github.com/earthstar-project/earthstar-graphql/blob/master/src/sync-graphql.ts#L157",
+        "contentHash": "btgf2vl5rwtlw7yulq5vyarldjaj26q5ytmtqrircyzxaenqoxnhq",
+        "deleteAfter": null,
+        "timestamp": 1597393989580000,
+        "signature": "b4sfykobwv5hwia2fmi4cqgs22cxwn3r6tcw7dejsnwsk6fbhu24tuvct4sewior2t4qj72dns7iw665s7rowedmvje6yhaenfb75wcq",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597393988218.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "hi friends :) this looks beautiful gwil. it's great to see you having fun with the project :)",
+        "contentHash": "b4otxo7eys4rwyf7mdu2itc2dp2yodpohfvvarjq2pre7rsk54pca",
+        "deleteAfter": null,
+        "timestamp": 1597396184955000,
+        "signature": "bnnk4shtj2pzp7r6x662qmktjv3lujsohccilmfdyqs2tuxjdrixmsh45itijyqjtb7dffkxm33seszhrswbkpmnbxfnuhuzknr6kedy",
+        "path": "/lobby/~@glyp.bpqc36op7lw72tlonhdsb4mx7upy4o6lqozwmm3vdepjhbmtai57a/1597396181089.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@glyp.bpqc36op7lw72tlonhdsb4mx7upy4o6lqozwmm3vdepjhbmtai57a"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "thanks glyph! It makes me happy to see so many of the regulars passing through 😊",
+        "contentHash": "br37a4od4vjxqmzhvyr4op44xpbehowi3q3xswz4mz4eoo25jalhq",
+        "deleteAfter": null,
+        "timestamp": 1597419636696000,
+        "signature": "bztw2keg2fxenwsjtm4xl3rs23j5qnvn4r3cbngg4mj6tpt6oe556lzcx66nfgltb3s2g47xlybz3ye6yzxe265i3e2mhck6y4mtq4ci",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597419635307.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "",
+        "contentHash": "b4oymiquy7qobjgx36tejs35zeqt24qpemsnzgtfeswmrw6csxbkq",
+        "deleteAfter": null,
+        "timestamp": 1597429560825000,
+        "signature": "bh3sksws3scyvcdytw4dl3pvlmr2ol5dsrurpl5ej56w3zxwlxmrgol55zlqj53driwbkvk4ud35zpbvzh3znpz3cvicsjc4plo7nyca",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597429553562.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Zombie posts fixed! Now, a question of what to do next...",
+        "contentHash": "bgays4t6yk3lb3uyv77elbg6rvy5uryvlmr52g6t75hchihaxurba",
+        "deleteAfter": null,
+        "timestamp": 1597430988971000,
+        "signature": "bfbxw7ufoftwnkcxsyi42sjrvuu37lzua2pjvyeou4yku2qcqplc4fhgxnomxfxnoi5pi3lcgpwzfvbaoeir4xccrr6lz3f4eba4xucy",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597430987812.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "I'm deciding between adding some features that put this a bit more on par with what people are used to (e.g. setting and showing display names for users, rather than the four letter shortnames), or adding multi-workspace support.",
+        "contentHash": "bsunx65oruiwz7w6s4oyzz4obhheimbyyhmj6l3okvo3v7mkteb6q",
+        "deleteAfter": null,
+        "timestamp": 1597431058092000,
+        "signature": "b5czqreeptmudjlv7msled55vhflw3tenic3qq3ibpcthkzo3dzn5nkiarvlmvkgdxanwmumdsspx2agqprblichptkaots544xjn4ay",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597431055181.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "One part of me thinks it would be great to polish this while I have everyone trapped in one space... 😈",
+        "contentHash": "bcpcu3fv5tu5d4b553yjiyb5euhrp7vehn2hfb4jnw2qwcgmykjaq",
+        "deleteAfter": null,
+        "timestamp": 1597431091971000,
+        "signature": "b5z64ukpcsbvaha46f3nbcp57ga2gznzuwyvlxwbdzhtdpuwtajv3r5ea3t2lbt5kfj3wqefv6p6du5hkgygckwop72xzhy2l25n6qdi",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597431090586.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "👋",
+        "contentHash": "bducffy6rstghsueqtnlyyyi5llkm2fiqlrvo57byzyqteqh7yrlq",
+        "deleteAfter": null,
+        "timestamp": 1597467189457000,
+        "signature": "bexmmxe5yv6ijtrhmxevjuub7zaaicak3olzmz5u75epl3x3a3jzw2bgwqxczf4qu5z2zgeuvc4b62r7epkgfnjkubthvoxlxgebdody",
+        "path": "/lobby/~@sean.byf6fdnmhutfokuz23squgo7omoem3fgoematlyiuacdz4fjoquxq/1597467187794.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@sean.byf6fdnmhutfokuz23squgo7omoem3fgoematlyiuacdz4fjoquxq"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "I feel bad for people who don't have 4-letter names.",
+        "contentHash": "bjnbxqh7as26wthnez5qeropw2kyzmeikoyzy5gidtlwbpkm23yrq",
+        "deleteAfter": null,
+        "timestamp": 1597467214381000,
+        "signature": "bhq726lj3ptg6jbxowyxsik5urddppos3lf6itfkqmxln7sdj4eaqdbyxb7zywtayrdupxmd5nuwtic6md3sdr4xp27kazqzhgnl6ccy",
+        "path": "/lobby/~@sean.byf6fdnmhutfokuz23squgo7omoem3fgoematlyiuacdz4fjoquxq/1597467211318.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@sean.byf6fdnmhutfokuz23squgo7omoem3fgoematlyiuacdz4fjoquxq"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Nice work gwil! And Cinnamon, of course!",
+        "contentHash": "bxvq7uv57bd57v3t6arxnmpbfrvcxibk7ceiufnsasfvx3jncg7ka",
+        "deleteAfter": null,
+        "timestamp": 1597467407596000,
+        "signature": "b2o7bjtrzealurcsjxdoaddjthsis37tifadbc3btajdwr3t2wpuh3hhjfic3vbbapkdfcfbuaunzw6vntjvtrap4jxwtk6vszg2aoaq",
+        "path": "/lobby/~@sean.byf6fdnmhutfokuz23squgo7omoem3fgoematlyiuacdz4fjoquxq/1597467392853.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@sean.byf6fdnmhutfokuz23squgo7omoem3fgoematlyiuacdz4fjoquxq"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "I'm very impressed by the apparent ease of building on top of earthstar.",
+        "contentHash": "b562m7dnoal5fbzmvpavyivwqnzqloxnn3mwcdcbf4ck6vj2sqdxa",
+        "deleteAfter": null,
+        "timestamp": 1597467480943000,
+        "signature": "bslsmdjizbnr2bloy4buehrndwqhvhjoa7q2f5ik4xrsdtjaf2za6zzl7bnq74nqx462bff527vngkncvz7xitflo66ahv544pcuqoaq",
+        "path": "/lobby/~@sean.byf6fdnmhutfokuz23squgo7omoem3fgoematlyiuacdz4fjoquxq/1597467476884.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@sean.byf6fdnmhutfokuz23squgo7omoem3fgoematlyiuacdz4fjoquxq"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Cheers sean! I think that settles it: display names are next. We must think of the non-four-letter-named, the downtrodden…",
+        "contentHash": "bgd47zsgogz5e3czlw77pcg3fsgpipqntuec765dvt47upvdgkilq",
+        "deleteAfter": null,
+        "timestamp": 1597485036440000,
+        "signature": "b3we4enxxdgfgwzuktwrwzi7p2jfazoicbililybiqxg7stv2khg4wujysc5fs476uic6kerxuyxt4wcrer4obz2rfcl6qecc3tvzoby",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597485033667.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Having a cuppa tea on a little farm just outside the city. Looking at some goats.",
+        "contentHash": "b7rzpuyk5lrr5ogzhdt3zswhw3qgonldhdwptvjnvyacijlc7ux2a",
+        "deleteAfter": null,
+        "timestamp": 1597485109679000,
+        "signature": "bg5keghm434bhz4fx2umwunmfmwglg4vguc7d72v4olhespqcqb7fhynce3e4lmkbult2mlxxhtfjvq44k5gvwsgflfd24yhyhau7gbi",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597485093953.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "yes, please. forget not the truncated ones!",
+        "contentHash": "bpf2r7dolnv2r443ttwvnjsvpvpx6zazt3jlhgwos6ajr5yx4kgyq",
+        "deleteAfter": null,
+        "timestamp": 1597487796751000,
+        "signature": "b2ecwbx24456e44tzkdszlyy36iwxmrd53hc2544gd2b4zekbvc26e6ilxuw7u37vw4zfm4iwyiuongzjzthhsljuavebyzvvev3p6ca",
+        "path": "/lobby/~@glyp.b4ggx3p3cl4s7b5n63rcmsvgu6d7q5gyuhu7gik24sk2a5bmihhya/1597487792072.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@glyp.b4ggx3p3cl4s7b5n63rcmsvgu6d7q5gyuhu7gik24sk2a5bmihhya"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Display names are here!",
+        "contentHash": "bw5y6ns2v5shqfvmxj7olkijyjiog5tvjmp436d76c6i2tzkjgziq",
+        "deleteAfter": null,
+        "timestamp": 1597520590829000,
+        "signature": "b3y4lylr2qqjj5zkhisfubmza5z6ul7f4sus7gr4rkcajradk5ugou7eto47pgaivrk3p4wdbt7zehora3fayzvnjtsiswujni2q7udy",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597520586393.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "",
+        "contentHash": "b4oymiquy7qobjgx36tejs35zeqt24qpemsnzgtfeswmrw6csxbkq",
+        "deleteAfter": null,
+        "timestamp": 1597523869446000,
+        "signature": "bkhi5pxuxa4uxfwct7ylcduia3x6dmjmuwlmrdpupobxp4m675rv4jee6ehuwwrbjk3swaofpry2loipeapjogfqtlgf3n4pxkywzsdi",
+        "path": "/lobby/~@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/1597523851307.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Yay, display names!",
+        "contentHash": "bu3incdrsmikcp4mqoxdzlvrt5a7o7vpd6r7ajfzj56mah2icjrrq",
+        "deleteAfter": null,
+        "timestamp": 1597524529892000,
+        "signature": "b43ylvq5qcfhhelibzajiajkavyawl4bldwvd23ygfzsw63mlg2g6fmd5rf33dkb2tqyjcjstjsgd7ueuejg5p2aisdrvfkyuktryqby",
+        "path": "/lobby/~@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/1597523879375.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "",
+        "contentHash": "b4oymiquy7qobjgx36tejs35zeqt24qpemsnzgtfeswmrw6csxbkq",
+        "deleteAfter": null,
+        "timestamp": 1597524601935000,
+        "signature": "bgtf4ilj3taofreqm5wffhhmirpkq52vshm2jf3zjsmbzdaxc6xat46jecscuyduhmo5sl2x7cmfuzabr3zsyydnbenc6e3u4plwfocq",
+        "path": "/lobby/~@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/1597524578591.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Taking a breather today. After a week-long heatwave, a delicious storm arrived today.",
+        "contentHash": "bfyw4dky22k2ebq56yogshtl6ie6tmtdykilphs7q2jc7mioc4w3q",
+        "deleteAfter": null,
+        "timestamp": 1597600475618000,
+        "signature": "bxero2wsuxj75od5uad3onwrfuuv5susvm3s7iijqjmd44f3bkz7dmrydemvasn7ugvdj7fyv3324j6lpxr5vdupussrsb4e66zdi4ca",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597600474727.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Big storm here too! ⛈⚡️  https://twitter.com/joenewsman/status/1294997209230917633",
+        "contentHash": "bv7bif4fkwkh4ntnihkvb7kl5jkspcadgslbwefzjtkfcvxtidzyq",
+        "deleteAfter": null,
+        "timestamp": 1597607998930000,
+        "signature": "b37bhmbil3qmwyidvexdwu52nmpw65rdowfdpakbywfhfr7jr7y5t6zu7hw247rowwm3y5n6yeeuubkpznwu52fhvovtdbflflnlt4cy",
+        "path": "/lobby/~@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/1597607996006.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "cinnamon",
+        "contentHash": "bmai5pkhth3mozguyv2aqhmsdcadh3v7ldjw7625khrdymewtcoqq",
+        "deleteAfter": null,
+        "timestamp": 1597608015906000,
+        "signature": "bg2u7xvtgzawt46e4ygp5qylkrgyphpmfsg4hg44b44dcrh2lqqyoxp2q6qn4q5gvu2omicj2tjqs27bme5q3h3w52p4tikc3ox4g6dq",
+        "path": "/about/@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/name",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Worked on some UI improvements this morning, the biggest of which is identicons for authors. Should those identicons be derived from the entire author address, or just the hash?",
+        "contentHash": "bpjrtoqphw42pkqujedkhbk6eldsgqebdtbpxel2qd7btynqpevmq",
+        "deleteAfter": null,
+        "timestamp": 1597663801857000,
+        "signature": "bduwnv3pojuk4fztpmx65xoctnp3lknccreuxpbjnred5zpxhxjufcdqrrhn2pruitzn5ybnoyc5cn3rk6itbsqqtr2cirrmc6n7sibi",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597663800374.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "sam",
+        "contentHash": "b5fxafwhep4vhya56kel3h3ixlrjkumh3eibiz6ojn4tbky2xoycq",
+        "deleteAfter": null,
+        "timestamp": 1597665312868000,
+        "signature": "bk73m7k3gmkve7pmsdffpmx7mtrlfb3zty7cns7xutayquxhdqi4bhlreiwyhjyvqmioxgcxbhkxrwl4fkdlutfafod36ld2vefnjkaq",
+        "path": "/about/@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/name",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "",
+        "contentHash": "b4oymiquy7qobjgx36tejs35zeqt24qpemsnzgtfeswmrw6csxbkq",
+        "deleteAfter": null,
+        "timestamp": 1597670153821000,
+        "signature": "bnhfrlxqq6y3gfrxttmtrdrmoou2s4iyt4oqsob4sgw46exrj7lkc6dvq432j3ln4l4nq4jcsn7naqqykuwkakafgoto66thza6olody",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597670061651.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "",
+        "contentHash": "b4oymiquy7qobjgx36tejs35zeqt24qpemsnzgtfeswmrw6csxbkq",
+        "deleteAfter": null,
+        "timestamp": 1597670224699000,
+        "signature": "bel4fybnjmwxlh7grzztu3wo4proyguvat74jebqm3vw36qyjnnolu6v67lue3o6wd7gf72cfio7r5az4ptf5a7sign7m5pi5kbkpway",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597670214999.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "",
+        "contentHash": "b4oymiquy7qobjgx36tejs35zeqt24qpemsnzgtfeswmrw6csxbkq",
+        "deleteAfter": null,
+        "timestamp": 1597678230941000,
+        "signature": "bco4uzdhd7loohrzwpjjpxzzj4ygkjtr7r5uxexxwlg3wfyy3keneyy5mz5x64w7jf5pf3f5cso4uqtugxaqfmuv6sjty4ogdag4aaca",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597670726452.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "my identicon is like a little house, or a waffle that's been nibbled",
+        "contentHash": "bs75ydcguuqnm5wm7idya2z3h36va7skbzocvb4rogte6sqt2aija",
+        "deleteAfter": null,
+        "timestamp": 1597678232199000,
+        "signature": "bcdzh5nosn5gnmbssgzhzn6kbozrg4pcr66niulucpwzish5xfoo5ylqcitoa7yczcc3rzna6q54ar5u7thqd5eaeea556lwrtzqksca",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597678231013.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Identicons should come from the entire author address including the shortname.",
+        "contentHash": "bnaxaiw2uf46uzhu5qbfvhhvu5pesqangnqwjbt5mbjdlpx2miqua",
+        "deleteAfter": null,
+        "timestamp": 1597686340067000,
+        "signature": "bngoibqriaffp4kikmv4radmmrqjpgsi7yenupyksnndvvvgs2ptku5mqsivbjwtxaqlhcpjkl37lpmi6fmeeojmgzrhw7surygtngdi",
+        "path": "/lobby/~@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/1597686328734.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Re identicons, it's even more secure if they're derived from the author's address + your own secret, so they look different to every user.  It makes it harder to generate a fake identity with a matching identicon.  (But it also means you can't compare identicons with other users, since they look different to everyone)",
+        "contentHash": "bbazjwbpslsfpzbnceuvabmetaoi3qvn5iyvvakq4p7eao5xzlj4q",
+        "deleteAfter": null,
+        "timestamp": 1597686631876000,
+        "signature": "b56apkbq6e5syoep3f7vrhinxugvc3pm5sivtencz3pgok5s2h62kr25eoza45yd3jjn3aatxwhnwh6buoce3vgzsnmwa7kmcxusiqba",
+        "path": "/lobby/~@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/1597686630048.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Got it! Right now it’s the whole address. I like the idea of adding in your own secret too, as common knowledge of identicons doesn’t seem like a very important thing (unless you can introduce yourself as ‘the space invader one’ at meet ups).",
+        "contentHash": "bnm4kicni3fhwzckkopshcfsmffydpgloupp6heen523tb6gf6rta",
+        "deleteAfter": null,
+        "timestamp": 1597686841338000,
+        "signature": "b5e5jqgdo3bnol3qqacvdveobfhy5crr27cyrqpdx5y6sx7jkr6alsmudhcvb3khfqmviqti44byt3lgjixpin75yqckua5urnq4yyaq",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597686840547.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Maleficient",
+        "contentHash": "b55c6afhk5fwjmm6mmha23ltpkzgvebciki25u4vpejvrnjalhk2q",
+        "deleteAfter": null,
+        "timestamp": 1597725454946000,
+        "signature": "bajsawos4zz546f3wl56757krdvmrbl7gsjnvp5qcgsf42jyufx7npvi6qthn3y6mpvj3gnjj54hfumnbyxrtxp4h6ichi6nstqanuai",
+        "path": "/about/@mlfc.bfqxlgg4kmnj32k5zlin3bvlaw25a2qvropo7gboqwsrzccfibzha/name",
+        "format": "es.4",
+        "author": {
+            "address": "@mlfc.bfqxlgg4kmnj32k5zlin3bvlaw25a2qvropo7gboqwsrzccfibzha"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "I look like a Minecraft creeper or something 😄",
+        "contentHash": "bb5whhmdcdug3oko3c6yupoxtzkh45lqbv3vn7cs2uivlottzbfuq",
+        "deleteAfter": null,
+        "timestamp": 1597728230205000,
+        "signature": "b6qz6awxhhrtv7zimcjbcooyvf3p6i4vysede7ryn6y6drg5ayocc55f6txkbrcbultbrwbyvie6dy74lm36e36m5mgvqo3ij7rk4mci",
+        "path": "/lobby/~@mlfc.bfqxlgg4kmnj32k5zlin3bvlaw25a2qvropo7gboqwsrzccfibzha/1597728229438.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@mlfc.bfqxlgg4kmnj32k5zlin3bvlaw25a2qvropo7gboqwsrzccfibzha"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "This is an edit test",
+        "contentHash": "bkc2vxb4ivte7cnbcf63wqnqkdvplnhnbk32mnxapa6xoyin6ixqa",
+        "deleteAfter": null,
+        "timestamp": 1597728293847000,
+        "signature": "bmg3e4euqogy4duhzutlqzmwhhi2oplitaxab5mblvjzeybyctowq4w36d55daplaa4n6b727mj65ssqqi47eyd3fdxx3phh4qzjw2dy",
+        "path": "/lobby/~@mlfc.bfqxlgg4kmnj32k5zlin3bvlaw25a2qvropo7gboqwsrzccfibzha/1597728277673.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@mlfc.bfqxlgg4kmnj32k5zlin3bvlaw25a2qvropo7gboqwsrzccfibzha"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "You know what they say. @296, time for tea",
+        "contentHash": "b35zh3xmr7v47zakbonbqdj3iimkjfner2viqjlmubhdypvvowejq",
+        "deleteAfter": null,
+        "timestamp": 1597817265234000,
+        "signature": "bqg7licqm54urwu2ah4lquvdxkedbntte726yv2x6molgcsquphgbkak2pced2dw2wksxkyfx7uezuemazf6xftkzoobja7v4ul73yaq",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597817247229.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "glyph",
+        "contentHash": "b7umjbl5pjnsuiqsjluksnw4zw3tbwaavpwtqeu5kkhrzdf3pelna",
+        "deleteAfter": null,
+        "timestamp": 1597831992907000,
+        "signature": "bvxqwfrz6fbxpspi2hhjd2eksuweuls4nl2dt2gtgd7gjr7ikwxepc75ht7yejx2ktggovn4cfskjdgnxrjec747u53huvh3lato3ady",
+        "path": "/about/@glyp.big6iva6y56s7bbqjxxeungf6baac2gyfeabw2fp2iiwnpxsz2qra/name",
+        "format": "es.4",
+        "author": {
+            "address": "@glyp.big6iva6y56s7bbqjxxeungf6baac2gyfeabw2fp2iiwnpxsz2qra"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "i am a whole glyph now :) nice work gwil!",
+        "contentHash": "b4npid4mytcwh4s52qrxbd2p2ju35oxdzyoakkx3dx35vy3tjdmya",
+        "deleteAfter": null,
+        "timestamp": 1597832017227000,
+        "signature": "byvr4zt2uuaamtnl5w2wotybow3c6vsmal2c2fikoc7gt2w2anj5umafljihl4fx2qyp2eoo44cmjpusaz2x4qekj46pnzxrd3bn36aa",
+        "path": "/lobby/~@glyp.big6iva6y56s7bbqjxxeungf6baac2gyfeabw2fp2iiwnpxsz2qra/1597832009818.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@glyp.big6iva6y56s7bbqjxxeungf6baac2gyfeabw2fp2iiwnpxsz2qra"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Thanks glyph, I'm happy you can be whole again! I'm also kind of shocked that it took less than three days for me to see my first identicon collision 🤯 (you seem to have the same one as cinnamon)",
+        "contentHash": "b67xzfzrxrcjiki63kawyhkbpfzhrpa43v33pdsinxwvgeqemvfua",
+        "deleteAfter": null,
+        "timestamp": 1597842707938000,
+        "signature": "bfsfrywekpb4a7gcyto2v4pj6r4fwlrp3ckpk3q4k52zuhauflkeycbktlign2qyl5l3u3aq65flcygeukz3bjlfgz372aqwx2xeusbi",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597842705440.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "testing! I quite like the look of this. EDIT: ooh I can edit? EDIT2: testing if it works after syncing",
+        "contentHash": "bojl555zzsvsx6o2rxt67efdi5a3hookvwxtubu3xsbiqacoeg7ta",
+        "deleteAfter": null,
+        "timestamp": 1597851236239000,
+        "signature": "bcinh33ocuvl3hkzh5lz3axhmzzr3pl2he3yjnakf4cepviqcqbc64b6bqdfzipay3j4vyrw2h4hlo5fqlkfqx3hjuy2obrak7zspmda",
+        "path": "/lobby/~@lerp.bcdwsio2nrj23uxsejyscftongob4zb5un4526hakzqy5a7vwy7da/1597851180374.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@lerp.bcdwsio2nrj23uxsejyscftongob4zb5un4526hakzqy5a7vwy7da"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "",
+        "contentHash": "b4oymiquy7qobjgx36tejs35zeqt24qpemsnzgtfeswmrw6csxbkq",
+        "deleteAfter": null,
+        "timestamp": 1597877924055000,
+        "signature": "bt5zyboomvefpsb25wsce5a5sxdaqzxufuucn7ffttdr7wm57pa4wgrlcypd4wgzsoeyiieb4cnlzemaajuiiqxyv4lmz2h4ipb7o2ay",
+        "path": "/lobby/~@aaaa.b54runre5fda5auawefwzgbmo4zgivrgg7b2tpgwe3tnswxch7z5a/1597877850353.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@aaaa.b54runre5fda5auawefwzgbmo4zgivrgg7b2tpgwe3tnswxch7z5a"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "",
+        "contentHash": "b4oymiquy7qobjgx36tejs35zeqt24qpemsnzgtfeswmrw6csxbkq",
+        "deleteAfter": null,
+        "timestamp": 1597877928726000,
+        "signature": "bmhb7kbfyc2h5m4c2wzuf7hpfg7gxyozyac4vaxko47clwzazfgeou4dy7zlcrclra6se7s4gzapuz6vwht6tdz43apx3nxaugvepgci",
+        "path": "/lobby/~@aaaa.b54runre5fda5auawefwzgbmo4zgivrgg7b2tpgwe3tnswxch7z5a/1597877856436.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@aaaa.b54runre5fda5auawefwzgbmo4zgivrgg7b2tpgwe3tnswxch7z5a"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "",
+        "contentHash": "b4oymiquy7qobjgx36tejs35zeqt24qpemsnzgtfeswmrw6csxbkq",
+        "deleteAfter": null,
+        "timestamp": 1597877932020000,
+        "signature": "bomlzteg6okyazolpuyovlkirhzvqgpejcl7eymn42whvizoblsh3uasmbdfurv7of3lrxtcrg2wwz42okwr3m7yjxqxx4o6oax2d6bq",
+        "path": "/lobby/~@aaaa.b54runre5fda5auawefwzgbmo4zgivrgg7b2tpgwe3tnswxch7z5a/1597877859159.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@aaaa.b54runre5fda5auawefwzgbmo4zgivrgg7b2tpgwe3tnswxch7z5a"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Testing from a local instance of lobby, I've made a breaking change to earthstar-graphql. EDIT: and updated. Should all be okay now. I wonder how long this easy time of breaking changes is going to last...",
+        "contentHash": "bsp5gqbwzkgwjugxhlmzox7s6xhxrv2tjoxaqdp7du4mes3b5rzfa",
+        "deleteAfter": null,
+        "timestamp": 1597915678345000,
+        "signature": "bpll4jpq2gwuigb7zba3du2bxzyrm2ugcvrwbrzsyj3vxwsx5ybwqgru57ad7wgu3ge2lnji3hwikujwla555yqeqsqfv2rxakcwm4da",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597914906370.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Currently adding a UI for ephemeral posts. For now I'm only supporting choosing a number of hours a post should live for, as I want to avoid writing a date picker for now.",
+        "contentHash": "b6rebyygzt6y75kpoz2ycrgoej7bymkp6hbdbpwi5a2clnyvp7alq",
+        "deleteAfter": null,
+        "timestamp": 1597919019621000,
+        "signature": "b7yki3jirc4xuyc4gocmkjx2hhq3tkq4ljrpyr4m4raet4am7ktxgtcidrotpttr7cjwyw7yzv47ru2me5duy6m4yxdwle26szrxvkbq",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597919018331.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "My real question is: how should the UI indicate that a post is ephemeral? Should it, even? If a post is going to delete itself, do you want to advertise that so that baddies know they should screenshot it?",
+        "contentHash": "baswhzcfdylg27c3gxawyjkfya64evzqiasoaknycfb5q3zqpysmq",
+        "deleteAfter": null,
+        "timestamp": 1597920568501000,
+        "signature": "bygkejx67b5ua4caorhen5sbsoao5ko4srwxc35fdrftgvmiraw6oah7doksjhxpupxi3t3tjcfq3is4yflzawjr5stugxhp72vb6yaa",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597919068649.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "I'm going to add a simple message with the anticipated time of deletion for now.",
+        "contentHash": "bebmhiz34ppputakx4ejifmiod6dy6gjballlgu7zl5rzqoamuima",
+        "deleteAfter": null,
+        "timestamp": 1597921392197000,
+        "signature": "byt723y66nluvc4cyv6qef5hvyq52x4jr6mutnkatqqfu43ufzs27fzem4eleotyjozzgevdwnbccgd7f5b4umbmd2w3gerq5beiciai",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597921094165.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "URLs in messages will now be transformed into clickable links. Want proof? Here's a comic with astrologers being cut in half by swords I made seven years ago! http://gwil.co/tjmd/",
+        "contentHash": "bdcwoqgkf6ho7gvieujiwxugmhlxguhya2fzjdh6zgu5r75nnplfa",
+        "deleteAfter": null,
+        "timestamp": 1597926283674000,
+        "signature": "brsdqxhtcs73ccnufbprrwfb45estth55sn2pck47x7qzxpe6edi5heie4ocil34nkwi7hqyntyacmngzzgjl4wwulb2knj7iqtkakay",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597926231935.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "One last thing for today: come back at night if your OS supports dark mode 🌛",
+        "contentHash": "bxd6ju3yhu4jmgdvnzdujnmbhmlsa4pjbt57lewsqzdqyn7be3t7a",
+        "deleteAfter": null,
+        "timestamp": 1597928548861000,
+        "signature": "b4exbgkoworikz7yebgr4uhzhc6wxmxw45z5itj6c2exntqyugqqizwp4sqgu5ikgzx5uk727cyrhtutympozz6kjorsldbuwybexgda",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1597928547682.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "@gwil I think it depends on what ephemeral messages are for.",
+        "contentHash": "byehtutilmzz2dffztqo6i5gtt4ad4pauktgvu43vpgcmjx4wgk5a",
+        "deleteAfter": null,
+        "timestamp": 1597975202941000,
+        "signature": "bit3w6qpemmy3eov4pwb3rjpeiv4w6cpybnufa6psnub3l6yuhhqfeftruppjfpfpkbt6g5577sugjanvhhqfpwa5fmxkukw6nejugai",
+        "path": "/lobby/~@mlfc.bfqxlgg4kmnj32k5zlin3bvlaw25a2qvropo7gboqwsrzccfibzha/1597975202087.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@mlfc.bfqxlgg4kmnj32k5zlin3bvlaw25a2qvropo7gboqwsrzccfibzha"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "@maleficient You're right. But I'm hesitant to add more storage and UI to configure all these things.",
+        "contentHash": "bw3agzesa4ses3b44prdlrh4q5mbcfpyo4i6sdrvz5iiv6pansnxq",
+        "deleteAfter": null,
+        "timestamp": 1598000418065000,
+        "signature": "bl23evxeoogspmurl7bbnd6xvehnipc5ogsknqsoxmubh3mtewoi2vad3hvi2wjzvdiem6m4grga7r6o335lhixm4iggneiumagelcbi",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1598000416909.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Won’t be working on lobby this weekend, going camping. Will be a mere poster in the river of posts",
+        "contentHash": "bnmpcodsefljrbvm3dsc5yypeekdloogrl657ngmmgfagmb5vbytq",
+        "deleteAfter": null,
+        "timestamp": 1598002295293000,
+        "signature": "b3kyzew2go6vakrv3kbwq5dfxv2h2sz4u5qggr477kjk5kfrffxyltvkincusarh7xcqbuatcjkcpcyvhdok37n3ojpag644bzrc2mda",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1598002294415.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Have fun camping!",
+        "contentHash": "bfsdfc7lg2i545qmdisbzg4vnij5txhkitdm5nthmbhyzfugkh5na",
+        "deleteAfter": null,
+        "timestamp": 1598042062173000,
+        "signature": "b7mvujaixzou4jibfi3yn4nyl4gikjgpuc3okw2q53bmrxo7u7fb7b2dis4bqcxrmc5cqgz3vhlcgbjxcdtdk4f3usato5tu6skfmsdq",
+        "path": "/lobby/~@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/1598042060629.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "We walked to Germany this morning, ate some plums, and then walked back.",
+        "contentHash": "bfjrgof7um5jgtexyba3newe3va4ahanvs7iidby6qgrjlz5qbska",
+        "deleteAfter": null,
+        "timestamp": 1598093834860000,
+        "signature": "bachpx3q4cejwu7iadiii3cdd6cgmqrnoyc7ehj6qrzmkxddys3qxz4bfczwc7isjifh2qh4rgerc2oceqk4s2rgnabbvkubxxmxmubi",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1598093833388.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "",
+        "contentHash": "b4oymiquy7qobjgx36tejs35zeqt24qpemsnzgtfeswmrw6csxbkq",
+        "deleteAfter": null,
+        "timestamp": 1598094224665000,
+        "signature": "bd6gkaa7jckwut3b22y4xnl5lqwocvydbmkq242uf3h5v5czxhsxboak5445fm3ayntpq56vsop5myjtw3ejlaufhz67udei7ppwy6bi",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1598094002825.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Hello earthstar. Humberto from ssb.",
+        "contentHash": "btwbbq2pnhq6jkxisad5xtsmsj2zl6m2tmtt3poztkaz2rxoexuna",
+        "deleteAfter": null,
+        "timestamp": 1598146898940000,
+        "signature": "bhtznqzcxblnvkxbod4d66ww2azmdrjgpodbpj5btorl4wwyhk7pg7kb3kwkv7dmdypjuoo34y5iudswlxhfjdd5eu6pwqcixdrucgcy",
+        "path": "/lobby/~@hgoz.bb67qkhatief2xzt3os2d7bzna7v7ke4hgwazntljrl6cjw6anaoa/1598146890332.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@hgoz.bb67qkhatief2xzt3os2d7bzna7v7ke4hgwazntljrl6cjw6anaoa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "humberto",
+        "contentHash": "blz2vjs6nkppwm3uyictvis5xcv5cse32hvytdyf2akm76nkvqjka",
+        "deleteAfter": null,
+        "timestamp": 1598146995467000,
+        "signature": "b4dgyfk5lxvjoycja42ii6soifrrfqol65el2h6pagl3izq5ubvosnstxsecf4axbajjdwphuycpgeq7eea67hxpw2gxzdbimvts7aaa",
+        "path": "/about/@hgoz.bb67qkhatief2xzt3os2d7bzna7v7ke4hgwazntljrl6cjw6anaoa/name",
+        "format": "es.4",
+        "author": {
+            "address": "@hgoz.bb67qkhatief2xzt3os2d7bzna7v7ke4hgwazntljrl6cjw6anaoa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "welcome to the lobby humberto!",
+        "contentHash": "bvnwx7brhunfss2km2d2oc5kgtpxu3gbo3fodvi6c6b5h75wn4cia",
+        "deleteAfter": null,
+        "timestamp": 1598260248286000,
+        "signature": "bqdia7qjafjantpjg5r6kbbq2srdlix4hihsxa55ciqqtg3hhgtlwe5iisxezxbhbfvp7j7n53n7bgeuucvatwbi4rsaun2xrsajiicy",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1598260245379.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Began the journey to multi-workspace support this morning. A journey starting with breaking apart the root App component from the workspace viewing code to make room for a new dashboard interface where you’ll be able to manage your workspaces. ",
+        "contentHash": "bh3oux2q4uus3sziqk5qftmfgvzoqha4kuacxnz5etsh7h6roiduq",
+        "deleteAfter": null,
+        "timestamp": 1598270501043000,
+        "signature": "bk3hsntyhjm55vfoqyv3xihgdr4nyahvlyr3nyggpd6fn6firox6qxay6ypkckiyieht7vyuvj324pfxu4daqfjtrjpgcmu74r3bhycq",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1598270499524.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Free strawberries!  Help yourself 🍓🍓🍓🍓🍓🍓",
+        "contentHash": "buf3onu2nkezo5y7hk6oygfdefhtxs3hy54iuct2etswm74oxbi6q",
+        "deleteAfter": null,
+        "timestamp": 1598330663406000,
+        "signature": "b4p7mynxjbe7p4sx4yr5rcjbzsqmyjggff2k3q53a4td3kpcotggtwtn6xz26irf6nuuuagvz3fmfekowcao4hq4qy7qvm7dge7ygyai",
+        "path": "/lobby/~@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/1598330660580.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "oh man, it’s strawberry tuesday already?!",
+        "contentHash": "bi53cykcpopbbq6kh7uei24natkcbbha4nmoohkyyapjiw6qgka4a",
+        "deleteAfter": null,
+        "timestamp": 1598349031832000,
+        "signature": "bnvm7rswvxiru2agad7re3u6ttqbojeq52ndnbce5e73swhaw2jbduyg6ct4wom3rugybymhvfgf7fr7xjafzr3g3vbp4ge5m5slv2ay",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1598349017612.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "What a week. Haven’t been able to get anything done! Nothing! Nada!",
+        "contentHash": "b2qht2ektkcwav5og2z7lyt2eihll72khgahhgvay2zvwt4jcycwq",
+        "deleteAfter": null,
+        "timestamp": 1598600560489000,
+        "signature": "boqlsz62pkyuwdg77kfkl4l6isuochph4y7vy6l3mqyhrqe3vcnaie3rkiqh4ywaywakvfjsb6tprxlqcp2cg5r5vufsiyqfizgykabi",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1598600555483.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "That's ok, it's Watermelon Friday 🍉🍉🍉🍉🍉",
+        "contentHash": "b6scisi7a2xuax3asvzarjxmgl2cax62pgw2bc2no3hhy7ko4vvya",
+        "deleteAfter": null,
+        "timestamp": 1598636533141000,
+        "signature": "bvgdhhmt2gyjrmmx56yypqc6qzzstbmvg2q6jjb3fyuvgeaelaetorpkxb5b5d2vmdru2yygdtvzvpfzbjslqe2frmxljhfaw4f5ksba",
+        "path": "/lobby/~@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/1598636526946.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Been thinking about the aesthetics of the early web, and which of them could be modernised to communicate the values of cosyweb.",
+        "contentHash": "blo6dlhiuqvdigme4d6ntmpzzdiarogjsrsf62dto543t6cvxi4lq",
+        "deleteAfter": null,
+        "timestamp": 1598770898291000,
+        "signature": "biu7yy2waldmewlqvbes4rixsutrs7z5tebhqwky36e5n2sswpwavxn5nej5s4bdmto4t5z6i7mzglluuialo6gvew2skes4bqg2wocq",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1598770891640.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "And in my downtime I’ve been playing Hypnospace Outlaw, which has definitely prompted the below thoughts",
+        "contentHash": "b2yw6aqq3bgobe4jdhehehczegokc5mcartpdldlipponk6zuiixa",
+        "deleteAfter": null,
+        "timestamp": 1598785007322000,
+        "signature": "bcdtyemneh7bwbn67x2bwnwtdoueib2yyuw2zmi6nyynnlfzpskndbwaqwgsllisvgnvaydvi65mn4caunomr27h6cbso4e3f62vcmby",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1598785006494.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "test-alfa",
+        "contentHash": "bmbbl5eyjpfvqbekzh7co3trtpm56zl6oryle7ucajfdjmt6aqkjq",
+        "deleteAfter": null,
+        "timestamp": 1598823597681000,
+        "signature": "bw4obbcs44dticq7xyfczzrnkajsj3h5kqf6rk3fq3jxldlhriesq4mhyyodorvgs3x4dhgfl7f2s2qh44ywlqqumgbnqllbvvz6ecca",
+        "path": "/about/@test.bwzmr6smdnnqfmhi7dkarv3hstgrcbuofpeetwqzsqxrqnajnt35a/name",
+        "format": "es.4",
+        "author": {
+            "address": "@test.bwzmr6smdnnqfmhi7dkarv3hstgrcbuofpeetwqzsqxrqnajnt35a"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Spent the weekend working on a video game about beetles.  Today, poking at my clone of Earthstar Lobby",
+        "contentHash": "b5mt4lxmf5ye3ftabmz2iamjdv24jzbbf45tcbjtulh2vhjmwzvkq",
+        "deleteAfter": null,
+        "timestamp": 1598914693612000,
+        "signature": "bh5tdehjizx5nhv62ohvzjin5w4p7nebydzl3v3bcboh6d5tolo5jm66jtwbwn2g6qzqj46it3xeheku3kgn2kixzdfraghcyhlygada",
+        "path": "/lobby/~@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/1598914688713.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "I really love that everyone viewing this page sees the same content.  So often distributed systems have a subjective view and you can't be sure that other people can read what you're saying.  It's nice to not be shouting into the void.",
+        "contentHash": "bt5m5r4cma7ljwbl6kw5fjaltulpb7uoti7x6uza3u6lr3gy7tdja",
+        "deleteAfter": null,
+        "timestamp": 1598914764421000,
+        "signature": "bxymsojaj4tgxu2756vlx3ju2ldsvjrpc6riz5uwrj7e6yjbceofgh65ftwgr7szgo6xwi4iggnmwk5t5l4ft3ukshc2unbnptvzzucq",
+        "path": "/lobby/~@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/1598914759101.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "@cinn Totally! A funny benefit of this workspace having only one associated pub. There was a discussion I vaguely remember a while back regarding whether workspaces could store a list of their preferred pubs in one of their own documents, which seems to make more and more sense to me.",
+        "contentHash": "bd3nq3uait2eytgezel23klbtdqz33vcdh26zzlfjlxqnh43jqwia",
+        "deleteAfter": null,
+        "timestamp": 1598945171964000,
+        "signature": "bhxdbp7xd3y6djzemkla2glsdqizjic5zja7yr6f5eopnfsa7ob3ij3xjbfcejuk6t4a4fwhevy6n4dcmk5qi2gqsspewqrwrqnxikaa",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1598945169988.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Also I hope I can get you to agree to pipe your beetle game news here first, cinnamon 😄",
+        "contentHash": "bmpd2fgqom2pi7dillua5uitqeu453umebq3tc2ffiymnmix4uuxq",
+        "deleteAfter": null,
+        "timestamp": 1598945255403000,
+        "signature": "byvcs44rjweon3ayc4fw7oqc57qgawp4mqgonkkuuo7kpjh3szqnulmsfgspmic3fmrjgj7ss6p6abic4l6xwuvn5owr7ywynlbi4qci",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1598945254991.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "And happy September. Who considers this the beginning of autumn? I’m a 21st of September kind of guy myself. ",
+        "contentHash": "bucqdjijo3lwjhcuqlaf4y5n454ol4hh755jxwuvf5hyacsk2lxrq",
+        "deleteAfter": null,
+        "timestamp": 1598951152495000,
+        "signature": "bxj6gsr4qqigj447gwsaft6m44npe75zrfhfal3w2ajvqm74ahb46gbzur27zo5gxvzdbeery3itrza6b5dsweommed6rq43522eagcy",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1598951151794.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "Added a way to sync many workspaces with many pubs in a single GraphQL operation to earthstar-graphql: https://github.com/earthstar-project/earthstar-graphql/releases/tag/v5.1.0",
+        "contentHash": "bpvd2fyraicsr3rh37az7zast2ciyoandbyjqswbtwgacflrdswla",
+        "deleteAfter": null,
+        "timestamp": 1598972488998000,
+        "signature": "bwrdhhvw6wm2lxvpi4f4v4ko7m7ltna556zar5buy6xyy63mrhswo2lck75qeieyya23ttwvjwdua64m467qi3rbmmrga6ph2q3o3mda",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1598972487545.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "This is for the new dashboard I'm building for the lobby where you may naturally want to sync all your workspaces at once.",
+        "contentHash": "bkdnac6xifu3cs5kzkc7vjislec7ovfw6dwwri2hzi5l6xwxpppma",
+        "deleteAfter": null,
+        "timestamp": 1598972527427000,
+        "signature": "bxzt7i4o5xlt7okbj3grvej3rockerjrisdpd5d3mv7uaeiogzsu46brjbmyg66ttwd3cchrt2n6dmufimqawpqd5h2f3st5eicmg2bi",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1598972526171.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "I’m at that really nice point of implementing this new feature where you’ve laid out all the pieces neatly, and it’s time to click then all together.",
+        "contentHash": "behmrlsshpdbewt7pljgoyuy6fs6qwuqsy6ec2zdae6m3t7eh346a",
+        "deleteAfter": null,
+        "timestamp": 1598973557146000,
+        "signature": "bns2gqkrr52ehwffwjmuqldhsucslqaqwiuow3rtmdt3njxn6vvvkmjajplvqtbfhv42mbiyteb6hjw7avoayei426z2osarhxrj7wby",
+        "path": "/lobby/~@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma/1598973555661.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@gwil.b63a5eqlqqkv5im37s6vebgf3ledhkyt63gzt4ylvcyatlxmrprma"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "@sam To me, autumn officially begins when it suddenly feels like autumn.  Which was yesterday :)",
+        "contentHash": "ba57ncjpqblzqe766vtnsfj2c2bh2hilzwpnr3jeajk3fl7h7astq",
+        "deleteAfter": null,
+        "timestamp": 1598984780516000,
+        "signature": "bh3mlsypnkrnsu3frntko62my2kqmgunhjcg77nv2lteddlfzswtdzifl5b2nb4yhvuu2uiu3y4dvx6aph3ub4iy6rvck2aokevdlici",
+        "path": "/lobby/~@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/1598984778841.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    },
+    {
+        "content": "",
+        "contentHash": "b4oymiquy7qobjgx36tejs35zeqt24qpemsnzgtfeswmrw6csxbkq",
+        "deleteAfter": null,
+        "timestamp": 1598984781031000,
+        "signature": "bs4kfy6fhluauqyrugzv72os6dkrwpgm6lqqhvljz4of2cview2763kmaazwdfic65oktqchrk3mh6cf3752e6wjjyzbc3puffyqc4cy",
+        "path": "/lobby/~@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa/1598984780658.txt",
+        "format": "es.4",
+        "author": {
+            "address": "@cinn.bmxtgzizm62a5emwygayfomzs4z3wwe2y6wvhybkz6dgjm7smxfqa"
+        },
+        "workspace": {
+            "address": "+lobbydev.a1"
+        }
+    }
+].map(graphQLDoc => {
+    // convert from graphQL format back to vanilla earthstar format
+    return Object.assign(Object.assign({}, graphQLDoc), { author: graphQLDoc.author.address, workspace: graphQLDoc.workspace.address });
+});
+
+},{}],268:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Kit = void 0;
 const earthstar_1 = require("earthstar");
+const exampledata_1 = require("./exampledata");
 // All the various pieces of Earthstar stuff for a workspace
 class Kit {
     constructor(storage, authorKeypair, pubs) {
@@ -68478,11 +70309,17 @@ class Kit {
         }
         this.layerAbout = new earthstar_1.LayerAbout(storage);
         this.layerWiki = new earthstar_1.LayerWiki(storage);
+        // ENORMOUS HACK: import lobbydev data when making a kit with that workspace
+        if (this.workspaceAddress === '+lobbydev.a1') {
+            for (let doc of exampledata_1.exampleLobbyDocuments) {
+                this.storage.ingestDocument(doc);
+            }
+        }
     }
 }
 exports.Kit = Kit;
 
-},{"earthstar":100}],268:[function(require,module,exports){
+},{"./exampledata":267,"earthstar":100}],269:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ellipsifyUserAddress = exports.sortByField = exports.sortFnByField = void 0;

@@ -7,6 +7,8 @@ import {
     WorkspaceAddress,
 } from 'earthstar';
 
+import { exampleLobbyDocuments } from './exampledata';
+
 // All the various pieces of Earthstar stuff for a workspace
 export class Kit {
     storage: IStorage;
@@ -25,5 +27,13 @@ export class Kit {
         }
         this.layerAbout = new LayerAbout(storage);
         this.layerWiki = new LayerWiki(storage);
+
+        // ENORMOUS HACK: import lobbydev data when making a kit with that workspace
+        if (this.workspaceAddress === '+lobbydev.a1') {
+            for (let doc of exampleLobbyDocuments) {
+                this.storage.ingestDocument(doc);
+            }
+        }
+
     }
 }

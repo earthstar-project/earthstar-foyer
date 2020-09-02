@@ -59,7 +59,7 @@ export class EarthbarStore {
             displayName: 'Suzy',
         };
         this.currentWorkspace = {
-            workspaceAddress: '+gardening.pals',
+            workspaceAddress: '+lobbydev.a1',
             pubs: [
                 'https://earthstar-demo-pub-v5-a.glitch.me/',
             ],
@@ -82,9 +82,9 @@ export class EarthbarStore {
         ];
         this.otherWorkspaces = [
             {
-                workspaceAddress: '+sailing.pj23p9faj',
+                workspaceAddress: '+gardening.pals',
                 pubs: [
-                    'https://pub.sailing.org/'
+                    'https://earthstar-demo-pub-v5-a.glitch.me/',
                 ],
             },
             {
