@@ -67873,17 +67873,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PageColumn = exports.LobbyApp = void 0;
+exports.LobbyApp = void 0;
 const React = __importStar(require("react"));
 const ReactDOM = __importStar(require("react-dom"));
 const earthbar_1 = require("./earthbar");
 const util_1 = require("./util");
-//================================================================================
-// LAYOUTS
 let logLobbyApp = (...args) => console.log('lobby view |', ...args);
 class LobbyApp extends React.PureComponent {
-    // note that this only re-renders when the overall Kit object changes.
-    // if we want more updates from inside the kit, we have to subscribe to them.
     constructor(props) {
         super(props);
     }
@@ -67892,7 +67888,7 @@ class LobbyApp extends React.PureComponent {
         logLobbyApp('render');
         let kit = this.props.kit;
         let docs = (kit === null || kit === void 0 ? void 0 : kit.storage.documents({ pathPrefix: '/lobby/', includeHistory: false })) || [];
-        docs = docs.filter(doc => doc.content !== '');
+        docs = docs.filter(doc => doc.content !== ''); // remove empty docs (aka "deleted" docs)
         util_1.sortByField(docs, 'timestamp');
         docs.reverse();
         return React.createElement("div", { style: { padding: 'var(--s0)' } },
@@ -67914,24 +67910,9 @@ class LobbyApp extends React.PureComponent {
 }
 exports.LobbyApp = LobbyApp;
 ;
-/*
-export const App: React.FunctionComponent<any> = (props) =>
-    <div style={{padding: 'var(--s0)'}}>
-        1 Hello this is the app content<br/><br/>
-        2 Hello this is the app content<br/><br/>
-        3 Hello this is the app content<br/><br/>
-        4 Hello this is the app content<br/><br/>
-        5 Hello this is the app content<br/><br/>
-        6 Hello this is the app content<br/><br/>
-        7 Hello this is the app content<br/><br/>
-        8 Hello this is the app content<br/><br/>
-        9 Hello this is the app content
-    </div>
-*/
-exports.PageColumn = (props) => React.createElement("div", { className: 'pageColumn' }, props.children);
 //================================================================================
 // MAIN
-ReactDOM.render(React.createElement(exports.PageColumn, null,
+ReactDOM.render(React.createElement("div", { className: 'pageColumn' },
     React.createElement(earthbar_1.Earthbar, { app: LobbyApp })), document.getElementById('react-slot'));
 
 },{"./earthbar":266,"./util":269,"react":220,"react-dom":217}],266:[function(require,module,exports){

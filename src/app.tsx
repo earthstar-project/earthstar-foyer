@@ -1,27 +1,29 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
-import {
-    Earthbar,
-} from './earthbar';
+import { Earthbar } from './earthbar';
 import { Kit } from './kit';
-import { Thunk } from 'earthstar';
 import { sortByField } from './util';
-
-//================================================================================
-// LAYOUTS
 
 let logLobbyApp = (...args : any[]) => console.log('lobby view |', ...args);
 
+//================================================================================
+
+// The "Earthbar" is the workspace and user switcher panel across the top.
+// It's responsible for setting up Earthstar classes and rendering the "app".
+
+// This is the "app":
 export interface LobbyProps {
-    changeKey: number | string;
+    // This prop changes whenever something in the earthstar kit has changed,
+    // helping trigger a re-render.
+    changeKey: string;
+    // A "Kit" is a collection of Earthstar-related classes (storage, syncer, etc).
+    // See kit.ts
     kit: Kit | null;
 }
 export interface LobbyState {
 }
 export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
-    // note that this only re-renders when the overall Kit object changes.
-    // if we want more updates from inside the kit, we have to subscribe to them.
     constructor(props: LobbyProps) {
         super(props);
     }
@@ -29,16 +31,18 @@ export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
         logLobbyApp('render');
         let kit = this.props.kit;
         let docs = kit?.storage.documents({ pathPrefix: '/lobby/', includeHistory: false }) || [];
-        docs = docs.filter(doc => doc.content !== '');
+        docs = docs.filter(doc => doc.content !== '');  // remove empty docs (aka "deleted" docs)
         sortByField(docs, 'timestamp');
         docs.reverse();
         return <div style={{padding: 'var(--s0)'}}>
             <h1 style={{fontStyle: 'italic', fontFamily: 'georgia, serif'}}>Welcome To The Foyer</h1>
+            {/* debug details */}
             <pre className='faint' style={{marginBottom: 50, overflow: 'hidden'}}>{
                 `workspace address: ${kit?.workspaceAddress || '(no workspace)'}\n`+
                 `user address: ${kit?.authorKeypair?.address || '(guest user)'}\n`+
                 `pubs: ${(kit?.syncer.state.pubs.map(p => p.domain) || ['(none)']).join('\n')}`
             }</pre>
+            {/* lobby messages */}
             <div className='stack'>
                 {docs.map(doc =>
                     <div key={doc.path} className='stack'
@@ -58,30 +62,12 @@ export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
     }
 };
 
-/*
-export const App: React.FunctionComponent<any> = (props) =>
-    <div style={{padding: 'var(--s0)'}}>
-        1 Hello this is the app content<br/><br/>
-        2 Hello this is the app content<br/><br/>
-        3 Hello this is the app content<br/><br/>
-        4 Hello this is the app content<br/><br/>
-        5 Hello this is the app content<br/><br/>
-        6 Hello this is the app content<br/><br/>
-        7 Hello this is the app content<br/><br/>
-        8 Hello this is the app content<br/><br/>
-        9 Hello this is the app content
-    </div>
-*/
-
-export const PageColumn: React.FunctionComponent<any> = (props) =>
-    <div className='pageColumn'>{props.children}</div>;
-
 //================================================================================
 // MAIN
 
 ReactDOM.render(
-    <PageColumn>
+    <div className='pageColumn'>
         <Earthbar app={LobbyApp}/>
-    </PageColumn>,
+    </div>,
     document.getElementById('react-slot')
 );
