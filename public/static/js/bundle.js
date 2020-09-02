@@ -67877,6 +67877,7 @@ exports.PageColumn = exports.LobbyApp = void 0;
 const React = __importStar(require("react"));
 const ReactDOM = __importStar(require("react-dom"));
 const earthbar_1 = require("./earthbar");
+const util_1 = require("./util");
 //================================================================================
 // LAYOUTS
 let logLobbyApp = (...args) => console.log('lobby view |', ...args);
@@ -67890,69 +67891,25 @@ class LobbyApp extends React.PureComponent {
         var _a;
         logLobbyApp('render');
         let kit = this.props.kit;
-        logLobbyApp('...docs:', kit === null || kit === void 0 ? void 0 : kit.storage.documents({ includeHistory: false }));
+        let docs = (kit === null || kit === void 0 ? void 0 : kit.storage.documents({ pathPrefix: '/lobby/', includeHistory: false })) || [];
+        docs = docs.filter(doc => doc.content !== '');
+        util_1.sortByField(docs, 'timestamp');
+        docs.reverse();
         return React.createElement("div", { style: { padding: 'var(--s0)' } },
-            "1 Hello this is the app content",
-            React.createElement("br", null),
-            React.createElement("br", null),
-            "2 Hello this is the app content",
-            React.createElement("br", null),
-            React.createElement("br", null),
-            "3 Hello this is the app content",
-            React.createElement("br", null),
-            React.createElement("br", null),
-            "4 Hello this is the app content",
-            React.createElement("br", null),
-            React.createElement("br", null),
-            "5 Hello this is the app content",
-            React.createElement("br", null),
-            React.createElement("br", null),
-            "6 Hello this is the app content",
-            React.createElement("br", null),
-            React.createElement("br", null),
-            "7 Hello this is the app content",
-            React.createElement("br", null),
-            React.createElement("br", null),
-            "8 Hello this is the app content",
-            React.createElement("br", null),
-            React.createElement("br", null),
-            "1 Hello this is the app content",
-            React.createElement("br", null),
-            React.createElement("br", null),
-            "2 Hello this is the app content",
-            React.createElement("br", null),
-            React.createElement("br", null),
-            "3 Hello this is the app content",
-            React.createElement("br", null),
-            React.createElement("br", null),
-            "4 Hello this is the app content",
-            React.createElement("br", null),
-            React.createElement("br", null),
-            "5 Hello this is the app content",
-            React.createElement("br", null),
-            React.createElement("br", null),
-            "6 Hello this is the app content",
-            React.createElement("br", null),
-            React.createElement("br", null),
-            "7 Hello this is the app content",
-            React.createElement("br", null),
-            React.createElement("br", null),
-            "8 Hello this is the app content",
-            React.createElement("br", null),
-            React.createElement("br", null), kit === null || kit === void 0 ? void 0 :
-            kit.storage.documents({ includeHistory: false }).map(doc => React.createElement("div", { key: doc.path },
-                React.createElement("b", null, doc.path),
-                ": ",
-                doc.content)),
-            React.createElement("pre", null,
-                "workspace address: ",
-                (kit === null || kit === void 0 ? void 0 : kit.workspaceAddress) || '(no workspace)'),
-            React.createElement("pre", null,
-                "user address: ",
-                ((_a = kit === null || kit === void 0 ? void 0 : kit.authorKeypair) === null || _a === void 0 ? void 0 : _a.address) || '(guest user)'),
-            React.createElement("pre", null,
-                "pubs: ",
-                ((kit === null || kit === void 0 ? void 0 : kit.syncer.state.pubs.map(p => p.domain)) || ['(none)']).join('\n')));
+            React.createElement("h1", { style: { fontStyle: 'italic', fontFamily: 'georgia, serif' } }, "Welcome To The Foyer"),
+            React.createElement("pre", { className: 'faint', style: { marginBottom: 50, overflow: 'hidden' } }, `workspace address: ${(kit === null || kit === void 0 ? void 0 : kit.workspaceAddress) || '(no workspace)'}\n` +
+                `user address: ${((_a = kit === null || kit === void 0 ? void 0 : kit.authorKeypair) === null || _a === void 0 ? void 0 : _a.address) || '(guest user)'}\n` +
+                `pubs: ${((kit === null || kit === void 0 ? void 0 : kit.syncer.state.pubs.map(p => p.domain)) || ['(none)']).join('\n')}`),
+            React.createElement("div", { className: 'stack' }, docs.map(doc => React.createElement("div", { key: doc.path, className: 'stack', style: {
+                    borderRadius: 'var(--slightlyRound',
+                    background: '#dedede',
+                    padding: 'var(--s0)',
+                } },
+                React.createElement("div", { className: 'faint' }, doc.path),
+                React.createElement("div", null,
+                    React.createElement("b", null, doc.author)),
+                React.createElement("div", { className: 'right' }, new Date(doc.timestamp / 1000).toDateString()),
+                React.createElement("div", null, doc.content)))));
     }
 }
 exports.LobbyApp = LobbyApp;
@@ -67977,7 +67934,7 @@ exports.PageColumn = (props) => React.createElement("div", { className: 'pageCol
 ReactDOM.render(React.createElement(exports.PageColumn, null,
     React.createElement(earthbar_1.Earthbar, { app: LobbyApp })), document.getElementById('react-slot'));
 
-},{"./earthbar":266,"react":220,"react-dom":217}],266:[function(require,module,exports){
+},{"./earthbar":266,"./util":269,"react":220,"react-dom":217}],266:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
