@@ -45,7 +45,7 @@ export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
             7 Hello this is the app content<br/><br/>
             8 Hello this is the app content<br/><br/>
             <pre>workspace address: {kit?.workspaceAddress || '(no workspace)'}</pre>
-            <pre>user address: {kit?.authorKeypair?.address || '(guest)'}</pre>
+            <pre>user address: {kit?.authorKeypair?.address || '(guest user)'}</pre>
             <pre>pubs: {(kit?.syncer.state.pubs.map(p => p.domain) || ['(none)']).join('\n')}</pre>
         </div>;
     }

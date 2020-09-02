@@ -35,13 +35,20 @@ export enum EbMode {
 }
 
 export class EarthbarStore {
+    // UI state
     mode: EbMode = EbMode.Closed;  // which tab are we looking at
+
+    // state to preserve in localHost
     currentUser: UserConfig | null = null;
     currentWorkspace: WorkspaceConfig | null = null;
     otherUsers: UserConfig[] = [];
     otherWorkspaces: WorkspaceConfig[] = [];
+
+    // non-JSON stuff
     kit: Kit | null = null;
+    unsubSyncer: Thunk | null = null;
     onChange: Emitter<null> = new Emitter<null>();
+
     constructor() {
         logEarthbarStore('constructor');
         this.currentUser = {
@@ -52,10 +59,9 @@ export class EarthbarStore {
             displayName: 'Suzy',
         };
         this.currentWorkspace = {
-            workspaceAddress: '+gardening.w092jf0q9fj09',
+            workspaceAddress: '+gardening.pals',
             pubs: [
-                'https://my-gardening-pub.glitch.com',
-                'https://mypub.org',
+                'https://earthstar-demo-pub-v5-a.glitch.me/',
             ],
         };
         this.otherUsers = [
@@ -76,35 +82,50 @@ export class EarthbarStore {
         ];
         this.otherWorkspaces = [
             {
-                workspaceAddress: '+sailing.pals',
+                workspaceAddress: '+sailing.pj23p9faj',
                 pubs: [
-                    'https://pub.sailing.org'
+                    'https://pub.sailing.org/'
                 ],
             },
             {
                 workspaceAddress: '+solarpunk.j0p9ja83j38',
                 pubs: [
-                    'https://my-solarpunk-pub.glitch.com',
-                    'https://mypub.org',
+                    'https://my-solarpunk-pub.glitch.com/',
+                    'https://mypub.org/',
                 ],
             },
         ];
-        this._load();
-        this._save();
+        this._loadFromLocalStorage();
+        this._saveToLocalStorage();
+        // create initial kit
         if (this.currentWorkspace !== null) {
             this.kit = new Kit(
                 new StorageMemory([ValidatorEs4], this.currentWorkspace.workspaceAddress),
                 this.currentUser === null ? null : this.currentUser.authorKeypair,
                 this.currentWorkspace.pubs,
             );
+            this._subscribeToKit();
         }
         logEarthbarStore('/constructor');
     }
+    _subscribeToKit() {
+        // call this after making a new kit instance
+        if (this.kit) {
+            // get change events from the kit.syncer and pass them along into our own change feed
+            this.unsubSyncer = this.kit.syncer.onChange.subscribe(() => this.onChange.send(null));
+        }
+    }
+    _unsubFromKit() {
+        // call this whenever changing the kit or setting it to null
+        if (this.unsubSyncer) { this.unsubSyncer(); }
+        this.unsubSyncer = null;
+    }
     _bump() {
+        // notify our subscribers of a change to the EarthbarStore's state
         logEarthbarStore('_bump');
         this.onChange.send(null);
     }
-    _save() {
+    _saveToLocalStorage() {
         logEarthbarStore('_save to localStorage');
         localStorage.setItem('earthbar', JSON.stringify({
             //mode: this.mode,
@@ -114,7 +135,7 @@ export class EarthbarStore {
             otherWorkspaces: this.otherWorkspaces,
         }));
     }
-    _load() {
+    _loadFromLocalStorage() {
         try {
             let s = localStorage.getItem('earthbar');
             if (s === null) {
@@ -143,6 +164,7 @@ export class EarthbarStore {
     //--------------------------------------------------
     // PUBS OF CURRENT WORKSPACE
     addPub(pub: string): void {
+        if (!pub.endsWith('/')) { pub += '/'; }
         logEarthbarStore('addPub', pub);
         if (this.currentWorkspace === null) {
             console.warn("can't add pub because current workspace is null");
@@ -152,24 +174,23 @@ export class EarthbarStore {
             // pub already exists
             return;
         }
-        // TODO: update kit.syncer's pubs?
         this.currentWorkspace.pubs.push(pub);
-        this.currentWorkspace.pubs.sort();
+        //this.currentWorkspace.pubs.sort();
         this.kit?.syncer.addPub(pub);
         this._bump();
-        this._save();
+        this._saveToLocalStorage();
     }
     removePub(pub: string): void {
+        if (!pub.endsWith('/')) { pub += '/'; }
         logEarthbarStore('removePub', pub);
         if (this.currentWorkspace === null) {
             console.warn("can't remove pub because current workspace is null");
             return;
         }
-        // TODO: update kit.syncer's pubs?
         this.currentWorkspace.pubs = this.currentWorkspace.pubs.filter(p => p !== pub);
         this.kit?.syncer.removePub(pub);
         this._bump();
-        this._save();
+        this._saveToLocalStorage();
     }
     //--------------------------------------------------
     // WORKSPACES
@@ -182,12 +203,13 @@ export class EarthbarStore {
         logEarthbarStore('removeWorkspace', workspaceAddress);
         if (this.currentWorkspace?.workspaceAddress === workspaceAddress) {
             this.currentWorkspace = null;
+            this._unsubFromKit();
             this.kit = null;
         } else {
             this.otherWorkspaces = this.otherWorkspaces.filter(wc => wc.workspaceAddress !== workspaceAddress);
         }
         this._bump();
-        this._save();
+        this._saveToLocalStorage();
     }
     switchWorkspace(workspaceConfig: WorkspaceConfig | null): void {
         // this also works to add a new workspace
@@ -210,17 +232,20 @@ export class EarthbarStore {
         // rebuild the kit
         if (workspaceConfig === null) {
             logEarthbarStore(`rebuilding kit: it's null`);
+            this._unsubFromKit();
             this.kit = null;
         } else {
             logEarthbarStore(`rebuilding kit for ${workspaceConfig.workspaceAddress} with ${workspaceConfig.pubs.length} pubs`);
+            this._unsubFromKit();
             this.kit = new Kit(
                 new StorageMemory([ValidatorEs4], workspaceConfig.workspaceAddress),
                 this.currentUser === null ? null : this.currentUser.authorKeypair,
                 workspaceConfig.pubs,
             );
+            this._subscribeToKit();
         }
         this._bump();
-        this._save();
+        this._saveToLocalStorage();
     }
 }
 
@@ -263,11 +288,11 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         // tab styles
         let sWorkspaceTab : React.CSSProperties =
             view === EbMode.Workspace
-            ? { color: 'var(--cWhite)', background: 'var(--cWorkspace)' }
+            ? { color: 'var(--cWhite)', background: 'var(--cWorkspace)', opacity: 0.66 }
             : { color: 'var(--cWorkspace)', background: 'none' };
         let sUserTab : React.CSSProperties =
             view === EbMode.User
-            ? { color: 'var(--cWhite)', background: 'var(--cUser)' }
+            ? { color: 'var(--cWhite)', background: 'var(--cUser)', opacity: 0.66 }
             : { color: 'var(--cUser)', background: 'none' };
 
         // tab click actions
@@ -292,14 +317,14 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         let sChildren : React.CSSProperties =
             view === EbMode.Closed
             ? { }
-            : { /*visibility: 'hidden'*/ };
+            : { opacity: 0.5, /*visibility: 'hidden'*/ };
 
         let workspaceString = 'Add a workspace';
         if (store.currentWorkspace) {
             workspaceString = ellipsifyAddress(store.currentWorkspace.workspaceAddress);
         }
 
-        let userString = 'Guest';
+        let userString = 'Guest User';
         if (store.currentUser) {
             userString = ellipsifyAddress(store.currentUser.authorKeypair.address);
         }
@@ -321,7 +346,8 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                     <div style={sChildren}>
                         {store.kit === null
                           ? null // don't render the app when there's no kit (no workspace)
-                          // TODO: how should the app specify if it cares about syncer changes or not?
+                          // TODO: how should the app specify which changes it wants?  (storage, syncer)
+                          // TODO: how to throttle changes here?
                           : <App kit={store.kit} changeKey={store.kit.storage.onChange.changeKey + '_' + store.kit.syncer.onChange.changeKey} />
                         }
                     </div>
@@ -343,10 +369,12 @@ let sWorkspacePanel : React.CSSProperties = {
     background: 'var(--cBackground)',
     color: 'var(--cText)',
     borderTopLeftRadius: 0,
-    borderTopRightRadius: 'var(--slightlyRound)',
-    borderBottomLeftRadius: 'var(--slightlyRound)',
-    borderBottomRightRadius: 'var(--slightlyRound)',
+    borderTopRightRadius: 'var(--round)',
+    borderBottomLeftRadius: 'var(--round)',
+    borderBottomRightRadius: 'var(--round)',
+    boxShadow: '0px 13px 10px 0px rgba(0,0,0,0.3)',
 } as React.CSSProperties;
+
 let sUserPanel : React.CSSProperties = {
     padding: 'var(--s0)',
     // change colors
@@ -355,10 +383,11 @@ let sUserPanel : React.CSSProperties = {
     // apply color variables
     background: 'var(--cBackground)',
     color: 'var(--cText)',
-    borderTopLeftRadius: 'var(--slightlyRound)',
+    borderTopLeftRadius: 'var(--round)',
     borderTopRightRadius: 0,
-    borderBottomLeftRadius: 'var(--slightlyRound)',
-    borderBottomRightRadius: 'var(--slightlyRound)',
+    borderBottomLeftRadius: 'var(--round)',
+    borderBottomRightRadius: 'var(--round)',
+    boxShadow: '0px 13px 10px 0px rgba(0,0,0,0.3)',
 } as React.CSSProperties;
 
 interface EbWorkspacePanelState {
@@ -423,6 +452,11 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
             sortByField(allWorkspaces, 'workspaceAddress');
         }
 
+        let canSync = false;
+        if (store.kit !== null) {
+            canSync = store.kit.syncer.state.pubs.length >= 1 && store.kit.syncer.state.syncState !== 'syncing';
+        }
+
         return <div className='stack' style={sWorkspacePanel}>
             {/* current workspace details */}
             {store.currentWorkspace === null
@@ -434,10 +468,12 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
                         <pre>{store.currentWorkspace.workspaceAddress}</pre>
                         <div className='faint'>Pub Servers:</div>
                         <div className='stack indent'>
-                            {store.currentWorkspace.pubs.length === 0
-                              ? <div><button className='button' disabled={true}>Sync</button> (Add pub server(s) to enable sync)</div>
-                              : <div><button className='button'>Sync</button></div>
-                            }
+                            <div><button className='button'
+                                disabled={!canSync}
+                                onClick={() => store.kit?.syncer.sync()}
+                                >
+                                Sync
+                            </button></div>
                             {/*
                                 List of pubs.  We could get this from state.currentWorkspace.pubs
                                 but instead let's get it from the Kit we built, from the Syncer,

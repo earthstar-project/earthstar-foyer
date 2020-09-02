@@ -67944,7 +67944,7 @@ class LobbyApp extends React.PureComponent {
                 (kit === null || kit === void 0 ? void 0 : kit.workspaceAddress) || '(no workspace)'),
             React.createElement("pre", null,
                 "user address: ",
-                ((_a = kit === null || kit === void 0 ? void 0 : kit.authorKeypair) === null || _a === void 0 ? void 0 : _a.address) || '(guest)'),
+                ((_a = kit === null || kit === void 0 ? void 0 : kit.authorKeypair) === null || _a === void 0 ? void 0 : _a.address) || '(guest user)'),
             React.createElement("pre", null,
                 "pubs: ",
                 ((kit === null || kit === void 0 ? void 0 : kit.syncer.state.pubs.map(p => p.domain)) || ['(none)']).join('\n')));
@@ -68010,12 +68010,16 @@ var EbMode;
 })(EbMode = exports.EbMode || (exports.EbMode = {}));
 class EarthbarStore {
     constructor() {
+        // UI state
         this.mode = EbMode.Closed; // which tab are we looking at
+        // state to preserve in localHost
         this.currentUser = null;
         this.currentWorkspace = null;
         this.otherUsers = [];
         this.otherWorkspaces = [];
+        // non-JSON stuff
         this.kit = null;
+        this.unsubSyncer = null;
         this.onChange = new earthstar_1.Emitter();
         logEarthbarStore('constructor');
         this.currentUser = {
@@ -68026,10 +68030,9 @@ class EarthbarStore {
             displayName: 'Suzy',
         };
         this.currentWorkspace = {
-            workspaceAddress: '+gardening.w092jf0q9fj09',
+            workspaceAddress: '+gardening.pals',
             pubs: [
-                'https://my-gardening-pub.glitch.com',
-                'https://mypub.org',
+                'https://earthstar-demo-pub-v5-a.glitch.me/',
             ],
         };
         this.otherUsers = [
@@ -68050,31 +68053,48 @@ class EarthbarStore {
         ];
         this.otherWorkspaces = [
             {
-                workspaceAddress: '+sailing.pals',
+                workspaceAddress: '+sailing.pj23p9faj',
                 pubs: [
-                    'https://pub.sailing.org'
+                    'https://pub.sailing.org/'
                 ],
             },
             {
                 workspaceAddress: '+solarpunk.j0p9ja83j38',
                 pubs: [
-                    'https://my-solarpunk-pub.glitch.com',
-                    'https://mypub.org',
+                    'https://my-solarpunk-pub.glitch.com/',
+                    'https://mypub.org/',
                 ],
             },
         ];
-        this._load();
-        this._save();
+        this._loadFromLocalStorage();
+        this._saveToLocalStorage();
+        // create initial kit
         if (this.currentWorkspace !== null) {
             this.kit = new kit_1.Kit(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], this.currentWorkspace.workspaceAddress), this.currentUser === null ? null : this.currentUser.authorKeypair, this.currentWorkspace.pubs);
+            this._subscribeToKit();
         }
         logEarthbarStore('/constructor');
     }
+    _subscribeToKit() {
+        // call this after making a new kit instance
+        if (this.kit) {
+            // get change events from the kit.syncer and pass them along into our own change feed
+            this.unsubSyncer = this.kit.syncer.onChange.subscribe(() => this.onChange.send(null));
+        }
+    }
+    _unsubFromKit() {
+        // call this whenever changing the kit or setting it to null
+        if (this.unsubSyncer) {
+            this.unsubSyncer();
+        }
+        this.unsubSyncer = null;
+    }
     _bump() {
+        // notify our subscribers of a change to the EarthbarStore's state
         logEarthbarStore('_bump');
         this.onChange.send(null);
     }
-    _save() {
+    _saveToLocalStorage() {
         logEarthbarStore('_save to localStorage');
         localStorage.setItem('earthbar', JSON.stringify({
             //mode: this.mode,
@@ -68084,7 +68104,7 @@ class EarthbarStore {
             otherWorkspaces: this.otherWorkspaces,
         }));
     }
-    _load() {
+    _loadFromLocalStorage() {
         try {
             let s = localStorage.getItem('earthbar');
             if (s === null) {
@@ -68117,6 +68137,9 @@ class EarthbarStore {
     // PUBS OF CURRENT WORKSPACE
     addPub(pub) {
         var _a;
+        if (!pub.endsWith('/')) {
+            pub += '/';
+        }
         logEarthbarStore('addPub', pub);
         if (this.currentWorkspace === null) {
             console.warn("can't add pub because current workspace is null");
@@ -68126,25 +68149,26 @@ class EarthbarStore {
             // pub already exists
             return;
         }
-        // TODO: update kit.syncer's pubs?
         this.currentWorkspace.pubs.push(pub);
-        this.currentWorkspace.pubs.sort();
+        //this.currentWorkspace.pubs.sort();
         (_a = this.kit) === null || _a === void 0 ? void 0 : _a.syncer.addPub(pub);
         this._bump();
-        this._save();
+        this._saveToLocalStorage();
     }
     removePub(pub) {
         var _a;
+        if (!pub.endsWith('/')) {
+            pub += '/';
+        }
         logEarthbarStore('removePub', pub);
         if (this.currentWorkspace === null) {
             console.warn("can't remove pub because current workspace is null");
             return;
         }
-        // TODO: update kit.syncer's pubs?
         this.currentWorkspace.pubs = this.currentWorkspace.pubs.filter(p => p !== pub);
         (_a = this.kit) === null || _a === void 0 ? void 0 : _a.syncer.removePub(pub);
         this._bump();
-        this._save();
+        this._saveToLocalStorage();
     }
     //--------------------------------------------------
     // WORKSPACES
@@ -68163,13 +68187,14 @@ class EarthbarStore {
         logEarthbarStore('removeWorkspace', workspaceAddress);
         if (((_a = this.currentWorkspace) === null || _a === void 0 ? void 0 : _a.workspaceAddress) === workspaceAddress) {
             this.currentWorkspace = null;
+            this._unsubFromKit();
             this.kit = null;
         }
         else {
             this.otherWorkspaces = this.otherWorkspaces.filter(wc => wc.workspaceAddress !== workspaceAddress);
         }
         this._bump();
-        this._save();
+        this._saveToLocalStorage();
     }
     switchWorkspace(workspaceConfig) {
         // this also works to add a new workspace
@@ -68194,14 +68219,17 @@ class EarthbarStore {
         // rebuild the kit
         if (workspaceConfig === null) {
             logEarthbarStore(`rebuilding kit: it's null`);
+            this._unsubFromKit();
             this.kit = null;
         }
         else {
             logEarthbarStore(`rebuilding kit for ${workspaceConfig.workspaceAddress} with ${workspaceConfig.pubs.length} pubs`);
+            this._unsubFromKit();
             this.kit = new kit_1.Kit(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], workspaceConfig.workspaceAddress), this.currentUser === null ? null : this.currentUser.authorKeypair, workspaceConfig.pubs);
+            this._subscribeToKit();
         }
         this._bump();
-        this._save();
+        this._saveToLocalStorage();
     }
 }
 exports.EarthbarStore = EarthbarStore;
@@ -68229,10 +68257,10 @@ class Earthbar extends React.Component {
         let view = store.mode;
         // tab styles
         let sWorkspaceTab = view === EbMode.Workspace
-            ? { color: 'var(--cWhite)', background: 'var(--cWorkspace)' }
+            ? { color: 'var(--cWhite)', background: 'var(--cWorkspace)', opacity: 0.66 }
             : { color: 'var(--cWorkspace)', background: 'none' };
         let sUserTab = view === EbMode.User
-            ? { color: 'var(--cWhite)', background: 'var(--cUser)' }
+            ? { color: 'var(--cWhite)', background: 'var(--cUser)', opacity: 0.66 }
             : { color: 'var(--cUser)', background: 'none' };
         // tab click actions
         let onClickWorkspaceTab = view === EbMode.Workspace
@@ -68252,12 +68280,12 @@ class Earthbar extends React.Component {
         // style to hide children when a panel is open
         let sChildren = view === EbMode.Closed
             ? {}
-            : { /*visibility: 'hidden'*/};
+            : { opacity: 0.5, };
         let workspaceString = 'Add a workspace';
         if (store.currentWorkspace) {
             workspaceString = util_1.ellipsifyUserAddress(store.currentWorkspace.workspaceAddress);
         }
-        let userString = 'Guest';
+        let userString = 'Guest User';
         if (store.currentUser) {
             userString = util_1.ellipsifyUserAddress(store.currentUser.authorKeypair.address);
         }
@@ -68271,7 +68299,8 @@ class Earthbar extends React.Component {
                 React.createElement("div", { style: { position: 'absolute', zIndex: 99, left: 0, right: 0 } }, panel),
                 React.createElement("div", { style: sChildren }, store.kit === null
                     ? null // don't render the app when there's no kit (no workspace)
-                    // TODO: how should the app specify if it cares about syncer changes or not?
+                    // TODO: how should the app specify which changes it wants?  (storage, syncer)
+                    // TODO: how to throttle changes here?
                     : React.createElement(App, { kit: store.kit, changeKey: store.kit.storage.onChange.changeKey + '_' + store.kit.syncer.onChange.changeKey })))));
     }
 }
@@ -68287,9 +68316,10 @@ let sWorkspacePanel = {
     background: 'var(--cBackground)',
     color: 'var(--cText)',
     borderTopLeftRadius: 0,
-    borderTopRightRadius: 'var(--slightlyRound)',
-    borderBottomLeftRadius: 'var(--slightlyRound)',
-    borderBottomRightRadius: 'var(--slightlyRound)',
+    borderTopRightRadius: 'var(--round)',
+    borderBottomLeftRadius: 'var(--round)',
+    borderBottomRightRadius: 'var(--round)',
+    boxShadow: '0px 13px 10px 0px rgba(0,0,0,0.3)',
 };
 let sUserPanel = {
     padding: 'var(--s0)',
@@ -68299,10 +68329,11 @@ let sUserPanel = {
     // apply color variables
     background: 'var(--cBackground)',
     color: 'var(--cText)',
-    borderTopLeftRadius: 'var(--slightlyRound)',
+    borderTopLeftRadius: 'var(--round)',
     borderTopRightRadius: 0,
-    borderBottomLeftRadius: 'var(--slightlyRound)',
-    borderBottomRightRadius: 'var(--slightlyRound)',
+    borderBottomLeftRadius: 'var(--round)',
+    borderBottomRightRadius: 'var(--round)',
+    boxShadow: '0px 13px 10px 0px rgba(0,0,0,0.3)',
 };
 class EarthbarWorkspacePanel extends React.Component {
     constructor(props) {
@@ -68359,6 +68390,10 @@ class EarthbarWorkspacePanel extends React.Component {
             allWorkspaces = [...allWorkspaces, store.currentWorkspace];
             util_1.sortByField(allWorkspaces, 'workspaceAddress');
         }
+        let canSync = false;
+        if (store.kit !== null) {
+            canSync = store.kit.syncer.state.pubs.length >= 1 && store.kit.syncer.state.syncState !== 'syncing';
+        }
         return React.createElement("div", { className: 'stack', style: sWorkspacePanel },
             store.currentWorkspace === null
                 ? null
@@ -68368,12 +68403,8 @@ class EarthbarWorkspacePanel extends React.Component {
                         React.createElement("pre", null, store.currentWorkspace.workspaceAddress),
                         React.createElement("div", { className: 'faint' }, "Pub Servers:"),
                         React.createElement("div", { className: 'stack indent' },
-                            store.currentWorkspace.pubs.length === 0
-                                ? React.createElement("div", null,
-                                    React.createElement("button", { className: 'button', disabled: true }, "Sync"),
-                                    " (Add pub server(s) to enable sync)")
-                                : React.createElement("div", null,
-                                    React.createElement("button", { className: 'button' }, "Sync")),
+                            React.createElement("div", null,
+                                React.createElement("button", { className: 'button', disabled: !canSync, onClick: () => { var _a; return (_a = store.kit) === null || _a === void 0 ? void 0 : _a.syncer.sync(); } }, "Sync")),
                             (store.kit === null ? [] : store.kit.syncer.state.pubs)
                                 .map(pub => {
                                 let icon = '';
