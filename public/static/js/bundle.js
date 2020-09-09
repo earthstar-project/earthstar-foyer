@@ -68377,16 +68377,9 @@ class EarthbarStore {
         ];
         this.otherWorkspaces = [
             {
-                workspaceAddress: '+gardening.pals',
+                workspaceAddress: '+emojiparty.fq0p48',
                 pubs: [
                     'https://earthstar-demo-pub-v5-a.glitch.me/',
-                ],
-            },
-            {
-                workspaceAddress: '+solarpunk.j0p9ja83j38',
-                pubs: [
-                    'https://my-solarpunk-pub.glitch.com/',
-                    'https://mypub.org/',
                 ],
             },
         ];
