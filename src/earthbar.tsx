@@ -421,8 +421,10 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
     handleAddPub() {
         let newPub = this.state.newPubInput.trim();
         if (newPub.length > 0) {
-            this.props.store.addPub(newPub);
-            this.setState({ newPubInput: '' });
+            if (newPub.startsWith('http://') || newPub.startsWith('https://')) {
+                this.props.store.addPub(newPub);
+                this.setState({ newPubInput: '' });
+            }
         }
     }
     handleEditNewWorkspace(val : string) {
