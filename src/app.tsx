@@ -3,7 +3,11 @@ import * as ReactDOM from 'react-dom';
 
 import { Earthbar } from './earthbar';
 import { Kit } from './kit';
-import { sortByField } from './util';
+import {
+    cutAtPeriod,
+    sortByField,
+    ellipsifyAddress,
+} from './util';
 
 let logLobbyApp = (...args : any[]) => console.log('lobby view |', ...args);
 
@@ -35,13 +39,14 @@ export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
         sortByField(docs, 'timestamp');
         docs.reverse();
         return <div style={{padding: 'var(--s0)'}}>
+            {/*
             <h1 style={{fontStyle: 'italic', fontFamily: 'georgia, serif'}}>Welcome To The Foyer</h1>
-            {/* debug details */}
             <pre className='faint' style={{marginBottom: 50, overflow: 'hidden'}}>{
                 `workspace address: ${kit?.workspaceAddress || '(no workspace)'}\n`+
                 `user address: ${kit?.authorKeypair?.address || '(guest user)'}\n`+
                 `pubs: ${(kit?.syncer.state.pubs.map(p => p.domain) || ['(none)']).join('\n')}`
             }</pre>
+            */}
             {/* lobby messages */}
             <div className='stack'>
                 {docs.map(doc =>
@@ -52,7 +57,7 @@ export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
                             padding: 'var(--s0)',
                         }}>
                         <div className='faint'>{doc.path}</div>
-                        <div><b>{doc.author}</b></div>
+                        <div><b>{ellipsifyAddress(doc.author)}</b></div>
                         <div className='right'>{new Date(doc.timestamp/1000).toDateString()}</div>
                         <div>{doc.content}</div>
                     </div>

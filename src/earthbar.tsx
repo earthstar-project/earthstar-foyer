@@ -12,7 +12,11 @@ import {
 } from 'earthstar';
 
 import { Kit } from './kit';
-import { sortByField, ellipsifyUserAddress as ellipsifyAddress } from './util';
+import {
+    cutAtPeriod,
+    ellipsifyAddress,
+    sortByField,
+} from './util';
 
 let logEarthbar = (...args : any[]) => console.log('    earthbar view |', ...args);
 let logEarthbarStore = (...args : any[]) => console.log('        earthbar store |', ...args);
@@ -314,12 +318,12 @@ export class Earthbar extends React.Component<EbProps, EbState> {
 
         let workspaceString = 'Add a workspace';
         if (store.currentWorkspace) {
-            workspaceString = ellipsifyAddress(store.currentWorkspace.workspaceAddress);
+            workspaceString = cutAtPeriod(store.currentWorkspace.workspaceAddress);
         }
 
         let userString = 'Guest User';
         if (store.currentUser) {
-            userString = ellipsifyAddress(store.currentUser.authorKeypair.address);
+            userString = cutAtPeriod(store.currentUser.authorKeypair.address);
         }
 
         let canSync = false;
@@ -338,8 +342,8 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                         style={{
                             margin: 'var(--s-2)',
                             // change colors
-                            '--cBackground': 'var(--cWhite)',
-                            '--cText': 'var(--cWorkspace)',
+                            '--cText': 'var(--cWhite)',
+                            '--cBackground': 'var(--cWorkspace)',
                         } as any}
                         disabled={!canSync}
                         onClick={() => store.kit?.syncer.sync()}

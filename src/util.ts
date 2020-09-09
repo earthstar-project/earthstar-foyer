@@ -15,7 +15,11 @@ export let sortByField = <T extends Ob>(arr: T[], field: string): T[] => {
     return arr.sort(sortFnByField(field));
 }
 
-export let ellipsifyUserAddress = (s : string) : string => {
+export let cutAtPeriod = (s: string): string => {
+    return s.split('.')[0];
+}
+
+export let ellipsifyAddress = (s : string) : string => {
     // assume s has zero or one periods
     // truncate the part after the period
     let chars = 8;

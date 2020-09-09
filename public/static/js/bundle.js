@@ -68265,7 +68265,6 @@ class LobbyApp extends React.PureComponent {
         super(props);
     }
     render() {
-        var _a;
         logLobbyApp('render');
         let kit = this.props.kit;
         let docs = (kit === null || kit === void 0 ? void 0 : kit.storage.documents({ pathPrefix: '/lobby/', includeHistory: false })) || [];
@@ -68273,10 +68272,6 @@ class LobbyApp extends React.PureComponent {
         util_1.sortByField(docs, 'timestamp');
         docs.reverse();
         return React.createElement("div", { style: { padding: 'var(--s0)' } },
-            React.createElement("h1", { style: { fontStyle: 'italic', fontFamily: 'georgia, serif' } }, "Welcome To The Foyer"),
-            React.createElement("pre", { className: 'faint', style: { marginBottom: 50, overflow: 'hidden' } }, `workspace address: ${(kit === null || kit === void 0 ? void 0 : kit.workspaceAddress) || '(no workspace)'}\n` +
-                `user address: ${((_a = kit === null || kit === void 0 ? void 0 : kit.authorKeypair) === null || _a === void 0 ? void 0 : _a.address) || '(guest user)'}\n` +
-                `pubs: ${((kit === null || kit === void 0 ? void 0 : kit.syncer.state.pubs.map(p => p.domain)) || ['(none)']).join('\n')}`),
             React.createElement("div", { className: 'stack' }, docs.map(doc => React.createElement("div", { key: doc.path, className: 'stack', style: {
                     borderRadius: 'var(--slightlyRound',
                     background: '#dedede',
@@ -68284,7 +68279,7 @@ class LobbyApp extends React.PureComponent {
                 } },
                 React.createElement("div", { className: 'faint' }, doc.path),
                 React.createElement("div", null,
-                    React.createElement("b", null, doc.author)),
+                    React.createElement("b", null, util_1.ellipsifyAddress(doc.author))),
                 React.createElement("div", { className: 'right' }, new Date(doc.timestamp / 1000).toDateString()),
                 React.createElement("div", null, doc.content)))));
     }
@@ -68600,11 +68595,11 @@ class Earthbar extends React.Component {
             : { opacity: 0.5, };
         let workspaceString = 'Add a workspace';
         if (store.currentWorkspace) {
-            workspaceString = util_1.ellipsifyUserAddress(store.currentWorkspace.workspaceAddress);
+            workspaceString = util_1.cutAtPeriod(store.currentWorkspace.workspaceAddress);
         }
         let userString = 'Guest User';
         if (store.currentUser) {
-            userString = util_1.ellipsifyUserAddress(store.currentUser.authorKeypair.address);
+            userString = util_1.cutAtPeriod(store.currentUser.authorKeypair.address);
         }
         let canSync = false;
         if (store.kit !== null) {
@@ -68617,8 +68612,8 @@ class Earthbar extends React.Component {
                 React.createElement("button", { className: 'flexItem button', style: {
                         margin: 'var(--s-2)',
                         // change colors
-                        '--cBackground': 'var(--cWhite)',
-                        '--cText': 'var(--cWorkspace)',
+                        '--cText': 'var(--cWhite)',
+                        '--cBackground': 'var(--cWorkspace)',
                     }, disabled: !canSync, onClick: () => { var _a; return (_a = store.kit) === null || _a === void 0 ? void 0 : _a.syncer.sync(); } }, "Sync"),
                 React.createElement("div", { className: 'flexItem', style: { flexGrow: 1 } }),
                 React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: onClickUserTab }, userString)),
@@ -68830,7 +68825,7 @@ exports.Kit = Kit;
 },{"earthstar":100,"lodash.debounce":170}],269:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ellipsifyUserAddress = exports.sortByField = exports.sortFnByField = void 0;
+exports.ellipsifyAddress = exports.cutAtPeriod = exports.sortByField = exports.sortFnByField = void 0;
 exports.sortFnByField = (field) => {
     return (a, b) => {
         if (a[field] > b[field]) {
@@ -68845,7 +68840,10 @@ exports.sortFnByField = (field) => {
 exports.sortByField = (arr, field) => {
     return arr.sort(exports.sortFnByField(field));
 };
-exports.ellipsifyUserAddress = (s) => {
+exports.cutAtPeriod = (s) => {
+    return s.split('.')[0];
+};
+exports.ellipsifyAddress = (s) => {
     // assume s has zero or one periods
     // truncate the part after the period
     let chars = 8;
