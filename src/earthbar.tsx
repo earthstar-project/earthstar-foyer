@@ -322,12 +322,29 @@ export class Earthbar extends React.Component<EbProps, EbState> {
             userString = ellipsifyAddress(store.currentUser.authorKeypair.address);
         }
 
+        let canSync = false;
+        if (store.kit !== null) {
+            canSync = store.kit.syncer.state.pubs.length >= 1 && store.kit.syncer.state.syncState !== 'syncing';
+        }
+
         let App = this.props.app;
         return (
             <div>
                 <div className='flexRow'>
                     <button className='flexItem earthbarTab' style={sWorkspaceTab} onClick={onClickWorkspaceTab}>
                         {workspaceString}
+                    </button>
+                    <button className='flexItem button'
+                        style={{
+                            margin: 'var(--s-2)',
+                            // change colors
+                            '--cBackground': 'var(--cWhite)',
+                            '--cText': 'var(--cWorkspace)',
+                        } as any}
+                        disabled={!canSync}
+                        onClick={() => store.kit?.syncer.sync()}
+                        >
+                        Sync
                     </button>
                     <div className='flexItem' style={{flexGrow: 1}} />
                     <button className='flexItem earthbarTab' style={sUserTab} onClick={onClickUserTab}>
@@ -445,11 +462,6 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
             sortByField(allWorkspaces, 'workspaceAddress');
         }
 
-        let canSync = false;
-        if (store.kit !== null) {
-            canSync = store.kit.syncer.state.pubs.length >= 1 && store.kit.syncer.state.syncState !== 'syncing';
-        }
-
         return <div className='stack' style={sWorkspacePanel}>
             {/* current workspace details */}
             {store.currentWorkspace === null
@@ -461,12 +473,6 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
                         <pre>{store.currentWorkspace.workspaceAddress}</pre>
                         <div className='faint'>Pub Servers:</div>
                         <div className='stack indent'>
-                            <div><button className='button'
-                                disabled={!canSync}
-                                onClick={() => store.kit?.syncer.sync()}
-                                >
-                                Sync
-                            </button></div>
                             {/*
                                 List of pubs.  We could get this from state.currentWorkspace.pubs
                                 but instead let's get it from the Kit we built, from the Syncer,

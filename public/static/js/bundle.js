@@ -68606,10 +68606,20 @@ class Earthbar extends React.Component {
         if (store.currentUser) {
             userString = util_1.ellipsifyUserAddress(store.currentUser.authorKeypair.address);
         }
+        let canSync = false;
+        if (store.kit !== null) {
+            canSync = store.kit.syncer.state.pubs.length >= 1 && store.kit.syncer.state.syncState !== 'syncing';
+        }
         let App = this.props.app;
         return (React.createElement("div", null,
             React.createElement("div", { className: 'flexRow' },
                 React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: onClickWorkspaceTab }, workspaceString),
+                React.createElement("button", { className: 'flexItem button', style: {
+                        margin: 'var(--s-2)',
+                        // change colors
+                        '--cBackground': 'var(--cWhite)',
+                        '--cText': 'var(--cWorkspace)',
+                    }, disabled: !canSync, onClick: () => { var _a; return (_a = store.kit) === null || _a === void 0 ? void 0 : _a.syncer.sync(); } }, "Sync"),
                 React.createElement("div", { className: 'flexItem', style: { flexGrow: 1 } }),
                 React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: onClickUserTab }, userString)),
             React.createElement("div", { style: { position: 'relative' } },
@@ -68707,10 +68717,6 @@ class EarthbarWorkspacePanel extends React.Component {
             allWorkspaces = [...allWorkspaces, store.currentWorkspace];
             util_1.sortByField(allWorkspaces, 'workspaceAddress');
         }
-        let canSync = false;
-        if (store.kit !== null) {
-            canSync = store.kit.syncer.state.pubs.length >= 1 && store.kit.syncer.state.syncState !== 'syncing';
-        }
         return React.createElement("div", { className: 'stack', style: sWorkspacePanel },
             store.currentWorkspace === null
                 ? null
@@ -68720,8 +68726,6 @@ class EarthbarWorkspacePanel extends React.Component {
                         React.createElement("pre", null, store.currentWorkspace.workspaceAddress),
                         React.createElement("div", { className: 'faint' }, "Pub Servers:"),
                         React.createElement("div", { className: 'stack indent' },
-                            React.createElement("div", null,
-                                React.createElement("button", { className: 'button', disabled: !canSync, onClick: () => { var _a; return (_a = store.kit) === null || _a === void 0 ? void 0 : _a.syncer.sync(); } }, "Sync")),
                             (store.kit === null ? [] : store.kit.syncer.state.pubs)
                                 .map(pub => {
                                 let icon = '';
