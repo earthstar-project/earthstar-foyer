@@ -48,17 +48,22 @@ export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
             }</pre>
             */}
             {/* lobby messages */}
-            <div className='stack'>
+            <div className=''>
                 {docs.map(doc =>
                     <div key={doc.path} className='stack'
                         style={{
-                            borderRadius: 'var(--slightlyRound',
-                            background: '#dedede',
+                            //borderRadius: 'var(--slightlyRound)',
+                            background: 'var(--cWhite)',
                             padding: 'var(--s0)',
+                            paddingTop: 'var(--s1)',
+                            paddingBottom: 'var(--s1)',
+                            marginBottom: 2,
                         }}>
-                        <div className='faint'>{doc.path}</div>
-                        <div><b>{ellipsifyAddress(doc.author)}</b></div>
-                        <div className='right'>{new Date(doc.timestamp/1000).toDateString()}</div>
+                        <div className='flexRow'>
+                            <div className='flexItem'><b>{cutAtPeriod(doc.author)}</b></div>
+                            <div className='flexItem flexGrow-1' />
+                            <div className='flexItem faint'>{new Date(doc.timestamp/1000).toDateString()}</div>
+                        </div>
                         <div>{doc.content}</div>
                     </div>
                 )}

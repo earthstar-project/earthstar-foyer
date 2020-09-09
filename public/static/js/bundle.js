@@ -68272,15 +68272,19 @@ class LobbyApp extends React.PureComponent {
         util_1.sortByField(docs, 'timestamp');
         docs.reverse();
         return React.createElement("div", { style: { padding: 'var(--s0)' } },
-            React.createElement("div", { className: 'stack' }, docs.map(doc => React.createElement("div", { key: doc.path, className: 'stack', style: {
-                    borderRadius: 'var(--slightlyRound',
-                    background: '#dedede',
+            React.createElement("div", { className: '' }, docs.map(doc => React.createElement("div", { key: doc.path, className: 'stack', style: {
+                    //borderRadius: 'var(--slightlyRound)',
+                    background: 'var(--cWhite)',
                     padding: 'var(--s0)',
+                    paddingTop: 'var(--s1)',
+                    paddingBottom: 'var(--s1)',
+                    marginBottom: 2,
                 } },
-                React.createElement("div", { className: 'faint' }, doc.path),
-                React.createElement("div", null,
-                    React.createElement("b", null, util_1.ellipsifyAddress(doc.author))),
-                React.createElement("div", { className: 'right' }, new Date(doc.timestamp / 1000).toDateString()),
+                React.createElement("div", { className: 'flexRow' },
+                    React.createElement("div", { className: 'flexItem' },
+                        React.createElement("b", null, util_1.cutAtPeriod(doc.author))),
+                    React.createElement("div", { className: 'flexItem flexGrow-1' }),
+                    React.createElement("div", { className: 'flexItem faint' }, new Date(doc.timestamp / 1000).toDateString())),
                 React.createElement("div", null, doc.content)))));
     }
 }
@@ -68615,7 +68619,7 @@ class Earthbar extends React.Component {
                         '--cText': 'var(--cWhite)',
                         '--cBackground': 'var(--cWorkspace)',
                     }, disabled: !canSync, onClick: () => { var _a; return (_a = store.kit) === null || _a === void 0 ? void 0 : _a.syncer.sync(); } }, "Sync"),
-                React.createElement("div", { className: 'flexItem', style: { flexGrow: 1 } }),
+                React.createElement("div", { className: 'flexItem flexGrow-1' }),
                 React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: onClickUserTab }, userString)),
             React.createElement("div", { style: { position: 'relative' } },
                 React.createElement("div", { style: { position: 'absolute', zIndex: 99, left: 0, right: 0 } }, panel),

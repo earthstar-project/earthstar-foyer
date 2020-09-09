@@ -350,7 +350,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                         >
                         Sync
                     </button>
-                    <div className='flexItem' style={{flexGrow: 1}} />
+                    <div className='flexItem flexGrow-1' />
                     <button className='flexItem earthbarTab' style={sUserTab} onClick={onClickUserTab}>
                         {userString}
                     </button>

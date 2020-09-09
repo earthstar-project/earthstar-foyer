@@ -23,10 +23,11 @@
     --cWorkspace: #990ccc;
     --cUser: #088;
     --cWhite: #fff;
+    --cGray: #dcded0;
     --cBlack: #222;
 
     /* color roles */
-    --cBackground: var(--cWhite);
+    --cBackground: var(--cGray);
     --cText: var(--cBlack);
 
     line-height: 21px;
