@@ -87,7 +87,7 @@ export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
                             <div className='flexItem flexGrow-1' />
                             <div className='flexItem faint'>{new Date(doc.timestamp/1000).toDateString()}</div>
                         </div>
-                        <div>{doc.content}</div>
+                        <div className='wrappyText'>{doc.content}</div>
                     </div>;
                 })}
             </div>

@@ -68306,7 +68306,7 @@ class LobbyApp extends React.PureComponent {
                             React.createElement("b", null, util_1.cutAtPeriod(doc.author))),
                         React.createElement("div", { className: 'flexItem flexGrow-1' }),
                         React.createElement("div", { className: 'flexItem faint' }, new Date(doc.timestamp / 1000).toDateString())),
-                    React.createElement("div", null, doc.content));
+                    React.createElement("div", { className: 'wrappyText' }, doc.content));
             })));
     }
 }

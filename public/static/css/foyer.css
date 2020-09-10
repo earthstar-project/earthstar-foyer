@@ -21,7 +21,7 @@
 
     /* colors */
     --cWorkspace: #760a9d;
-    --cUser: #066;
+    --cUser: #29367a;
     --cWhite: #fff;
     /*--cGray: #dcded0;*/
     /*--cGray: #eee;*/
@@ -159,4 +159,10 @@ textarea::before {
 
 .right {
     text-align: right;
+}
+
+.wrappyText {
+    white-space: break-spaces;
+    overflow-wrap: break-word;
+    hyphens: auto;
 }
