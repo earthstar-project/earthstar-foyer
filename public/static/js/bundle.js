@@ -68260,6 +68260,7 @@ const ReactDOM = __importStar(require("react-dom"));
 const earthbar_1 = require("./earthbar");
 const util_1 = require("./util");
 const log_1 = require("./log");
+const earthstar_1 = require("earthstar");
 class LobbyApp extends React.PureComponent {
     constructor(props) {
         super(props);
@@ -68271,21 +68272,42 @@ class LobbyApp extends React.PureComponent {
         docs = docs.filter(doc => doc.content !== ''); // remove empty docs (aka "deleted" docs)
         util_1.sortByField(docs, 'timestamp');
         docs.reverse();
+        let colors = 'red orange yellow green blue violet cyan pink'.split(' ');
         return React.createElement("div", { style: { padding: 'var(--s0)' } },
-            React.createElement("div", { className: '' }, docs.map(doc => React.createElement("div", { key: doc.path, className: 'stack', style: {
-                    //borderRadius: 'var(--slightlyRound)',
-                    background: 'var(--cWhite)',
-                    padding: 'var(--s0)',
-                    paddingTop: 'var(--s1)',
-                    paddingBottom: 'var(--s1)',
-                    marginBottom: 2,
-                } },
-                React.createElement("div", { className: 'flexRow' },
-                    React.createElement("div", { className: 'flexItem' },
-                        React.createElement("b", null, util_1.cutAtPeriod(doc.author))),
-                    React.createElement("div", { className: 'flexItem flexGrow-1' }),
-                    React.createElement("div", { className: 'flexItem faint' }, new Date(doc.timestamp / 1000).toDateString())),
-                React.createElement("div", null, doc.content)))));
+            React.createElement("div", { className: '' }, docs.map(doc => {
+                let rand = earthstar_1.detRandom(doc.author);
+                let hue = ((rand * 7) % 1) * 360;
+                let rot = ((rand * 23) % 1);
+                let bgColor = `hsl(${hue}, 50%, 90%)`;
+                let edgeColor = `hsl(${hue}, 56%, 82%)`;
+                let darkColor = `hsl(${hue}, 90%, 20%)`;
+                return React.createElement("div", { key: doc.path, className: 'stack', style: {
+                        transform: `rotate(${(rot * 2 - 1) * 4}deg)`,
+                        borderRadius: 'var(--slightlyRound)',
+                        //background: 'var(--cWhite)',
+                        //background: bgColor,
+                        //background: `linear-gradient(180deg, ${bgColor} 43px, #fff 43px)`,  // top stripe
+                        //background: `linear-gradient(90deg, ${bgColor} 10px, #fff 10px)`,  // left side stripe
+                        //background: `linear-gradient(90deg, ${bgColor} 3px, #fff 40px)`,  // left side gentle
+                        //border: '1px solid #999',
+                        background: `linear-gradient(180deg, ${edgeColor} 3px, ${bgColor} 43px)`,
+                        //background: `linear-gradient(-90deg, ${edgeColor} 10px, ${bgColor} 50px)`,  // right side shading
+                        //background: bgColor,
+                        //borderLeft: '10px solid ' + edgeColor,
+                        marginLeft: `${rand * 20}%`,
+                        marginRight: `${(1 - rand) * 20}%`,
+                        padding: 'var(--s0)',
+                        //paddingTop: 'var(--s1)',
+                        //paddingBottom: 'var(--s1)',
+                        marginBottom: 4,
+                    } },
+                    React.createElement("div", { className: 'flexRow' },
+                        React.createElement("div", { className: 'flexItem', style: { color: darkColor } },
+                            React.createElement("b", null, util_1.cutAtPeriod(doc.author))),
+                        React.createElement("div", { className: 'flexItem flexGrow-1' }),
+                        React.createElement("div", { className: 'flexItem faint' }, new Date(doc.timestamp / 1000).toDateString())),
+                    React.createElement("div", null, doc.content));
+            })));
     }
 }
 exports.LobbyApp = LobbyApp;
@@ -68295,7 +68317,7 @@ exports.LobbyApp = LobbyApp;
 ReactDOM.render(React.createElement("div", { className: 'pageColumn' },
     React.createElement(earthbar_1.Earthbar, { app: LobbyApp })), document.getElementById('react-slot'));
 
-},{"./earthbar":267,"./log":270,"./util":271,"react":221,"react-dom":218}],267:[function(require,module,exports){
+},{"./earthbar":267,"./log":270,"./util":271,"earthstar":100,"react":221,"react-dom":218}],267:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -68347,11 +68369,27 @@ class Earthbar extends React.Component {
         let view = store.mode;
         // tab styles
         let sWorkspaceTab = view === earthbarStore_1.EbMode.Workspace
-            ? { color: 'var(--cWhite)', background: 'var(--cWorkspace)', opacity: 0.66 }
-            : { color: 'var(--cWorkspace)', background: 'none' };
+            ? { color: 'var(--cWhite)', background: 'var(--cWorkspace)', opacity: 0.66 } // selected
+            : { color: 'var(--cWhite)', background: 'var(--cWorkspace)',
+                //marginTop: 'var(--s-2)',
+                //paddingTop: 'var(--s-1)',
+                paddingBottom: 'var(--s-1)',
+                marginBottom: 'var(--s-2)',
+            };
         let sUserTab = view === earthbarStore_1.EbMode.User
-            ? { color: 'var(--cWhite)', background: 'var(--cUser)', opacity: 0.66 }
-            : { color: 'var(--cUser)', background: 'none' };
+            ? { color: 'var(--cWhite)', background: 'var(--cUser)', opacity: 0.66 } // selected
+            : { color: 'var(--cWhite)', background: 'var(--cUser)',
+                //marginTop: 'var(--s-2)',
+                //paddingTop: 'var(--s-1)',
+                paddingBottom: 'var(--s-1)',
+                marginBottom: 'var(--s-2)',
+            };
+        let sSyncButton = {
+            margin: 'var(--s-2)',
+            // change colors
+            '--cText': 'var(--cWhite)',
+            '--cBackground': 'var(--cWorkspace)',
+        };
         // tab click actions
         let onClickWorkspaceTab = view === earthbarStore_1.EbMode.Workspace
             ? (e) => store.setMode(earthbarStore_1.EbMode.Closed)
@@ -68370,7 +68408,7 @@ class Earthbar extends React.Component {
         // style to hide children when a panel is open
         let sChildren = view === earthbarStore_1.EbMode.Closed
             ? {}
-            : { opacity: 0.5, };
+            : { opacity: 0.3, };
         let workspaceString = 'Add a workspace';
         if (store.currentWorkspace) {
             workspaceString = util_1.cutAtPeriod(store.currentWorkspace.workspaceAddress);
@@ -68387,16 +68425,17 @@ class Earthbar extends React.Component {
         return (React.createElement("div", null,
             React.createElement("div", { className: 'flexRow' },
                 React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: onClickWorkspaceTab }, workspaceString),
-                React.createElement("button", { className: 'flexItem button', style: {
-                        margin: 'var(--s-2)',
-                        // change colors
-                        '--cText': 'var(--cWhite)',
-                        '--cBackground': 'var(--cWorkspace)',
-                    }, disabled: !canSync, onClick: () => { var _a; return (_a = store.kit) === null || _a === void 0 ? void 0 : _a.syncer.sync(); } }, "Sync"),
+                React.createElement("button", { className: 'flexItem button', style: sSyncButton, disabled: !canSync, onClick: () => { var _a; return (_a = store.kit) === null || _a === void 0 ? void 0 : _a.syncer.sync(); } }, "Sync"),
                 React.createElement("div", { className: 'flexItem flexGrow-1' }),
                 React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: onClickUserTab }, userString)),
             React.createElement("div", { style: { position: 'relative' } },
-                React.createElement("div", { style: { position: 'absolute', zIndex: 99, left: 0, right: 0 } }, panel),
+                React.createElement("div", { style: {
+                        position: 'absolute',
+                        zIndex: 99,
+                        top: 0,
+                        left: store.mode === earthbarStore_1.EbMode.User ? 20 : 0,
+                        right: store.mode === earthbarStore_1.EbMode.Workspace ? 20 : 0,
+                    } }, panel),
                 React.createElement("div", { style: sChildren }, store.kit === null
                     ? null // don't render the app when there's no kit (no workspace)
                     // TODO: how should the app specify which changes it wants?  (storage, syncer)

@@ -10,6 +10,7 @@ import {
 import {
     logLobbyApp,
 } from './log';
+import { detChoice, detInt, detRandom, detRange } from 'earthstar';
 
 //================================================================================
 
@@ -38,6 +39,7 @@ export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
         docs = docs.filter(doc => doc.content !== '');  // remove empty docs (aka "deleted" docs)
         sortByField(docs, 'timestamp');
         docs.reverse();
+        let colors = 'red orange yellow green blue violet cyan pink'.split(' ');
         return <div style={{padding: 'var(--s0)'}}>
             {/*
             <h1 style={{fontStyle: 'italic', fontFamily: 'georgia, serif'}}>Welcome To The Foyer</h1>
@@ -49,24 +51,45 @@ export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
             */}
             {/* lobby messages */}
             <div className=''>
-                {docs.map(doc =>
-                    <div key={doc.path} className='stack'
+                {docs.map(doc => {
+                    let rand = detRandom(doc.author);
+                    let hue = ((rand * 7) % 1) * 360;
+                    let rot = ((rand * 23) % 1);
+                    let bgColor = `hsl(${hue}, 50%, 90%)`;
+                    let edgeColor = `hsl(${hue}, 56%, 82%)`;
+                    let darkColor = `hsl(${hue}, 90%, 20%)`;
+                    return <div key={doc.path} className='stack'
                         style={{
-                            //borderRadius: 'var(--slightlyRound)',
-                            background: 'var(--cWhite)',
+                            transform: `rotate(${(rot * 2 - 1) * 4}deg)`,
+                            borderRadius: 'var(--slightlyRound)',
+                            //background: 'var(--cWhite)',
+                            //background: bgColor,
+                            //background: `linear-gradient(180deg, ${bgColor} 43px, #fff 43px)`,  // top stripe
+                            //background: `linear-gradient(90deg, ${bgColor} 10px, #fff 10px)`,  // left side stripe
+                            //background: `linear-gradient(90deg, ${bgColor} 3px, #fff 40px)`,  // left side gentle
+                            //border: '1px solid #999',
+
+                            background: `linear-gradient(180deg, ${edgeColor} 3px, ${bgColor} 43px)`,  // top grad
+                            //background: `linear-gradient(-90deg, ${edgeColor} 10px, ${bgColor} 50px)`,  // right side shading
+
+                            //background: bgColor,
+                            //borderLeft: '10px solid ' + edgeColor,
+
+                            marginLeft: `${rand * 20}%`,
+                            marginRight: `${(1-rand) * 20}%`,
                             padding: 'var(--s0)',
-                            paddingTop: 'var(--s1)',
-                            paddingBottom: 'var(--s1)',
-                            marginBottom: 2,
+                            //paddingTop: 'var(--s1)',
+                            //paddingBottom: 'var(--s1)',
+                            marginBottom: 4,
                         }}>
                         <div className='flexRow'>
-                            <div className='flexItem'><b>{cutAtPeriod(doc.author)}</b></div>
+                            <div className='flexItem' style={{color: darkColor}}><b>{cutAtPeriod(doc.author)}</b></div>
                             <div className='flexItem flexGrow-1' />
                             <div className='flexItem faint'>{new Date(doc.timestamp/1000).toDateString()}</div>
                         </div>
                         <div>{doc.content}</div>
-                    </div>
-                )}
+                    </div>;
+                })}
             </div>
         </div>;
     }

@@ -58,12 +58,30 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         // tab styles
         let sWorkspaceTab : React.CSSProperties =
             view === EbMode.Workspace
-            ? { color: 'var(--cWhite)', background: 'var(--cWorkspace)', opacity: 0.66 }
-            : { color: 'var(--cWorkspace)', background: 'none' };
+            ? { color: 'var(--cWhite)', background: 'var(--cWorkspace)', opacity: 0.66 }  // selected
+            : { color: 'var(--cWhite)', background: 'var(--cWorkspace)',
+                //marginTop: 'var(--s-2)',
+                //paddingTop: 'var(--s-1)',
+                paddingBottom: 'var(--s-1)',
+                marginBottom: 'var(--s-2)',
+                //borderRadius: 'var(--round)',
+            };
         let sUserTab : React.CSSProperties =
             view === EbMode.User
-            ? { color: 'var(--cWhite)', background: 'var(--cUser)', opacity: 0.66 }
-            : { color: 'var(--cUser)', background: 'none' };
+            ? { color: 'var(--cWhite)', background: 'var(--cUser)', opacity: 0.66 }  // selected
+            : { color: 'var(--cWhite)', background: 'var(--cUser)',
+                //marginTop: 'var(--s-2)',
+                //paddingTop: 'var(--s-1)',
+                paddingBottom: 'var(--s-1)',
+                marginBottom: 'var(--s-2)',
+                //borderRadius: 'var(--round)',
+            };
+        let sSyncButton : any = {
+            margin: 'var(--s-2)',
+            // change colors
+            '--cText': 'var(--cWhite)',
+            '--cBackground': 'var(--cWorkspace)',
+        };
 
         // tab click actions
         let onClickWorkspaceTab =
@@ -87,7 +105,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         let sChildren : React.CSSProperties =
             view === EbMode.Closed
             ? { }
-            : { opacity: 0.5, /*visibility: 'hidden'*/ };
+            : { opacity: 0.3, /*visibility: 'hidden'*/ };
 
         let workspaceString = 'Add a workspace';
         if (store.currentWorkspace) {
@@ -112,12 +130,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                         {workspaceString}
                     </button>
                     <button className='flexItem button'
-                        style={{
-                            margin: 'var(--s-2)',
-                            // change colors
-                            '--cText': 'var(--cWhite)',
-                            '--cBackground': 'var(--cWorkspace)',
-                        } as any}
+                        style={sSyncButton}
                         disabled={!canSync}
                         onClick={() => store.kit?.syncer.sync()}
                         >
@@ -129,7 +142,15 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                     </button>
                 </div>
                 <div style={{position: 'relative'}}>
-                    <div style={{position: 'absolute', zIndex: 99, left: 0, right: 0}}>{panel}</div>
+                    <div style={{
+                            position: 'absolute',
+                            zIndex: 99,
+                            top: 0,
+                            left: store.mode === EbMode.User ? 20 : 0,
+                            right: store.mode === EbMode.Workspace ? 20 : 0,
+                        }}>
+                        {panel}
+                    </div>
                     <div style={sChildren}>
                         {store.kit === null
                           ? null // don't render the app when there's no kit (no workspace)

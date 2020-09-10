@@ -20,14 +20,17 @@
     --test-border-width: 0px;
 
     /* colors */
-    --cWorkspace: #990ccc;
-    --cUser: #088;
+    --cWorkspace: #760a9d;
+    --cUser: #066;
     --cWhite: #fff;
-    --cGray: #dcded0;
+    /*--cGray: #dcded0;*/
+    /*--cGray: #eee;*/
+    /*--cGray: #b3b3ca;*/
+    --cEggplant: #8e8999;
     --cBlack: #222;
 
     /* color roles */
-    --cBackground: var(--cGray);
+    --cBackground: var(--cEggplant);
     --cText: var(--cBlack);
 
     line-height: 21px;
