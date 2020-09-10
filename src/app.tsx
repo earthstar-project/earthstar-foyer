@@ -6,10 +6,10 @@ import { Kit } from './kit';
 import {
     cutAtPeriod,
     sortByField,
-    ellipsifyAddress,
 } from './util';
-
-let logLobbyApp = (...args : any[]) => console.log('lobby view |', ...args);
+import {
+    logLobbyApp,
+} from './log';
 
 //================================================================================
 

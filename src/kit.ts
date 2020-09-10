@@ -1,4 +1,5 @@
 import debounce = require('lodash.debounce');
+
 import {
     AuthorKeypair,
     IStorage,
@@ -9,7 +10,11 @@ import {
     StorageMemory,
 } from 'earthstar';
 
-let logKit = (...args : any[]) => console.log('            kit |', ...args);
+import {
+    logKit,
+} from './log';
+
+//================================================================================
 
 // All the various pieces of Earthstar stuff for a workspace
 export class Kit {

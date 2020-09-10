@@ -68259,13 +68259,13 @@ const React = __importStar(require("react"));
 const ReactDOM = __importStar(require("react-dom"));
 const earthbar_1 = require("./earthbar");
 const util_1 = require("./util");
-let logLobbyApp = (...args) => console.log('lobby view |', ...args);
+const log_1 = require("./log");
 class LobbyApp extends React.PureComponent {
     constructor(props) {
         super(props);
     }
     render() {
-        logLobbyApp('render');
+        log_1.logLobbyApp('render');
         let kit = this.props.kit;
         let docs = (kit === null || kit === void 0 ? void 0 : kit.storage.documents({ pathPrefix: '/lobby/', includeHistory: false })) || [];
         docs = docs.filter(doc => doc.content !== ''); // remove empty docs (aka "deleted" docs)
@@ -68295,7 +68295,7 @@ exports.LobbyApp = LobbyApp;
 ReactDOM.render(React.createElement("div", { className: 'pageColumn' },
     React.createElement(earthbar_1.Earthbar, { app: LobbyApp })), document.getElementById('react-slot'));
 
-},{"./earthbar":267,"./util":269,"react":221,"react-dom":218}],267:[function(require,module,exports){
+},{"./earthbar":267,"./log":270,"./util":271,"react":221,"react-dom":218}],267:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -68317,247 +68317,21 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EarthbarUserPanel = exports.EarthbarWorkspacePanel = exports.Earthbar = exports.EarthbarStore = exports.EbMode = void 0;
-const fast_equals_1 = require("fast-equals");
+exports.EarthbarUserPanel = exports.EarthbarWorkspacePanel = exports.Earthbar = void 0;
 const React = __importStar(require("react"));
 const earthstar_1 = require("earthstar");
-const kit_1 = require("./kit");
+const earthbarStore_1 = require("./earthbarStore");
 const util_1 = require("./util");
-let logEarthbar = (...args) => console.log('    earthbar view |', ...args);
-let logEarthbarStore = (...args) => console.log('        earthbar store |', ...args);
-var EbMode;
-(function (EbMode) {
-    EbMode["Closed"] = "CLOSED";
-    EbMode["Workspace"] = "WORKSPACE";
-    EbMode["User"] = "USER";
-})(EbMode = exports.EbMode || (exports.EbMode = {}));
-class EarthbarStore {
-    constructor() {
-        // UI state
-        this.mode = EbMode.Closed; // which tab are we looking at
-        // state to preserve in localHost
-        this.currentUser = null;
-        this.currentWorkspace = null;
-        this.otherUsers = [];
-        this.otherWorkspaces = [];
-        // non-JSON stuff
-        this.kit = null;
-        this.unsubSyncer = null;
-        this.onChange = new earthstar_1.Emitter();
-        logEarthbarStore('constructor');
-        this.currentUser = {
-            authorKeypair: {
-                address: '@suzy.bzrjm4jnvr5luvbgls5ryqrq7jolqw3v5p2cmpabcsoczyhdrdjga',
-                secret: 'bugskupxnwtjt56rsyusoh5oo5x74uoy3kikftv32swmskvw36m7a',
-            },
-            displayName: 'Suzy',
-        };
-        this.currentWorkspace = {
-            workspaceAddress: '+lobbydev.a1',
-            pubs: [
-                'https://earthstar-demo-pub-v5-a.glitch.me/',
-            ],
-        };
-        this.otherUsers = [
-            {
-                authorKeypair: {
-                    address: '@fern.bx3ujqftyiqds7ohbeuet3d4iqzombh6qpc2zlx2l2isssc5jgoza',
-                    secret: 'bspk7zvtwkj6wemo6rngkxdrvkiruo4p2yhmmnjzds2uydoix7odq'
-                },
-                displayName: 'Fernie',
-            },
-            {
-                authorKeypair: {
-                    address: '@zzzz.bgbultxgtqupc4zpyjpbno3zxg5xbk27v2cvgdpbieqlox7syzzxq',
-                    secret: 'bvoowi3xqsidznc7fef4o4jcs3dycgr7yiqkbrxivg6bidjubcokq'
-                },
-                displayName: null,
-            },
-        ];
-        this.otherWorkspaces = [
-            {
-                workspaceAddress: '+emojiparty.fq0p48',
-                pubs: [
-                    'https://earthstar-demo-pub-v5-a.glitch.me/',
-                ],
-            },
-        ];
-        this._loadFromLocalStorage();
-        this._saveToLocalStorage();
-        // create initial kit
-        if (this.currentWorkspace !== null) {
-            this.kit = new kit_1.Kit(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], this.currentWorkspace.workspaceAddress), this.currentUser === null ? null : this.currentUser.authorKeypair, this.currentWorkspace.pubs);
-            this._subscribeToKit();
-        }
-        logEarthbarStore('/constructor');
-    }
-    _subscribeToKit() {
-        // call this after making a new kit instance
-        if (this.kit) {
-            // get change events from the kit.syncer and pass them along into our own change feed
-            this.unsubSyncer = this.kit.syncer.onChange.subscribe(() => this.onChange.send(null));
-        }
-    }
-    _unsubFromKit() {
-        // call this whenever changing the kit or setting it to null
-        if (this.unsubSyncer) {
-            this.unsubSyncer();
-        }
-        this.unsubSyncer = null;
-    }
-    _bump() {
-        // notify our subscribers of a change to the EarthbarStore's state
-        logEarthbarStore('_bump');
-        this.onChange.send(null);
-    }
-    _saveToLocalStorage() {
-        logEarthbarStore('_save to localStorage');
-        localStorage.setItem('earthbar', JSON.stringify({
-            //mode: this.mode,
-            currentUser: this.currentUser,
-            currentWorkspace: this.currentWorkspace,
-            otherUsers: this.otherUsers,
-            otherWorkspaces: this.otherWorkspaces,
-        }));
-    }
-    _loadFromLocalStorage() {
-        try {
-            let s = localStorage.getItem('earthbar');
-            if (s === null) {
-                logEarthbarStore('_load from localStorage: not found');
-                return;
-            }
-            logEarthbarStore('_load from localStorage: parsing...');
-            let parsed = JSON.parse(s);
-            this.currentUser = parsed.currentUser;
-            this.currentWorkspace = parsed.currentWorkspace;
-            this.otherUsers = parsed.otherUsers;
-            this.otherWorkspaces = parsed.otherWorkspaces;
-        }
-        catch (e) {
-            logEarthbarStore('_load from localStorage: error:');
-            console.warn(e);
-        }
-    }
-    //--------------------------------------------------
-    // VISUAL STATE
-    setMode(mode) {
-        logEarthbarStore('setMode', mode);
-        if (mode === this.mode) {
-            return;
-        }
-        this.mode = mode;
-        this._bump();
-    }
-    //--------------------------------------------------
-    // PUBS OF CURRENT WORKSPACE
-    addPub(pub) {
-        var _a;
-        if (!pub.endsWith('/')) {
-            pub += '/';
-        }
-        logEarthbarStore('addPub', pub);
-        if (this.currentWorkspace === null) {
-            console.warn("can't add pub because current workspace is null");
-            return;
-        }
-        if (this.currentWorkspace.pubs.indexOf(pub) !== -1) {
-            // pub already exists
-            return;
-        }
-        this.currentWorkspace.pubs.push(pub);
-        //this.currentWorkspace.pubs.sort();
-        (_a = this.kit) === null || _a === void 0 ? void 0 : _a.syncer.addPub(pub);
-        this._bump();
-        this._saveToLocalStorage();
-    }
-    removePub(pub) {
-        var _a;
-        if (!pub.endsWith('/')) {
-            pub += '/';
-        }
-        logEarthbarStore('removePub', pub);
-        if (this.currentWorkspace === null) {
-            console.warn("can't remove pub because current workspace is null");
-            return;
-        }
-        this.currentWorkspace.pubs = this.currentWorkspace.pubs.filter(p => p !== pub);
-        (_a = this.kit) === null || _a === void 0 ? void 0 : _a.syncer.removePub(pub);
-        this._bump();
-        this._saveToLocalStorage();
-    }
-    //--------------------------------------------------
-    // WORKSPACES
-    hasWorkspace(workspaceAddress) {
-        var _a;
-        if (((_a = this.currentWorkspace) === null || _a === void 0 ? void 0 : _a.workspaceAddress) === workspaceAddress) {
-            return true;
-        }
-        if (this.otherWorkspaces.filter(wc => wc.workspaceAddress === workspaceAddress).length >= 1) {
-            return true;
-        }
-        return false;
-    }
-    removeWorkspace(workspaceAddress) {
-        var _a;
-        logEarthbarStore('removeWorkspace', workspaceAddress);
-        if (((_a = this.currentWorkspace) === null || _a === void 0 ? void 0 : _a.workspaceAddress) === workspaceAddress) {
-            this.currentWorkspace = null;
-            this._unsubFromKit();
-            this.kit = null;
-        }
-        else {
-            this.otherWorkspaces = this.otherWorkspaces.filter(wc => wc.workspaceAddress !== workspaceAddress);
-        }
-        this._bump();
-        this._saveToLocalStorage();
-    }
-    switchWorkspace(workspaceConfig) {
-        // this also works to add a new workspace
-        // TODO: don't use this to modify pubs of an existing workspace; it might cause duplicates
-        // TODO: change this to only accept a workspaceAddress as input
-        logEarthbarStore('switchWorkspace', workspaceConfig);
-        // nop
-        if (fast_equals_1.deepEqual(workspaceConfig, this.currentWorkspace)) {
-            return;
-        }
-        // remove from otherWorkspaces in case it's there
-        if (workspaceConfig !== null) {
-            this.otherWorkspaces = this.otherWorkspaces.filter(o => o.workspaceAddress !== workspaceConfig.workspaceAddress);
-        }
-        // stash current workspace if there is one
-        if (this.currentWorkspace !== null) {
-            this.otherWorkspaces.push(this.currentWorkspace);
-        }
-        util_1.sortByField(this.otherWorkspaces, 'workspaceAddress');
-        // save new workspace as current
-        this.currentWorkspace = workspaceConfig;
-        // rebuild the kit
-        if (workspaceConfig === null) {
-            logEarthbarStore(`rebuilding kit: it's null`);
-            this._unsubFromKit();
-            this.kit = null;
-        }
-        else {
-            logEarthbarStore(`rebuilding kit for ${workspaceConfig.workspaceAddress} with ${workspaceConfig.pubs.length} pubs`);
-            this._unsubFromKit();
-            this.kit = new kit_1.Kit(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], workspaceConfig.workspaceAddress), this.currentUser === null ? null : this.currentUser.authorKeypair, workspaceConfig.pubs);
-            this._subscribeToKit();
-        }
-        this._bump();
-        this._saveToLocalStorage();
-    }
-}
-exports.EarthbarStore = EarthbarStore;
+const log_1 = require("./log");
 class Earthbar extends React.Component {
     constructor(props) {
         super(props);
         this.unsub = null;
-        this.state = { store: new EarthbarStore() };
+        this.state = { store: new earthbarStore_1.EarthbarStore() };
     }
     componentDidMount() {
         this.unsub = this.state.store.onChange.subscribe((v) => {
-            logEarthbar('forceUpdate from EarthbarStore');
+            log_1.logEarthbar('forceUpdate from EarthbarStore');
             this.forceUpdate();
         });
     }
@@ -68569,32 +68343,32 @@ class Earthbar extends React.Component {
     }
     render() {
         let store = this.state.store;
-        logEarthbar(`render in ${store.mode} mode`);
+        log_1.logEarthbar(`render in ${store.mode} mode`);
         let view = store.mode;
         // tab styles
-        let sWorkspaceTab = view === EbMode.Workspace
+        let sWorkspaceTab = view === earthbarStore_1.EbMode.Workspace
             ? { color: 'var(--cWhite)', background: 'var(--cWorkspace)', opacity: 0.66 }
             : { color: 'var(--cWorkspace)', background: 'none' };
-        let sUserTab = view === EbMode.User
+        let sUserTab = view === earthbarStore_1.EbMode.User
             ? { color: 'var(--cWhite)', background: 'var(--cUser)', opacity: 0.66 }
             : { color: 'var(--cUser)', background: 'none' };
         // tab click actions
-        let onClickWorkspaceTab = view === EbMode.Workspace
-            ? (e) => store.setMode(EbMode.Closed)
-            : (e) => store.setMode(EbMode.Workspace);
-        let onClickUserTab = view === EbMode.User
-            ? (e) => store.setMode(EbMode.Closed)
-            : (e) => store.setMode(EbMode.User);
+        let onClickWorkspaceTab = view === earthbarStore_1.EbMode.Workspace
+            ? (e) => store.setMode(earthbarStore_1.EbMode.Closed)
+            : (e) => store.setMode(earthbarStore_1.EbMode.Workspace);
+        let onClickUserTab = view === earthbarStore_1.EbMode.User
+            ? (e) => store.setMode(earthbarStore_1.EbMode.Closed)
+            : (e) => store.setMode(earthbarStore_1.EbMode.User);
         // which panel to show
         let panel = null;
-        if (view === EbMode.Workspace) {
+        if (view === earthbarStore_1.EbMode.Workspace) {
             panel = React.createElement(EarthbarWorkspacePanel, { store: store });
         }
-        else if (view === EbMode.User) {
+        else if (view === earthbarStore_1.EbMode.User) {
             panel = React.createElement(exports.EarthbarUserPanel, { store: store });
         }
         // style to hide children when a panel is open
-        let sChildren = view === EbMode.Closed
+        let sChildren = view === earthbarStore_1.EbMode.Closed
             ? {}
             : { opacity: 0.5, };
         let workspaceString = 'Add a workspace';
@@ -68783,13 +68557,248 @@ exports.EarthbarUserPanel = (props) => React.createElement("div", { style: sUser
     React.createElement("br", null),
     "Hello this is the user config page");
 
-},{"./kit":268,"./util":269,"earthstar":100,"fast-equals":132,"react":221}],268:[function(require,module,exports){
+},{"./earthbarStore":268,"./log":270,"./util":271,"earthstar":100,"react":221}],268:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EarthbarStore = exports.EbMode = void 0;
+const fast_equals_1 = require("fast-equals");
+const earthstar_1 = require("earthstar");
+const util_1 = require("./util");
+const kit_1 = require("./kit");
+const log_1 = require("./log");
+var EbMode;
+(function (EbMode) {
+    EbMode["Closed"] = "CLOSED";
+    EbMode["Workspace"] = "WORKSPACE";
+    EbMode["User"] = "USER";
+})(EbMode = exports.EbMode || (exports.EbMode = {}));
+class EarthbarStore {
+    constructor() {
+        // UI state
+        this.mode = EbMode.Closed; // which tab are we looking at
+        // state to preserve in localHost
+        this.currentUser = null;
+        this.currentWorkspace = null;
+        this.otherUsers = [];
+        this.otherWorkspaces = [];
+        // non-JSON stuff
+        this.kit = null;
+        this.unsubSyncer = null;
+        this.onChange = new earthstar_1.Emitter();
+        log_1.logEarthbarStore('constructor');
+        this.currentUser = {
+            authorKeypair: {
+                address: '@suzy.bzrjm4jnvr5luvbgls5ryqrq7jolqw3v5p2cmpabcsoczyhdrdjga',
+                secret: 'bugskupxnwtjt56rsyusoh5oo5x74uoy3kikftv32swmskvw36m7a',
+            },
+            displayName: 'Suzy',
+        };
+        this.currentWorkspace = {
+            workspaceAddress: '+lobbydev.a1',
+            pubs: [
+                'https://earthstar-demo-pub-v5-a.glitch.me/',
+            ],
+        };
+        this.otherUsers = [
+            {
+                authorKeypair: {
+                    address: '@fern.bx3ujqftyiqds7ohbeuet3d4iqzombh6qpc2zlx2l2isssc5jgoza',
+                    secret: 'bspk7zvtwkj6wemo6rngkxdrvkiruo4p2yhmmnjzds2uydoix7odq'
+                },
+                displayName: 'Fernie',
+            },
+            {
+                authorKeypair: {
+                    address: '@zzzz.bgbultxgtqupc4zpyjpbno3zxg5xbk27v2cvgdpbieqlox7syzzxq',
+                    secret: 'bvoowi3xqsidznc7fef4o4jcs3dycgr7yiqkbrxivg6bidjubcokq'
+                },
+                displayName: null,
+            },
+        ];
+        this.otherWorkspaces = [
+            {
+                workspaceAddress: '+emojiparty.fq0p48',
+                pubs: [
+                    'https://earthstar-demo-pub-v5-a.glitch.me/',
+                ],
+            },
+        ];
+        this._loadFromLocalStorage();
+        this._saveToLocalStorage();
+        // create initial kit
+        if (this.currentWorkspace !== null) {
+            this.kit = new kit_1.Kit(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], this.currentWorkspace.workspaceAddress), this.currentUser === null ? null : this.currentUser.authorKeypair, this.currentWorkspace.pubs);
+            this._subscribeToKit();
+        }
+        log_1.logEarthbarStore('/constructor');
+    }
+    _subscribeToKit() {
+        // call this after making a new kit instance
+        if (this.kit) {
+            // get change events from the kit.syncer and pass them along into our own change feed
+            this.unsubSyncer = this.kit.syncer.onChange.subscribe(() => this.onChange.send(null));
+        }
+    }
+    _unsubFromKit() {
+        // call this whenever changing the kit or setting it to null
+        if (this.unsubSyncer) {
+            this.unsubSyncer();
+        }
+        this.unsubSyncer = null;
+    }
+    _bump() {
+        // notify our subscribers of a change to the EarthbarStore's state
+        log_1.logEarthbarStore('_bump');
+        this.onChange.send(null);
+    }
+    _saveToLocalStorage() {
+        log_1.logEarthbarStore('_save to localStorage');
+        localStorage.setItem('earthbar', JSON.stringify({
+            //mode: this.mode,
+            currentUser: this.currentUser,
+            currentWorkspace: this.currentWorkspace,
+            otherUsers: this.otherUsers,
+            otherWorkspaces: this.otherWorkspaces,
+        }));
+    }
+    _loadFromLocalStorage() {
+        try {
+            let s = localStorage.getItem('earthbar');
+            if (s === null) {
+                log_1.logEarthbarStore('_load from localStorage: not found');
+                return;
+            }
+            log_1.logEarthbarStore('_load from localStorage: parsing...');
+            let parsed = JSON.parse(s);
+            this.currentUser = parsed.currentUser;
+            this.currentWorkspace = parsed.currentWorkspace;
+            this.otherUsers = parsed.otherUsers;
+            this.otherWorkspaces = parsed.otherWorkspaces;
+        }
+        catch (e) {
+            log_1.logEarthbarStore('_load from localStorage: error:');
+            console.warn(e);
+        }
+    }
+    //--------------------------------------------------
+    // VISUAL STATE
+    setMode(mode) {
+        log_1.logEarthbarStore('setMode', mode);
+        if (mode === this.mode) {
+            return;
+        }
+        this.mode = mode;
+        this._bump();
+    }
+    //--------------------------------------------------
+    // PUBS OF CURRENT WORKSPACE
+    addPub(pub) {
+        var _a;
+        if (!pub.endsWith('/')) {
+            pub += '/';
+        }
+        log_1.logEarthbarStore('addPub', pub);
+        if (this.currentWorkspace === null) {
+            console.warn("can't add pub because current workspace is null");
+            return;
+        }
+        if (this.currentWorkspace.pubs.indexOf(pub) !== -1) {
+            // pub already exists
+            return;
+        }
+        this.currentWorkspace.pubs.push(pub);
+        //this.currentWorkspace.pubs.sort();
+        (_a = this.kit) === null || _a === void 0 ? void 0 : _a.syncer.addPub(pub);
+        this._bump();
+        this._saveToLocalStorage();
+    }
+    removePub(pub) {
+        var _a;
+        if (!pub.endsWith('/')) {
+            pub += '/';
+        }
+        log_1.logEarthbarStore('removePub', pub);
+        if (this.currentWorkspace === null) {
+            console.warn("can't remove pub because current workspace is null");
+            return;
+        }
+        this.currentWorkspace.pubs = this.currentWorkspace.pubs.filter(p => p !== pub);
+        (_a = this.kit) === null || _a === void 0 ? void 0 : _a.syncer.removePub(pub);
+        this._bump();
+        this._saveToLocalStorage();
+    }
+    //--------------------------------------------------
+    // WORKSPACES
+    hasWorkspace(workspaceAddress) {
+        var _a;
+        if (((_a = this.currentWorkspace) === null || _a === void 0 ? void 0 : _a.workspaceAddress) === workspaceAddress) {
+            return true;
+        }
+        if (this.otherWorkspaces.filter(wc => wc.workspaceAddress === workspaceAddress).length >= 1) {
+            return true;
+        }
+        return false;
+    }
+    removeWorkspace(workspaceAddress) {
+        var _a;
+        log_1.logEarthbarStore('removeWorkspace', workspaceAddress);
+        if (((_a = this.currentWorkspace) === null || _a === void 0 ? void 0 : _a.workspaceAddress) === workspaceAddress) {
+            this.currentWorkspace = null;
+            this._unsubFromKit();
+            this.kit = null;
+        }
+        else {
+            this.otherWorkspaces = this.otherWorkspaces.filter(wc => wc.workspaceAddress !== workspaceAddress);
+        }
+        this._bump();
+        this._saveToLocalStorage();
+    }
+    switchWorkspace(workspaceConfig) {
+        // this also works to add a new workspace
+        // TODO: don't use this to modify pubs of an existing workspace; it might cause duplicates
+        // TODO: change this to only accept a workspaceAddress as input
+        log_1.logEarthbarStore('switchWorkspace', workspaceConfig);
+        // nop
+        if (fast_equals_1.deepEqual(workspaceConfig, this.currentWorkspace)) {
+            return;
+        }
+        // remove from otherWorkspaces in case it's there
+        if (workspaceConfig !== null) {
+            this.otherWorkspaces = this.otherWorkspaces.filter(o => o.workspaceAddress !== workspaceConfig.workspaceAddress);
+        }
+        // stash current workspace if there is one
+        if (this.currentWorkspace !== null) {
+            this.otherWorkspaces.push(this.currentWorkspace);
+        }
+        util_1.sortByField(this.otherWorkspaces, 'workspaceAddress');
+        // save new workspace as current
+        this.currentWorkspace = workspaceConfig;
+        // rebuild the kit
+        if (workspaceConfig === null) {
+            log_1.logEarthbarStore(`rebuilding kit: it's null`);
+            this._unsubFromKit();
+            this.kit = null;
+        }
+        else {
+            log_1.logEarthbarStore(`rebuilding kit for ${workspaceConfig.workspaceAddress} with ${workspaceConfig.pubs.length} pubs`);
+            this._unsubFromKit();
+            this.kit = new kit_1.Kit(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], workspaceConfig.workspaceAddress), this.currentUser === null ? null : this.currentUser.authorKeypair, workspaceConfig.pubs);
+            this._subscribeToKit();
+        }
+        this._bump();
+        this._saveToLocalStorage();
+    }
+}
+exports.EarthbarStore = EarthbarStore;
+
+},{"./kit":269,"./log":270,"./util":271,"earthstar":100,"fast-equals":132}],269:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Kit = void 0;
 const debounce = require("lodash.debounce");
 const earthstar_1 = require("earthstar");
-let logKit = (...args) => console.log('            kit |', ...args);
+const log_1 = require("./log");
+//================================================================================
 // All the various pieces of Earthstar stuff for a workspace
 class Kit {
     constructor(storage, authorKeypair, pubs) {
@@ -68803,7 +68812,7 @@ class Kit {
         this.layerAbout = new earthstar_1.LayerAbout(storage);
         this.layerWiki = new earthstar_1.LayerWiki(storage);
         // HACK to persist the memory storage to localStorage
-        logKit('loading workspace data from localStorage...');
+        log_1.logKit('loading workspace data from localStorage...');
         let localStorageKey = `earthstar:${this.workspaceAddress}`;
         let existingData = localStorage.getItem(localStorageKey);
         let numLoaded = 0;
@@ -68815,7 +68824,7 @@ class Kit {
             //}
             storage._docs = JSON.parse(existingData);
         }
-        logKit('/loaded from localStorage');
+        log_1.logKit('/loaded from localStorage');
         // saving will get triggered on every incoming document, so we should debounce it
         let saveToLocalStorage = () => {
             console.log('SAVING=====================================');
@@ -68828,7 +68837,17 @@ class Kit {
 }
 exports.Kit = Kit;
 
-},{"earthstar":100,"lodash.debounce":170}],269:[function(require,module,exports){
+},{"./log":270,"earthstar":100,"lodash.debounce":170}],270:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.logLobbyApp = exports.logEarthbar = exports.logKit = exports.logEarthbarStore = void 0;
+let makeLogger = (tag) => (...args) => console.log(tag + ' |', ...args);
+exports.logEarthbarStore = makeLogger('earthbar store');
+exports.logKit = makeLogger('    kit');
+exports.logEarthbar = makeLogger('        earthbar view');
+exports.logLobbyApp = makeLogger('            lobby view');
+
+},{}],271:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ellipsifyAddress = exports.cutAtPeriod = exports.sortByField = exports.sortFnByField = void 0;

@@ -1,17 +1,15 @@
-
-type Thunk = () => void;
+import { Ob } from './types';
 
 type SortFn<T> = (a: T, b: T) => number;
-type Ob = {[index: string]: any};
 
-export let sortFnByField = <T extends Ob>(field: string): SortFn<T> => {
+export let sortFnByField = <T extends Ob<any>>(field: string): SortFn<T> => {
     return (a: T, b: T): number => {
         if (a[field] > b[field]) { return 1; }
         if (a[field] < b[field]) { return -1; }
         return 0;
     }
 }
-export let sortByField = <T extends Ob>(arr: T[], field: string): T[] => {
+export let sortByField = <T extends Ob<any>>(arr: T[], field: string): T[] => {
     return arr.sort(sortFnByField(field));
 }
 
