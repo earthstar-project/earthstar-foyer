@@ -68302,7 +68302,7 @@ class LobbyApp extends React.PureComponent {
                         marginBottom: 4,
                     } },
                     React.createElement("div", { className: 'flexRow' },
-                        React.createElement("div", { className: 'flexItem', style: { color: darkColor } },
+                        React.createElement("div", { className: 'flexItem', style: { color: darkColor }, title: doc.author },
                             React.createElement("b", null, util_1.cutAtPeriod(doc.author))),
                         React.createElement("div", { className: 'flexItem flexGrow-1' }),
                         React.createElement("div", { className: 'flexItem faint' }, new Date(doc.timestamp / 1000).toDateString())),
