@@ -6,6 +6,8 @@ import {
     StorageMemory,
     ValidatorEs4,
     AuthorKeypair,
+    isErr,
+    WriteResult,
 } from 'earthstar';
 
 import {
@@ -42,7 +44,7 @@ export class EarthbarStore {
     // state to preserve in localHost
     currentUser: UserConfig | null = null;
     currentWorkspace: WorkspaceConfig | null = null;
-    otherUsers: UserConfig[] = [];
+    //otherUsers: UserConfig[] = [];
     otherWorkspaces: WorkspaceConfig[] = [];
 
     // non-JSON stuff
@@ -65,6 +67,7 @@ export class EarthbarStore {
                 'https://earthstar-demo-pub-v5-a.glitch.me/',
             ],
         };
+        /*
         this.otherUsers = [
             {
                 authorKeypair: {
@@ -81,6 +84,7 @@ export class EarthbarStore {
                 displayName: null,
             },
         ];
+        */
         this.otherWorkspaces = [
             {
                 workspaceAddress: '+emojiparty.fq0p48',
@@ -90,7 +94,6 @@ export class EarthbarStore {
             },
         ];
         this._loadFromLocalStorage();
-        this._saveToLocalStorage();
         // create initial kit
         if (this.currentWorkspace !== null) {
             this.kit = new Kit(
@@ -98,8 +101,12 @@ export class EarthbarStore {
                 this.currentUser === null ? null : this.currentUser.authorKeypair,
                 this.currentWorkspace.pubs,
             );
+            if (this.currentUser !== null) {
+                this.currentUser.displayName = this._readDisplayNameFromIStorage();
+            }
             this._subscribeToKit();
         }
+        this._saveToLocalStorage();
         logEarthbarStore('/constructor');
     }
     _subscribeToKit() {
@@ -125,7 +132,7 @@ export class EarthbarStore {
             //mode: this.mode,
             currentUser: this.currentUser,
             currentWorkspace: this.currentWorkspace,
-            otherUsers: this.otherUsers,
+            //otherUsers: this.otherUsers,
             otherWorkspaces: this.otherWorkspaces,
         }));
     }
@@ -140,12 +147,20 @@ export class EarthbarStore {
             let parsed = JSON.parse(s);
             this.currentUser = parsed.currentUser;
             this.currentWorkspace = parsed.currentWorkspace;
-            this.otherUsers = parsed.otherUsers;
+            //this.otherUsers = parsed.otherUsers;
             this.otherWorkspaces = parsed.otherWorkspaces;
         } catch (e) {
             logEarthbarStore('_load from localStorage: error:');
             console.warn(e);
         }
+    }
+    _readDisplayNameFromIStorage(): string | null {
+        logEarthbarStore('_readDisplayNameFromIStorage');
+        if (this.currentUser === null) { return null; }
+        if (this.kit === null) { return null; }
+        let path = `/about/${this.currentUser.authorKeypair.address}/name`;
+        let displayName = this.kit.storage.getContent(path);
+        return displayName || null;  // undefined or '' become null
     }
     //--------------------------------------------------
     // VISUAL STATE
@@ -154,6 +169,34 @@ export class EarthbarStore {
         if (mode === this.mode) { return; }
         this.mode = mode;
         this._bump();
+    }
+    //--------------------------------------------------
+    // USER
+    setDisplayName(name: string): void {
+        if (this.currentUser === null) { return; }
+        if (this.kit === null) { return; }
+        this.currentUser.displayName = name;
+        // TODO: this should instead use kit.LayerAbout, but for now
+        // we're matching the path style used by earthstar-lobby.
+        // proper way:
+        //    let authorInfo = this.kit.layerAbout.getAuthorInfo(this.kit.authorKeypair.address)
+        //    if (isErr(authorInfo)) { return; }
+        //    this.kit.layerAbout.setMyAuthorProfile(this.kit.authorKeypair, {...authorInfo.profile, displayName: name});
+        //
+        // earthstar-lobby way
+        let result = this.kit.storage.set(this.currentUser.authorKeypair, {
+            format: 'es.4',
+            path: `/about/${this.currentUser.authorKeypair.address}/name`,
+            content: name,
+        });
+        if (result !== WriteResult.Accepted) { console.warn(result); }
+        this._bump();
+        this._saveToLocalStorage();
+    }
+    logOutUser(): void {
+        this.currentUser = null;
+        this._bump();
+        this._saveToLocalStorage();
     }
     //--------------------------------------------------
     // PUBS OF CURRENT WORKSPACE
@@ -236,6 +279,9 @@ export class EarthbarStore {
                 this.currentUser === null ? null : this.currentUser.authorKeypair,
                 workspaceConfig.pubs,
             );
+            if (this.currentUser !== null) {
+                this.currentUser.displayName = this._readDisplayNameFromIStorage();
+            }
             this._subscribeToKit();
         }
         this._bump();

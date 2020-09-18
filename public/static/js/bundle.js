@@ -68304,7 +68304,7 @@ class LobbyApp extends React.PureComponent {
                     React.createElement("div", { className: 'flexRow' },
                         React.createElement("div", { className: 'flexItem', style: { color: darkColor }, title: doc.author },
                             React.createElement("b", null, util_1.cutAtPeriod(doc.author))),
-                        React.createElement("div", { className: 'flexItem flexGrow-1' }),
+                        React.createElement("div", { className: 'flexItem flexGrow1' }),
                         React.createElement("div", { className: 'flexItem faint' }, new Date(doc.timestamp / 1000).toDateString())),
                     React.createElement("div", { className: 'wrappyText' }, doc.content));
             })));
@@ -68317,7 +68317,7 @@ exports.LobbyApp = LobbyApp;
 ReactDOM.render(React.createElement("div", { className: 'pageColumn' },
     React.createElement(earthbar_1.Earthbar, { app: LobbyApp })), document.getElementById('react-slot'));
 
-},{"./earthbar":267,"./log":270,"./util":271,"earthstar":100,"react":221,"react-dom":218}],267:[function(require,module,exports){
+},{"./earthbar":267,"./log":272,"./util":273,"earthstar":100,"react":221,"react-dom":218}],267:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -68339,11 +68339,12 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EarthbarUserPanel = exports.EarthbarWorkspacePanel = exports.Earthbar = void 0;
+exports.Earthbar = void 0;
 const React = __importStar(require("react"));
-const earthstar_1 = require("earthstar");
-const earthbarStore_1 = require("./earthbarStore");
 const util_1 = require("./util");
+const earthbarStore_1 = require("./earthbarStore");
+const earthbarWorkspacePanel_1 = require("./earthbarWorkspacePanel");
+const earthbarUserPanel_1 = require("./earthbarUserPanel");
 const log_1 = require("./log");
 class Earthbar extends React.Component {
     constructor(props) {
@@ -68366,9 +68367,9 @@ class Earthbar extends React.Component {
     render() {
         let store = this.state.store;
         log_1.logEarthbar(`render in ${store.mode} mode`);
-        let view = store.mode;
+        let mode = store.mode;
         // tab styles
-        let sWorkspaceTab = view === earthbarStore_1.EbMode.Workspace
+        let sWorkspaceTab = mode === earthbarStore_1.EbMode.Workspace
             ? { color: 'var(--cWhite)', background: 'var(--cWorkspace)', opacity: 0.66 } // selected
             : { color: 'var(--cWhite)', background: 'var(--cWorkspace)',
                 //marginTop: 'var(--s-2)',
@@ -68376,7 +68377,7 @@ class Earthbar extends React.Component {
                 paddingBottom: 'var(--s-1)',
                 marginBottom: 'var(--s-2)',
             };
-        let sUserTab = view === earthbarStore_1.EbMode.User
+        let sUserTab = mode === earthbarStore_1.EbMode.User
             ? { color: 'var(--cWhite)', background: 'var(--cUser)', opacity: 0.66 } // selected
             : { color: 'var(--cWhite)', background: 'var(--cUser)',
                 //marginTop: 'var(--s-2)',
@@ -68391,31 +68392,39 @@ class Earthbar extends React.Component {
             '--cBackground': 'var(--cWorkspace)',
         };
         // tab click actions
-        let onClickWorkspaceTab = view === earthbarStore_1.EbMode.Workspace
+        let onClickWorkspaceTab = mode === earthbarStore_1.EbMode.Workspace
             ? (e) => store.setMode(earthbarStore_1.EbMode.Closed)
             : (e) => store.setMode(earthbarStore_1.EbMode.Workspace);
-        let onClickUserTab = view === earthbarStore_1.EbMode.User
+        let onClickUserTab = mode === earthbarStore_1.EbMode.User
             ? (e) => store.setMode(earthbarStore_1.EbMode.Closed)
             : (e) => store.setMode(earthbarStore_1.EbMode.User);
         // which panel to show
         let panel = null;
-        if (view === earthbarStore_1.EbMode.Workspace) {
-            panel = React.createElement(EarthbarWorkspacePanel, { store: store });
+        if (mode === earthbarStore_1.EbMode.Workspace) {
+            panel = React.createElement(earthbarWorkspacePanel_1.EarthbarWorkspacePanel, { store: store });
         }
-        else if (view === earthbarStore_1.EbMode.User) {
-            panel = React.createElement(exports.EarthbarUserPanel, { store: store });
+        else if (mode === earthbarStore_1.EbMode.User) {
+            panel = React.createElement(earthbarUserPanel_1.EarthbarUserPanel, { store: store });
         }
+        // panel style
+        let sPanel = {
+            position: 'absolute',
+            zIndex: 99,
+            top: 0,
+            left: store.mode === earthbarStore_1.EbMode.User ? 20 : 0,
+            right: store.mode === earthbarStore_1.EbMode.Workspace ? 20 : 0,
+        };
         // style to hide children when a panel is open
-        let sChildren = view === earthbarStore_1.EbMode.Closed
+        let sChildren = mode === earthbarStore_1.EbMode.Closed
             ? {}
             : { opacity: 0.3, };
-        let workspaceString = 'Add a workspace';
+        let workspaceLabel = 'Add a workspace';
         if (store.currentWorkspace) {
-            workspaceString = util_1.cutAtPeriod(store.currentWorkspace.workspaceAddress);
+            workspaceLabel = util_1.cutAtPeriod(store.currentWorkspace.workspaceAddress);
         }
-        let userString = 'Guest User';
+        let userLabel = 'Guest User';
         if (store.currentUser) {
-            userString = util_1.cutAtPeriod(store.currentUser.authorKeypair.address);
+            userLabel = util_1.cutAtPeriod(store.currentUser.authorKeypair.address);
         }
         let canSync = false;
         if (store.kit !== null) {
@@ -68424,18 +68433,12 @@ class Earthbar extends React.Component {
         let App = this.props.app;
         return (React.createElement("div", null,
             React.createElement("div", { className: 'flexRow' },
-                React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: onClickWorkspaceTab }, workspaceString),
+                React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: onClickWorkspaceTab }, workspaceLabel),
                 React.createElement("button", { className: 'flexItem button', style: sSyncButton, disabled: !canSync, onClick: () => { var _a; return (_a = store.kit) === null || _a === void 0 ? void 0 : _a.syncer.sync(); } }, "Sync"),
-                React.createElement("div", { className: 'flexItem flexGrow-1' }),
-                React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: onClickUserTab }, userString)),
+                React.createElement("div", { className: 'flexItem flexGrow1' }),
+                React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: onClickUserTab }, userLabel)),
             React.createElement("div", { style: { position: 'relative' } },
-                React.createElement("div", { style: {
-                        position: 'absolute',
-                        zIndex: 99,
-                        top: 0,
-                        left: store.mode === earthbarStore_1.EbMode.User ? 20 : 0,
-                        right: store.mode === earthbarStore_1.EbMode.Workspace ? 20 : 0,
-                    } }, panel),
+                React.createElement("div", { style: sPanel }, panel),
                 React.createElement("div", { style: sChildren }, store.kit === null
                     ? null // don't render the app when there's no kit (no workspace)
                     // TODO: how should the app specify which changes it wants?  (storage, syncer)
@@ -68444,159 +68447,8 @@ class Earthbar extends React.Component {
     }
 }
 exports.Earthbar = Earthbar;
-//================================================================================
-// EARTHBAR PANELS
-let sWorkspacePanel = {
-    padding: 'var(--s0)',
-    // change colors
-    '--cBackground': 'var(--cWorkspace)',
-    '--cText': 'var(--cWhite)',
-    // apply color variables
-    background: 'var(--cBackground)',
-    color: 'var(--cText)',
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 'var(--round)',
-    borderBottomLeftRadius: 'var(--round)',
-    borderBottomRightRadius: 'var(--round)',
-    boxShadow: '0px 13px 10px 0px rgba(0,0,0,0.3)',
-};
-let sUserPanel = {
-    padding: 'var(--s0)',
-    // change colors
-    '--cBackground': 'var(--cUser)',
-    '--cText': 'var(--cWhite)',
-    // apply color variables
-    background: 'var(--cBackground)',
-    color: 'var(--cText)',
-    borderTopLeftRadius: 'var(--round)',
-    borderTopRightRadius: 0,
-    borderBottomLeftRadius: 'var(--round)',
-    borderBottomRightRadius: 'var(--round)',
-    boxShadow: '0px 13px 10px 0px rgba(0,0,0,0.3)',
-};
-class EarthbarWorkspacePanel extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            newPubInput: '',
-            newWorkspaceInput: '',
-            newWorkspaceError: null,
-        };
-    }
-    handleAddPub() {
-        let newPub = this.state.newPubInput.trim();
-        if (newPub.length > 0) {
-            if (newPub.startsWith('http://') || newPub.startsWith('https://')) {
-                this.props.store.addPub(newPub);
-                this.setState({ newPubInput: '' });
-            }
-        }
-    }
-    handleEditNewWorkspace(val) {
-        if (val === '') {
-            this.setState({
-                newWorkspaceInput: '',
-                newWorkspaceError: null,
-            });
-            return;
-        }
-        let parsed = earthstar_1.ValidatorEs4.parseWorkspaceAddress(val);
-        let err = null;
-        if (earthstar_1.isErr(parsed)) {
-            err = parsed.message;
-        }
-        this.setState({
-            newWorkspaceInput: val,
-            newWorkspaceError: err,
-        });
-    }
-    handleAddWorkspace() {
-        let newWorkspace = this.state.newWorkspaceInput;
-        let parsed = earthstar_1.ValidatorEs4.parseWorkspaceAddress(newWorkspace);
-        if (earthstar_1.notErr(parsed)) {
-            // can add a workspace by switching to it
-            this.props.store.switchWorkspace({
-                workspaceAddress: newWorkspace,
-                pubs: []
-            });
-            this.setState({ newWorkspaceInput: '' });
-        }
-    }
-    render() {
-        let store = this.props.store;
-        let pubs = [];
-        let allWorkspaces = store.otherWorkspaces;
-        if (store.currentWorkspace !== null) {
-            pubs = store.currentWorkspace.pubs;
-            allWorkspaces = [...allWorkspaces, store.currentWorkspace];
-            util_1.sortByField(allWorkspaces, 'workspaceAddress');
-        }
-        return React.createElement("div", { className: 'stack', style: sWorkspacePanel },
-            store.currentWorkspace === null
-                ? null
-                : React.createElement("div", { className: 'stack' },
-                    React.createElement("div", { className: 'faint' }, "Current workspace:"),
-                    React.createElement("div", { className: 'stack indent' },
-                        React.createElement("pre", null, store.currentWorkspace.workspaceAddress),
-                        React.createElement("div", { className: 'faint' }, "Pub Servers:"),
-                        React.createElement("div", { className: 'stack indent' },
-                            (store.kit === null ? [] : store.kit.syncer.state.pubs)
-                                .map(pub => {
-                                let icon = '';
-                                if (pub.syncState === 'idle') {
-                                    icon = '📡';
-                                }
-                                if (pub.syncState === 'syncing') {
-                                    icon = '⏳';
-                                }
-                                if (pub.syncState === 'success') {
-                                    icon = '✅';
-                                }
-                                if (pub.syncState === 'failure') {
-                                    icon = '❗️';
-                                }
-                                return React.createElement("div", { key: pub.domain, className: 'flexRow' },
-                                    React.createElement("div", { className: 'flexItem flexGrow-1' },
-                                        icon,
-                                        " ",
-                                        pub.domain),
-                                    React.createElement("button", { className: 'flexItem linkButton', onClick: () => store.removePub(pub.domain) }, "\u2715"));
-                            }),
-                            React.createElement("form", { className: 'flexRow', onSubmit: () => this.handleAddPub() },
-                                React.createElement("input", { className: 'flexItem flexGrow-1', type: "text", placeholder: "http://...", value: this.state.newPubInput, onChange: (e) => this.setState({ newPubInput: e.target.value }) }),
-                                React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit' }, "Add Pub Server"))))),
-            React.createElement("hr", { className: 'faint' }),
-            React.createElement("div", { className: 'faint' }, "Switch workspace:"),
-            React.createElement("div", { className: 'stack indent' },
-                allWorkspaces.map(wsConfig => {
-                    var _a;
-                    let isCurrent = wsConfig.workspaceAddress === ((_a = store.currentWorkspace) === null || _a === void 0 ? void 0 : _a.workspaceAddress);
-                    let style = isCurrent
-                        ? { fontStyle: 'italic', background: 'rgba(255,255,255,0.2)' }
-                        : {};
-                    return React.createElement("div", { key: wsConfig.workspaceAddress, className: 'flexRow' },
-                        React.createElement("a", { href: "#", style: Object.assign(Object.assign({}, style), { flexGrow: 1 }), className: 'flexItem linkButton', onClick: (e) => store.switchWorkspace(wsConfig) }, wsConfig.workspaceAddress),
-                        React.createElement("button", { className: 'flexItem linkButton', onClick: () => store.removeWorkspace(wsConfig.workspaceAddress) }, "\u2715"));
-                }),
-                React.createElement("form", { className: 'flexRow', onSubmit: () => this.handleAddWorkspace() },
-                    React.createElement("input", { className: 'flexItem flexGrow-1', type: "text", placeholder: "+foo.rjo34irqjf", value: this.state.newWorkspaceInput, onChange: (e) => this.handleEditNewWorkspace(e.target.value) }),
-                    React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit', disabled: this.state.newWorkspaceError !== null }, "Add Workspace")),
-                this.state.newWorkspaceError === null
-                    ? null
-                    : React.createElement("div", { className: 'right' }, this.state.newWorkspaceError)));
-    }
-}
-exports.EarthbarWorkspacePanel = EarthbarWorkspacePanel;
-exports.EarthbarUserPanel = (props) => React.createElement("div", { style: sUserPanel },
-    "Hello this is the user config page",
-    React.createElement("br", null),
-    React.createElement("br", null),
-    "Hello this is the user config page",
-    React.createElement("br", null),
-    React.createElement("br", null),
-    "Hello this is the user config page");
 
-},{"./earthbarStore":268,"./log":270,"./util":271,"earthstar":100,"react":221}],268:[function(require,module,exports){
+},{"./earthbarStore":268,"./earthbarUserPanel":269,"./earthbarWorkspacePanel":270,"./log":272,"./util":273,"react":221}],268:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EarthbarStore = exports.EbMode = void 0;
@@ -68618,7 +68470,7 @@ class EarthbarStore {
         // state to preserve in localHost
         this.currentUser = null;
         this.currentWorkspace = null;
-        this.otherUsers = [];
+        //otherUsers: UserConfig[] = [];
         this.otherWorkspaces = [];
         // non-JSON stuff
         this.kit = null;
@@ -68638,6 +68490,7 @@ class EarthbarStore {
                 'https://earthstar-demo-pub-v5-a.glitch.me/',
             ],
         };
+        /*
         this.otherUsers = [
             {
                 authorKeypair: {
@@ -68654,6 +68507,7 @@ class EarthbarStore {
                 displayName: null,
             },
         ];
+        */
         this.otherWorkspaces = [
             {
                 workspaceAddress: '+emojiparty.fq0p48',
@@ -68663,12 +68517,15 @@ class EarthbarStore {
             },
         ];
         this._loadFromLocalStorage();
-        this._saveToLocalStorage();
         // create initial kit
         if (this.currentWorkspace !== null) {
             this.kit = new kit_1.Kit(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], this.currentWorkspace.workspaceAddress), this.currentUser === null ? null : this.currentUser.authorKeypair, this.currentWorkspace.pubs);
+            if (this.currentUser !== null) {
+                this.currentUser.displayName = this._readDisplayNameFromIStorage();
+            }
             this._subscribeToKit();
         }
+        this._saveToLocalStorage();
         log_1.logEarthbarStore('/constructor');
     }
     _subscribeToKit() {
@@ -68696,7 +68553,7 @@ class EarthbarStore {
             //mode: this.mode,
             currentUser: this.currentUser,
             currentWorkspace: this.currentWorkspace,
-            otherUsers: this.otherUsers,
+            //otherUsers: this.otherUsers,
             otherWorkspaces: this.otherWorkspaces,
         }));
     }
@@ -68711,13 +68568,25 @@ class EarthbarStore {
             let parsed = JSON.parse(s);
             this.currentUser = parsed.currentUser;
             this.currentWorkspace = parsed.currentWorkspace;
-            this.otherUsers = parsed.otherUsers;
+            //this.otherUsers = parsed.otherUsers;
             this.otherWorkspaces = parsed.otherWorkspaces;
         }
         catch (e) {
             log_1.logEarthbarStore('_load from localStorage: error:');
             console.warn(e);
         }
+    }
+    _readDisplayNameFromIStorage() {
+        log_1.logEarthbarStore('_readDisplayNameFromIStorage');
+        if (this.currentUser === null) {
+            return null;
+        }
+        if (this.kit === null) {
+            return null;
+        }
+        let path = `/about/${this.currentUser.authorKeypair.address}/name`;
+        let displayName = this.kit.storage.getContent(path);
+        return displayName || null; // undefined or '' become null
     }
     //--------------------------------------------------
     // VISUAL STATE
@@ -68728,6 +68597,40 @@ class EarthbarStore {
         }
         this.mode = mode;
         this._bump();
+    }
+    //--------------------------------------------------
+    // USER
+    setDisplayName(name) {
+        if (this.currentUser === null) {
+            return;
+        }
+        if (this.kit === null) {
+            return;
+        }
+        this.currentUser.displayName = name;
+        // TODO: this should instead use kit.LayerAbout, but for now
+        // we're matching the path style used by earthstar-lobby.
+        // proper way:
+        //    let authorInfo = this.kit.layerAbout.getAuthorInfo(this.kit.authorKeypair.address)
+        //    if (isErr(authorInfo)) { return; }
+        //    this.kit.layerAbout.setMyAuthorProfile(this.kit.authorKeypair, {...authorInfo.profile, displayName: name});
+        //
+        // earthstar-lobby way
+        let result = this.kit.storage.set(this.currentUser.authorKeypair, {
+            format: 'es.4',
+            path: `/about/${this.currentUser.authorKeypair.address}/name`,
+            content: name,
+        });
+        if (result !== earthstar_1.WriteResult.Accepted) {
+            console.warn(result);
+        }
+        this._bump();
+        this._saveToLocalStorage();
+    }
+    logOutUser() {
+        this.currentUser = null;
+        this._bump();
+        this._saveToLocalStorage();
     }
     //--------------------------------------------------
     // PUBS OF CURRENT WORKSPACE
@@ -68822,6 +68725,9 @@ class EarthbarStore {
             log_1.logEarthbarStore(`rebuilding kit for ${workspaceConfig.workspaceAddress} with ${workspaceConfig.pubs.length} pubs`);
             this._unsubFromKit();
             this.kit = new kit_1.Kit(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], workspaceConfig.workspaceAddress), this.currentUser === null ? null : this.currentUser.authorKeypair, workspaceConfig.pubs);
+            if (this.currentUser !== null) {
+                this.currentUser.displayName = this._readDisplayNameFromIStorage();
+            }
             this._subscribeToKit();
         }
         this._bump();
@@ -68830,7 +68736,267 @@ class EarthbarStore {
 }
 exports.EarthbarStore = EarthbarStore;
 
-},{"./kit":269,"./log":270,"./util":271,"earthstar":100,"fast-equals":132}],269:[function(require,module,exports){
+},{"./kit":271,"./log":272,"./util":273,"earthstar":100,"fast-equals":132}],269:[function(require,module,exports){
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EarthbarUserPanel = void 0;
+const React = __importStar(require("react"));
+const util_1 = require("./util");
+const log_1 = require("./log");
+//================================================================================
+let sUserPanel = {
+    padding: 'var(--s0)',
+    // change colors
+    '--cBackground': 'var(--cUser)',
+    '--cText': 'var(--cWhite)',
+    // apply color variables
+    background: 'var(--cBackground)',
+    color: 'var(--cText)',
+    borderTopLeftRadius: 'var(--round)',
+    borderTopRightRadius: 0,
+    borderBottomLeftRadius: 'var(--round)',
+    borderBottomRightRadius: 'var(--round)',
+    boxShadow: '0px 13px 10px 0px rgba(0,0,0,0.3)',
+};
+class EarthbarUserPanel extends React.Component {
+    constructor(props) {
+        var _a;
+        super(props);
+        this.state = {
+            shortnameInput: '',
+            displayNameInput: ((_a = this.props.store.currentUser) === null || _a === void 0 ? void 0 : _a.displayName) || '',
+        };
+    }
+    handleCopyUsername() {
+        log_1.logEarthbarPanel('copying username');
+        if (this.props.store.currentUser === null) {
+            return;
+        }
+        navigator.clipboard.writeText(this.props.store.currentUser.authorKeypair.address);
+    }
+    handleSaveDisplayName() {
+        log_1.logEarthbarPanel('saving display name');
+        this.props.store.setDisplayName(this.state.displayNameInput.trim());
+    }
+    handleLogOut() {
+        log_1.logEarthbarPanel('logging out');
+        this.props.store.logOutUser();
+    }
+    render() {
+        var _a;
+        log_1.logEarthbarPanel('render user panel');
+        let store = this.props.store;
+        if (store.currentUser === null) {
+            return React.createElement("div", { className: 'stack', style: sUserPanel },
+                React.createElement("form", { className: 'flexRow', onSubmit: () => false },
+                    React.createElement("input", { className: 'flexItem flexGrow1', type: "text", placeholder: "suzy", value: this.state.shortnameInput, onChange: (e) => false }),
+                    React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit' }, "Create new user")),
+                React.createElement("hr", null),
+                React.createElement("form", { className: 'flexRow', onSubmit: () => false },
+                    React.createElement("input", { className: 'flexItem flexGrow1', type: "text", placeholder: "@suzy.xxxxxxxxx" }),
+                    React.createElement("input", { className: 'flexItem flexGrow1', type: "password", placeholder: "@suzy.xxxxxxxxx" }),
+                    React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit' }, "Log in")));
+        }
+        else {
+            // user is logged in
+            return React.createElement("div", { className: 'stack', style: sUserPanel },
+                React.createElement("div", { className: 'faint' }, "Full username"),
+                React.createElement("div", { className: 'indent flexRow' },
+                    React.createElement("pre", { className: 'flexGrow1', style: {
+                            whiteSpace: 'break-spaces',
+                            overflowWrap: 'break-word',
+                            margin: 0, padding: 0,
+                        } }, store.currentUser.authorKeypair.address),
+                    React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, onClick: () => this.handleCopyUsername() }, "Copy")),
+                React.createElement("div", { className: 'faint' }, "Display name in this workspace"),
+                React.createElement("form", { className: 'indent flexRow', onSubmit: (e) => { e.preventDefault(); this.handleSaveDisplayName(); } },
+                    React.createElement("input", { type: 'text', className: 'flexGrow1', value: this.state.displayNameInput, onChange: (e) => this.setState({ displayNameInput: e.target.value }), placeholder: util_1.cutAtPeriod((((_a = this.props.store.currentUser) === null || _a === void 0 ? void 0 : _a.authorKeypair.address) || '@').slice(1)) }),
+                    React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit' }, "Save")),
+                React.createElement("hr", { className: 'faint' }),
+                React.createElement("div", { style: { textAlign: 'center' } },
+                    React.createElement("button", { className: 'button', type: 'button', onClick: () => this.handleLogOut() }, "Log out")));
+        }
+    }
+}
+exports.EarthbarUserPanel = EarthbarUserPanel;
+
+},{"./log":272,"./util":273,"react":221}],270:[function(require,module,exports){
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EarthbarWorkspacePanel = void 0;
+const React = __importStar(require("react"));
+const earthstar_1 = require("earthstar");
+const util_1 = require("./util");
+const log_1 = require("./log");
+//================================================================================
+let sWorkspacePanel = {
+    padding: 'var(--s0)',
+    // change colors
+    '--cBackground': 'var(--cWorkspace)',
+    '--cText': 'var(--cWhite)',
+    // apply color variables
+    background: 'var(--cBackground)',
+    color: 'var(--cText)',
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 'var(--round)',
+    borderBottomLeftRadius: 'var(--round)',
+    borderBottomRightRadius: 'var(--round)',
+    boxShadow: '0px 13px 10px 0px rgba(0,0,0,0.3)',
+};
+class EarthbarWorkspacePanel extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            newPubInput: '',
+            newWorkspaceInput: '',
+            newWorkspaceError: null,
+        };
+    }
+    handleAddPub() {
+        let newPub = this.state.newPubInput.trim();
+        if (newPub.length > 0) {
+            if (newPub.startsWith('http://') || newPub.startsWith('https://')) {
+                this.props.store.addPub(newPub);
+                this.setState({ newPubInput: '' });
+            }
+        }
+    }
+    handleEditNewWorkspace(val) {
+        if (val === '') {
+            this.setState({
+                newWorkspaceInput: '',
+                newWorkspaceError: null,
+            });
+            return;
+        }
+        let parsed = earthstar_1.ValidatorEs4.parseWorkspaceAddress(val);
+        let err = null;
+        if (earthstar_1.isErr(parsed)) {
+            err = parsed.message;
+        }
+        this.setState({
+            newWorkspaceInput: val,
+            newWorkspaceError: err,
+        });
+    }
+    handleAddWorkspace() {
+        let newWorkspace = this.state.newWorkspaceInput;
+        let parsed = earthstar_1.ValidatorEs4.parseWorkspaceAddress(newWorkspace);
+        if (earthstar_1.notErr(parsed)) {
+            // can add a workspace by switching to it
+            this.props.store.switchWorkspace({
+                workspaceAddress: newWorkspace,
+                pubs: []
+            });
+            this.setState({ newWorkspaceInput: '' });
+        }
+    }
+    render() {
+        log_1.logEarthbarPanel('render workspace panel');
+        let store = this.props.store;
+        let pubs = [];
+        let allWorkspaces = store.otherWorkspaces;
+        if (store.currentWorkspace !== null) {
+            pubs = store.currentWorkspace.pubs;
+            allWorkspaces = [...allWorkspaces, store.currentWorkspace];
+            util_1.sortByField(allWorkspaces, 'workspaceAddress');
+        }
+        return React.createElement("div", { className: 'stack', style: sWorkspacePanel },
+            store.currentWorkspace === null
+                ? null
+                : React.createElement("div", { className: 'stack' },
+                    React.createElement("div", { className: 'faint' }, "Current workspace:"),
+                    React.createElement("div", { className: 'stack indent' },
+                        React.createElement("pre", null, store.currentWorkspace.workspaceAddress),
+                        React.createElement("div", { className: 'faint' }, "Pub Servers:"),
+                        React.createElement("div", { className: 'stack indent' },
+                            (store.kit === null ? [] : store.kit.syncer.state.pubs)
+                                .map(pub => {
+                                let icon = '';
+                                if (pub.syncState === 'idle') {
+                                    icon = '📡';
+                                }
+                                if (pub.syncState === 'syncing') {
+                                    icon = '⏳';
+                                }
+                                if (pub.syncState === 'success') {
+                                    icon = '✅';
+                                }
+                                if (pub.syncState === 'failure') {
+                                    icon = '❗️';
+                                }
+                                return React.createElement("div", { key: pub.domain, className: 'flexRow' },
+                                    React.createElement("div", { className: 'flexItem flexGrow1' },
+                                        icon,
+                                        " ",
+                                        pub.domain),
+                                    React.createElement("button", { className: 'flexItem linkButton', onClick: () => store.removePub(pub.domain) }, "\u2715"));
+                            }),
+                            React.createElement("form", { className: 'flexRow', onSubmit: (e) => { e.preventDefault(); this.handleAddPub(); } },
+                                React.createElement("input", { className: 'flexItem flexGrow1', type: "text", placeholder: "http://...", value: this.state.newPubInput, onChange: (e) => this.setState({ newPubInput: e.target.value }) }),
+                                React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit' }, "Add Pub Server"))))),
+            React.createElement("hr", { className: 'faint' }),
+            React.createElement("div", { className: 'faint' }, "Switch workspace:"),
+            React.createElement("div", { className: 'stack indent' },
+                allWorkspaces.map(wsConfig => {
+                    var _a;
+                    let isCurrent = wsConfig.workspaceAddress === ((_a = store.currentWorkspace) === null || _a === void 0 ? void 0 : _a.workspaceAddress);
+                    let style = isCurrent
+                        ? { fontStyle: 'italic', background: 'rgba(255,255,255,0.2)' }
+                        : {};
+                    return React.createElement("div", { key: wsConfig.workspaceAddress, className: 'flexRow' },
+                        React.createElement("a", { href: "#", style: style, className: 'flexItem flexGrow1 linkButton', onClick: (e) => store.switchWorkspace(wsConfig) }, wsConfig.workspaceAddress),
+                        React.createElement("button", { className: 'flexItem linkButton', onClick: () => store.removeWorkspace(wsConfig.workspaceAddress) }, "\u2715"));
+                }),
+                React.createElement("form", { className: 'flexRow', onSubmit: (e) => { e.preventDefault(); this.handleAddWorkspace(); } },
+                    React.createElement("input", { className: 'flexItem flexGrow1', type: "text", placeholder: "+foo.rjo34irqjf", value: this.state.newWorkspaceInput, onChange: (e) => this.handleEditNewWorkspace(e.target.value) }),
+                    React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit', disabled: this.state.newWorkspaceError !== null }, "Add Workspace")),
+                this.state.newWorkspaceError === null
+                    ? null
+                    : React.createElement("div", { className: 'right' }, this.state.newWorkspaceError)));
+    }
+}
+exports.EarthbarWorkspacePanel = EarthbarWorkspacePanel;
+
+},{"./log":272,"./util":273,"earthstar":100,"react":221}],271:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Kit = void 0;
@@ -68876,17 +69042,18 @@ class Kit {
 }
 exports.Kit = Kit;
 
-},{"./log":270,"earthstar":100,"lodash.debounce":170}],270:[function(require,module,exports){
+},{"./log":272,"earthstar":100,"lodash.debounce":170}],272:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logLobbyApp = exports.logEarthbar = exports.logKit = exports.logEarthbarStore = void 0;
+exports.logLobbyApp = exports.logEarthbarPanel = exports.logEarthbar = exports.logKit = exports.logEarthbarStore = void 0;
 let makeLogger = (tag) => (...args) => console.log(tag + ' |', ...args);
 exports.logEarthbarStore = makeLogger('earthbar store');
 exports.logKit = makeLogger('    kit');
 exports.logEarthbar = makeLogger('        earthbar view');
+exports.logEarthbarPanel = makeLogger('            earthbar panel');
 exports.logLobbyApp = makeLogger('            lobby view');
 
-},{}],271:[function(require,module,exports){
+},{}],273:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ellipsifyAddress = exports.cutAtPeriod = exports.sortByField = exports.sortFnByField = void 0;

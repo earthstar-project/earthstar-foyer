@@ -84,7 +84,7 @@ export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
                         }}>
                         <div className='flexRow'>
                             <div className='flexItem' style={{color: darkColor}} title={doc.author}><b>{cutAtPeriod(doc.author)}</b></div>
-                            <div className='flexItem flexGrow-1' />
+                            <div className='flexItem flexGrow1' />
                             <div className='flexItem faint'>{new Date(doc.timestamp/1000).toDateString()}</div>
                         </div>
                         <div className='wrappyText'>{doc.content}</div>

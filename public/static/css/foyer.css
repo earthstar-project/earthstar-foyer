@@ -63,7 +63,10 @@
 .flexItem {
     border: var(--test-border-width) solid #880;
 }
-.flexGrow-1 {
+.flexGrow1 {
+    flex-grow: 1;
+}
+.flexGrow0 {
     flex-grow: 1;
 }
 
