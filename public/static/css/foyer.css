@@ -163,6 +163,9 @@ textarea::before {
 .right {
     text-align: right;
 }
+.center {
+    text-align: center;
+}
 
 .wrappyText {
     white-space: break-spaces;

@@ -68623,7 +68623,8 @@ class EarthbarStore {
         log_1.logEarthbarStore('creating user with shortname ' + shortname);
         let keypair = earthstar_1.generateAuthorKeypair(shortname);
         if (earthstar_1.isErr(keypair)) {
-            console.error(keypair);
+            log_1.logEarthbarStore('could not generate keypair from shortname:');
+            console.warn(keypair.name, keypair.message);
             return;
         }
         this._setCurrentUser(keypair);
@@ -68631,10 +68632,11 @@ class EarthbarStore {
         this._saveToLocalStorage();
     }
     logIn(keypair) {
-        log_1.logEarthbarStore('logging in:', keypair);
+        log_1.logEarthbarStore('logging in:');
         let valid = earthstar_1.checkAuthorKeypairIsValid(keypair);
         if (earthstar_1.isErr(valid)) {
-            console.error(valid.message);
+            log_1.logEarthbarStore('keypair is not valid:', keypair);
+            console.warn(valid.name, valid.message);
             return valid;
         }
         this._setCurrentUser(keypair);
@@ -68819,9 +68821,12 @@ class EarthbarUserPanel extends React.Component {
             shortnameInput: '',
             usernameInput: '',
             passwordInput: '',
+            loginError: '',
             displayNameInput: ((_a = this.props.store.currentUser) === null || _a === void 0 ? void 0 : _a.displayName) || '',
         };
     }
+    //-------------------------
+    // create user
     shortnameIsValid(shortname) {
         let fakeAddr = '@' + shortname + '.bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
         let parsed = earthstar_1.ValidatorEs4.parseAuthorAddress(fakeAddr);
@@ -68831,19 +68836,70 @@ class EarthbarUserPanel extends React.Component {
         let shortname = this.state.shortnameInput;
         return shortname && this.shortnameIsValid(shortname);
     }
-    handleEditShortname(shortname) {
-        this.setState({ shortnameInput: shortname.trim() });
+    handleEditShortname(val) {
+        this.setState({ shortnameInput: val.trim() });
     }
     handleCreateUser() {
         let shortname = this.state.shortnameInput;
         if (this.shortnameIsValid(shortname)) {
-            this.setState({ shortnameInput: '' });
             this.props.store.createUser(this.state.shortnameInput);
+            this.setState({ shortnameInput: '' });
+            /*
+            // HACK to try to get 1password to recognize the fake fields
+            let u = document.getElementById('fakeUsername');
+            let p = document.getElementById('fakePassword');
+            setTimeout(() => {
+                if (!u || !p) { return; }
+                u.click();
+                u.focus();
+                u.setAttribute('value', 'abc');
+                setTimeout(() => {
+                if (!u || !p) { return; }
+                    p.click();
+                    p.focus();
+                    p.setAttribute('value', 'def');
+                    setTimeout(() => {
+                        this.props.store.createUser(this.state.shortnameInput);
+                        this.setState({shortnameInput: ''});
+                    }, 1000);
+                }, 1000);
+            }, 1);
+            */
         }
         else {
             console.warn('invalid shortname: ' + shortname);
         }
     }
+    //-------------------------
+    // log in
+    handleEditUsername(val) {
+        this.setState({ usernameInput: val.trim(), loginError: '' });
+    }
+    handleEditPassword(val) {
+        this.setState({ passwordInput: val.trim(), loginError: '' });
+    }
+    canLogIn() {
+        return this.state.usernameInput.length > 0 && this.state.passwordInput.length > 0;
+    }
+    handleLogIn() {
+        let keypair = {
+            address: this.state.usernameInput,
+            secret: this.state.passwordInput,
+        };
+        let success = this.props.store.logIn(keypair);
+        if (earthstar_1.isErr(success)) {
+            this.setState({ loginError: 'Invalid username or password' });
+        }
+        else {
+            this.setState({
+                usernameInput: '',
+                passwordInput: '',
+                loginError: '',
+            });
+        }
+    }
+    //-------------------------
+    // for logged-in users
     handleCopy(val) {
         log_1.logEarthbarPanel('copying value to clipboard: ' + val);
         navigator.clipboard.writeText(val);
@@ -68856,6 +68912,7 @@ class EarthbarUserPanel extends React.Component {
         log_1.logEarthbarPanel('logging out');
         this.props.store.logOutUser();
     }
+    //-------------------------
     render() {
         log_1.logEarthbarPanel('render user panel');
         let store = this.props.store;
@@ -68863,17 +68920,18 @@ class EarthbarUserPanel extends React.Component {
             return React.createElement("div", { className: 'stack', style: sUserPanel },
                 React.createElement("div", { className: 'faint' }, "Create new user"),
                 React.createElement("form", { className: 'flexRow indent', onSubmit: (e) => { e.preventDefault(); this.handleCreateUser(); } },
-                    React.createElement("input", { className: 'flexItem flexGrow1', type: "text", placeholder: "4-letter nickname", maxLength: 4, value: this.state.shortnameInput, onChange: (e) => this.handleEditShortname(e.target.value) }),
-                    React.createElement("button", { className: 'button flexItem', type: 'submit', style: { marginLeft: 'var(--s-1)' }, disabled: !this.canCreateUser() }, "Create")),
+                    React.createElement("input", { className: 'flexItem flexGrow1', type: 'text', placeholder: '4-letter nickname', maxLength: 4, value: this.state.shortnameInput, onChange: (e) => this.handleEditShortname(e.target.value) }),
+                    React.createElement("button", { className: 'button flexItem', type: 'submit', id: 'createUser', style: { marginLeft: 'var(--s-1)' }, disabled: !this.canCreateUser() }, "Create")),
                 React.createElement("div", { className: 'faint indent' }, "We'll create a new, unique username and password for you. After clicking Create, be sure to save your username and password so you can log in again later!"),
                 React.createElement("hr", { className: 'faint' }),
                 React.createElement("div", { className: 'faint' }, "Log in"),
-                React.createElement("form", { className: 'stack indent', onSubmit: () => false },
+                React.createElement("form", { className: 'stack indent', onSubmit: (e) => { e.preventDefault(); this.handleLogIn(); } },
                     React.createElement("div", { className: 'flexRow' },
-                        React.createElement("input", { className: 'flexItem flexGrow1', type: "text", placeholder: '@user.xxxxxxxxxxxxxxx' })),
+                        React.createElement("input", { className: 'flexItem flexGrow1', type: "text", name: 'username', id: 'loginUsername', placeholder: '@user.xxxxxxxxxxxxxxx', onChange: (e) => this.handleEditUsername(e.target.value) })),
                     React.createElement("div", { className: 'flexRow' },
-                        React.createElement("input", { className: 'flexItem flexGrow1', type: 'password', placeholder: 'password' }),
-                        React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit' }, "Log in"))));
+                        React.createElement("input", { className: 'flexItem flexGrow1', type: 'password', name: 'password', id: 'loginPassword', placeholder: 'password', onChange: (e) => this.handleEditPassword(e.target.value) }),
+                        React.createElement("button", { className: 'button flexItem', type: 'submit', id: 'logIn', style: { marginLeft: 'var(--s-1)' }, disabled: !this.canLogIn() }, "Log in")),
+                    React.createElement("div", { className: 'indent right' }, this.state.loginError)));
         }
         else {
             // user is logged in
@@ -68881,7 +68939,7 @@ class EarthbarUserPanel extends React.Component {
                 React.createElement("div", { className: 'faint' }, "Display name in this workspace"),
                 React.createElement("form", { className: 'indent flexRow', onSubmit: (e) => { e.preventDefault(); this.handleSaveDisplayName(); } },
                     React.createElement("input", { type: 'text', className: 'flexGrow1', value: this.state.displayNameInput, onChange: (e) => this.setState({ displayNameInput: e.target.value }) }),
-                    React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit' }, "Save")),
+                    React.createElement("button", { className: 'button flexItem', type: 'submit', style: { marginLeft: 'var(--s-1)' } }, "Save")),
                 React.createElement("hr", { className: 'faint' }),
                 React.createElement("div", { className: 'faint' }, "Username"),
                 React.createElement("div", { className: 'indent flexRow' },
@@ -68890,7 +68948,7 @@ class EarthbarUserPanel extends React.Component {
                             overflowWrap: 'break-word',
                             margin: 0, padding: 0,
                         } }, store.currentUser.authorKeypair.address),
-                    React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, onClick: () => { var _a; return this.handleCopy(((_a = store.currentUser) === null || _a === void 0 ? void 0 : _a.authorKeypair.address) || ''); } }, "Copy")),
+                    React.createElement("button", { className: 'button flexItem', type: 'button', style: { marginLeft: 'var(--s-1)' }, onClick: () => { var _a; return this.handleCopy(((_a = store.currentUser) === null || _a === void 0 ? void 0 : _a.authorKeypair.address) || ''); } }, "Copy")),
                 React.createElement("div", { className: 'faint' }, "Password"),
                 React.createElement("div", { className: 'indent flexRow' },
                     React.createElement("pre", { className: 'flexGrow1 faint', style: {
@@ -68898,9 +68956,9 @@ class EarthbarUserPanel extends React.Component {
                             overflowWrap: 'break-word',
                             margin: 0, padding: 0,
                         } }, store.currentUser.authorKeypair.secret),
-                    React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, onClick: () => { var _a; return this.handleCopy(((_a = store.currentUser) === null || _a === void 0 ? void 0 : _a.authorKeypair.secret) || ''); } }, "Copy")),
+                    React.createElement("button", { className: 'button flexItem', type: 'button', style: { marginLeft: 'var(--s-1)' }, onClick: () => { var _a; return this.handleCopy(((_a = store.currentUser) === null || _a === void 0 ? void 0 : _a.authorKeypair.secret) || ''); } }, "Copy")),
                 React.createElement("hr", { className: 'faint' }),
-                React.createElement("div", { style: { textAlign: 'center' } },
+                React.createElement("div", { className: 'center' },
                     React.createElement("button", { className: 'button', type: 'button', onClick: () => this.handleLogOut() }, "Log out")),
                 React.createElement("div", { className: 'faint indent' }, "Make sure to save your username and password before you log out!"));
         }

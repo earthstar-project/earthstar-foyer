@@ -199,7 +199,8 @@ export class EarthbarStore {
         logEarthbarStore('creating user with shortname ' + shortname);
         let keypair = generateAuthorKeypair(shortname);
         if (isErr(keypair)) {
-            console.error(keypair);
+            logEarthbarStore('could not generate keypair from shortname:');
+            console.warn(keypair.name, keypair.message);
             return;
         }
         this._setCurrentUser(keypair);
@@ -207,10 +208,11 @@ export class EarthbarStore {
         this._saveToLocalStorage();
     }
     logIn(keypair: AuthorKeypair): ValidationError | true {
-        logEarthbarStore('logging in:', keypair);
+        logEarthbarStore('logging in:');
         let valid = checkAuthorKeypairIsValid(keypair);
         if (isErr(valid)) {
-            console.error(valid.message);
+            logEarthbarStore('keypair is not valid:', keypair);
+            console.warn(valid.name, valid.message);
             return valid;
         }
         this._setCurrentUser(keypair);

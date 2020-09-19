@@ -4,6 +4,7 @@ import {
     ValidatorEs4,
     isErr,
     notErr,
+    AuthorKeypair,
 } from 'earthstar';
 
 import {
@@ -45,6 +46,7 @@ interface EbUserPanelState {
     shortnameInput: string,
     usernameInput: string,
     passwordInput: string,
+    loginError: string,
     displayNameInput: string,
 }
 export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanelState> {
@@ -54,9 +56,12 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
             shortnameInput: '',
             usernameInput: '',
             passwordInput: '',
+            loginError: '',
             displayNameInput: this.props.store.currentUser?.displayName || '',
         };
     }
+    //-------------------------
+    // create user
     shortnameIsValid(shortname: string) {
         let fakeAddr = '@' + shortname + '.bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
         let parsed = ValidatorEs4.parseAuthorAddress(fakeAddr);
@@ -66,18 +71,68 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
         let shortname = this.state.shortnameInput;
         return shortname && this.shortnameIsValid(shortname);
     }
-    handleEditShortname(shortname: string) {
-        this.setState({shortnameInput: shortname.trim()});
+    handleEditShortname(val: string) {
+        this.setState({shortnameInput: val.trim()});
     }
     handleCreateUser() {
         let shortname = this.state.shortnameInput;
         if (this.shortnameIsValid(shortname)) {
-            this.setState({shortnameInput: ''});
             this.props.store.createUser(this.state.shortnameInput);
+            this.setState({shortnameInput: ''});
+            /*
+            // HACK to try to get 1password to recognize the fake fields
+            let u = document.getElementById('fakeUsername');
+            let p = document.getElementById('fakePassword');
+            setTimeout(() => {
+                if (!u || !p) { return; }
+                u.click();
+                u.focus();
+                u.setAttribute('value', 'abc');
+                setTimeout(() => {
+                if (!u || !p) { return; }
+                    p.click();
+                    p.focus();
+                    p.setAttribute('value', 'def');
+                    setTimeout(() => {
+                        this.props.store.createUser(this.state.shortnameInput);
+                        this.setState({shortnameInput: ''});
+                    }, 1000);
+                }, 1000);
+            }, 1);
+            */
         } else {
             console.warn('invalid shortname: ' + shortname);
         }
     }
+    //-------------------------
+    // log in
+    handleEditUsername(val: string) {
+        this.setState({usernameInput: val.trim(), loginError: ''});
+    }
+    handleEditPassword(val: string) {
+        this.setState({passwordInput: val.trim(), loginError: ''});
+    }
+    canLogIn(): boolean {
+        return this.state.usernameInput.length > 0 && this.state.passwordInput.length > 0;
+    }
+    handleLogIn() {
+        let keypair: AuthorKeypair = {
+            address: this.state.usernameInput,
+            secret: this.state.passwordInput,
+        }
+        let success = this.props.store.logIn(keypair);
+        if (isErr(success)) {
+            this.setState({loginError: 'Invalid username or password'});
+        } else {
+            this.setState({
+                usernameInput: '',
+                passwordInput: '',
+                loginError: '',
+            });
+        }
+    }
+    //-------------------------
+    // for logged-in users
     handleCopy(val: string) {
         logEarthbarPanel('copying value to clipboard: ' + val);
         navigator.clipboard.writeText(val);
@@ -90,6 +145,7 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
         logEarthbarPanel('logging out');
         this.props.store.logOutUser();
     }
+    //-------------------------
     render() {
         logEarthbarPanel('render user panel');
         let store = this.props.store;
@@ -99,19 +155,28 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
                 {/* form to create new user */}
                 <div className='faint'>Create new user</div>
                 <form className='flexRow indent' onSubmit={(e) => {e.preventDefault(); this.handleCreateUser()}}>
-                    <input className='flexItem flexGrow1' type="text"
-                        placeholder="4-letter nickname"
+                    <input className='flexItem flexGrow1' type='text'
+                        placeholder='4-letter nickname'
                         maxLength={4}
                         value={this.state.shortnameInput}
                         onChange={(e) => this.handleEditShortname(e.target.value)}
                         />
                     <button className='button flexItem'
                         type='submit'
+                        id='createUser'
                         style={{marginLeft: 'var(--s-1)'}}
                         disabled={!this.canCreateUser()}
                         >
                         Create
                     </button>
+                    {/* fake inputs for 1password
+                    <input className='flexItem flexGrow1' type='text'
+                        name='username' id='fakeUsername'
+                        />
+                    <input className='flexItem flexGrow1' type='password'
+                        name='password' id='fakePassword'
+                        />
+                    */}
                 </form>
                 <div className='faint indent'>
                     We'll create a new, unique username and password for you.
@@ -121,23 +186,30 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
                 <hr className='faint'/>
                 {/* form to log in */}
                 <div className='faint'>Log in</div>
-                <form className='stack indent' onSubmit={() => false}>
+                <form className='stack indent' onSubmit={(e) => {e.preventDefault(); this.handleLogIn()}}>
                     <div className='flexRow'>
                         <input className='flexItem flexGrow1' type="text"
+                            name='username' id='loginUsername'
                             placeholder='@user.xxxxxxxxxxxxxxx'
+                            onChange={(e) => this.handleEditUsername(e.target.value)}
                             />
                     </div>
                     <div className='flexRow'>
                         <input className='flexItem flexGrow1' type='password'
+                            name='password' id='loginPassword'
                             placeholder='password'
+                            onChange={(e) => this.handleEditPassword(e.target.value)}
                             />
                         <button className='button flexItem'
-                            style={{marginLeft: 'var(--s-1)'}}
                             type='submit'
+                            id='logIn'
+                            style={{marginLeft: 'var(--s-1)'}}
+                            disabled={!this.canLogIn()}
                             >
                             Log in
                         </button>
                     </div>
+                    <div className='indent right'>{this.state.loginError}</div>
                 </form>
             </div>;
         } else {
@@ -150,8 +222,8 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
                         onChange={(e) => this.setState({displayNameInput: e.target.value})}
                         />
                     <button className='button flexItem'
-                        style={{marginLeft: 'var(--s-1)'}}
                         type='submit'
+                        style={{marginLeft: 'var(--s-1)'}}
                         >
                         Save
                     </button>
@@ -166,7 +238,7 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
                         }}>
                         {store.currentUser.authorKeypair.address}
                     </pre>
-                    <button className='button flexItem'
+                    <button className='button flexItem' type='button'
                         style={{marginLeft: 'var(--s-1)'}}
                         onClick={() => this.handleCopy(store.currentUser?.authorKeypair.address || '')}
                         >
@@ -182,7 +254,7 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
                         }}>
                         {store.currentUser.authorKeypair.secret}
                     </pre>
-                    <button className='button flexItem'
+                    <button className='button flexItem' type='button'
                         style={{marginLeft: 'var(--s-1)'}}
                         onClick={() => this.handleCopy(store.currentUser?.authorKeypair.secret || '')}
                         >
@@ -190,7 +262,7 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
                     </button>
                 </div>
                 <hr className='faint' />
-                <div style={{textAlign: 'center'}}>
+                <div className='center'>
                     <button className='button' type='button'
                         onClick={() => this.handleLogOut()}
                         >
