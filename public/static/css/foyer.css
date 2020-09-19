@@ -87,7 +87,7 @@ hr {
     font-weight: bold;
 }
 
-input[type=text] {
+input[type=text], input[type=password] {
     border: 2px solid var(--cText);
     background: none;
     color: var(--cText);

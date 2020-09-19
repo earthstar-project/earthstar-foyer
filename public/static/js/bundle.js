@@ -68422,7 +68422,7 @@ class Earthbar extends React.Component {
         if (store.currentWorkspace) {
             workspaceLabel = util_1.cutAtPeriod(store.currentWorkspace.workspaceAddress);
         }
-        let userLabel = 'Guest User';
+        let userLabel = 'log in';
         if (store.currentUser) {
             userLabel = util_1.cutAtPeriod(store.currentUser.authorKeypair.address);
         }
@@ -68475,6 +68475,9 @@ class EarthbarStore {
         // non-JSON stuff
         this.kit = null;
         this.unsubSyncer = null;
+        // emit change events when we need to re-render the earthbar:
+        // - the kit's Syncer emits a change event
+        // - any state changes in the EarthbarStore (current user or workspace, new Kit, etc)
         this.onChange = new earthstar_1.Emitter();
         log_1.logEarthbarStore('constructor');
         this.currentUser = {
@@ -68517,30 +68520,38 @@ class EarthbarStore {
             },
         ];
         this._loadFromLocalStorage();
-        // create initial kit
-        if (this.currentWorkspace !== null) {
-            this.kit = new kit_1.Kit(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], this.currentWorkspace.workspaceAddress), this.currentUser === null ? null : this.currentUser.authorKeypair, this.currentWorkspace.pubs);
-            if (this.currentUser !== null) {
-                this.currentUser.displayName = this._readDisplayNameFromIStorage();
-            }
-            this._subscribeToKit();
-        }
+        this._rebuildKit();
         this._saveToLocalStorage();
         log_1.logEarthbarStore('/constructor');
     }
-    _subscribeToKit() {
-        // call this after making a new kit instance
-        if (this.kit) {
-            // get change events from the kit.syncer and pass them along into our own change feed
-            this.unsubSyncer = this.kit.syncer.onChange.subscribe(() => this.onChange.send(null));
-        }
-    }
-    _unsubFromKit() {
-        // call this whenever changing the kit or setting it to null
+    //--------------------------------------------------
+    // PRIVATE METHODS
+    // None of these should call _bump or _saveToLocalStorage; the public methods are responsible for that.
+    //
+    _rebuildKit() {
+        var _a;
+        // set up a new Kit instance to match this.currentWorkspace,
+        // or set kit to null if the currentWorkspace is null.
+        log_1.logEarthbarStore('rebuilding kit');
+        // unsub from previous kit
         if (this.unsubSyncer) {
             this.unsubSyncer();
         }
         this.unsubSyncer = null;
+        if (this.currentWorkspace === null) {
+            log_1.logEarthbarStore("...it's null because workspace is null");
+            this.kit = null;
+        }
+        else {
+            log_1.logEarthbarStore(`...for workspace ${this.currentWorkspace.workspaceAddress} and user ${((_a = this.currentUser) === null || _a === void 0 ? void 0 : _a.authorKeypair.address) || null}`);
+            this.kit = new kit_1.Kit(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], this.currentWorkspace.workspaceAddress), this.currentUser === null ? null : this.currentUser.authorKeypair, this.currentWorkspace.pubs);
+            // load user's displayName from IStorage
+            if (this.currentUser !== null) {
+                this.currentUser.displayName = this._readDisplayNameFromIStorage();
+            }
+            // subscribe to kit events
+            this.unsubSyncer = this.kit.syncer.onChange.subscribe(() => this.onChange.send(null));
+        }
     }
     _bump() {
         // notify our subscribers of a change to the EarthbarStore's state
@@ -68588,6 +68599,14 @@ class EarthbarStore {
         let displayName = this.kit.storage.getContent(path);
         return displayName || null; // undefined or '' become null
     }
+    _setCurrentUser(keypair) {
+        log_1.logEarthbarStore('_setCurrentUser', keypair);
+        this.currentUser = {
+            authorKeypair: keypair,
+            displayName: null,
+        };
+        // TODO: reload kit
+    }
     //--------------------------------------------------
     // VISUAL STATE
     setMode(mode) {
@@ -68600,6 +68619,29 @@ class EarthbarStore {
     }
     //--------------------------------------------------
     // USER
+    createUser(shortname) {
+        log_1.logEarthbarStore('creating user with shortname ' + shortname);
+        let keypair = earthstar_1.generateAuthorKeypair(shortname);
+        if (earthstar_1.isErr(keypair)) {
+            console.error(keypair);
+            return;
+        }
+        this._setCurrentUser(keypair);
+        this._bump();
+        this._saveToLocalStorage();
+    }
+    logIn(keypair) {
+        log_1.logEarthbarStore('logging in:', keypair);
+        let valid = earthstar_1.checkAuthorKeypairIsValid(keypair);
+        if (earthstar_1.isErr(valid)) {
+            console.error(valid.message);
+            return valid;
+        }
+        this._setCurrentUser(keypair);
+        this._bump();
+        this._saveToLocalStorage();
+        return true;
+    }
     setDisplayName(name) {
         if (this.currentUser === null) {
             return;
@@ -68686,8 +68728,7 @@ class EarthbarStore {
         log_1.logEarthbarStore('removeWorkspace', workspaceAddress);
         if (((_a = this.currentWorkspace) === null || _a === void 0 ? void 0 : _a.workspaceAddress) === workspaceAddress) {
             this.currentWorkspace = null;
-            this._unsubFromKit();
-            this.kit = null;
+            this._rebuildKit();
         }
         else {
             this.otherWorkspaces = this.otherWorkspaces.filter(wc => wc.workspaceAddress !== workspaceAddress);
@@ -68718,18 +68759,11 @@ class EarthbarStore {
         // rebuild the kit
         if (workspaceConfig === null) {
             log_1.logEarthbarStore(`rebuilding kit: it's null`);
-            this._unsubFromKit();
-            this.kit = null;
         }
         else {
             log_1.logEarthbarStore(`rebuilding kit for ${workspaceConfig.workspaceAddress} with ${workspaceConfig.pubs.length} pubs`);
-            this._unsubFromKit();
-            this.kit = new kit_1.Kit(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], workspaceConfig.workspaceAddress), this.currentUser === null ? null : this.currentUser.authorKeypair, workspaceConfig.pubs);
-            if (this.currentUser !== null) {
-                this.currentUser.displayName = this._readDisplayNameFromIStorage();
-            }
-            this._subscribeToKit();
         }
+        this._rebuildKit();
         this._bump();
         this._saveToLocalStorage();
     }
@@ -68760,7 +68794,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EarthbarUserPanel = void 0;
 const React = __importStar(require("react"));
-const util_1 = require("./util");
+const earthstar_1 = require("earthstar");
 const log_1 = require("./log");
 //================================================================================
 let sUserPanel = {
@@ -68783,15 +68817,36 @@ class EarthbarUserPanel extends React.Component {
         super(props);
         this.state = {
             shortnameInput: '',
+            usernameInput: '',
+            passwordInput: '',
             displayNameInput: ((_a = this.props.store.currentUser) === null || _a === void 0 ? void 0 : _a.displayName) || '',
         };
     }
-    handleCopyUsername() {
-        log_1.logEarthbarPanel('copying username');
-        if (this.props.store.currentUser === null) {
-            return;
+    shortnameIsValid(shortname) {
+        let fakeAddr = '@' + shortname + '.bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+        let parsed = earthstar_1.ValidatorEs4.parseAuthorAddress(fakeAddr);
+        return earthstar_1.notErr(parsed);
+    }
+    canCreateUser() {
+        let shortname = this.state.shortnameInput;
+        return shortname && this.shortnameIsValid(shortname);
+    }
+    handleEditShortname(shortname) {
+        this.setState({ shortnameInput: shortname.trim() });
+    }
+    handleCreateUser() {
+        let shortname = this.state.shortnameInput;
+        if (this.shortnameIsValid(shortname)) {
+            this.setState({ shortnameInput: '' });
+            this.props.store.createUser(this.state.shortnameInput);
         }
-        navigator.clipboard.writeText(this.props.store.currentUser.authorKeypair.address);
+        else {
+            console.warn('invalid shortname: ' + shortname);
+        }
+    }
+    handleCopy(val) {
+        log_1.logEarthbarPanel('copying value to clipboard: ' + val);
+        navigator.clipboard.writeText(val);
     }
     handleSaveDisplayName() {
         log_1.logEarthbarPanel('saving display name');
@@ -68802,44 +68857,58 @@ class EarthbarUserPanel extends React.Component {
         this.props.store.logOutUser();
     }
     render() {
-        var _a;
         log_1.logEarthbarPanel('render user panel');
         let store = this.props.store;
         if (store.currentUser === null) {
             return React.createElement("div", { className: 'stack', style: sUserPanel },
-                React.createElement("form", { className: 'flexRow', onSubmit: () => false },
-                    React.createElement("input", { className: 'flexItem flexGrow1', type: "text", placeholder: "suzy", value: this.state.shortnameInput, onChange: (e) => false }),
-                    React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit' }, "Create new user")),
-                React.createElement("hr", null),
-                React.createElement("form", { className: 'flexRow', onSubmit: () => false },
-                    React.createElement("input", { className: 'flexItem flexGrow1', type: "text", placeholder: "@suzy.xxxxxxxxx" }),
-                    React.createElement("input", { className: 'flexItem flexGrow1', type: "password", placeholder: "@suzy.xxxxxxxxx" }),
-                    React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit' }, "Log in")));
+                React.createElement("div", { className: 'faint' }, "Create new user"),
+                React.createElement("form", { className: 'flexRow indent', onSubmit: (e) => { e.preventDefault(); this.handleCreateUser(); } },
+                    React.createElement("input", { className: 'flexItem flexGrow1', type: "text", placeholder: "4-letter nickname", maxLength: 4, value: this.state.shortnameInput, onChange: (e) => this.handleEditShortname(e.target.value) }),
+                    React.createElement("button", { className: 'button flexItem', type: 'submit', style: { marginLeft: 'var(--s-1)' }, disabled: !this.canCreateUser() }, "Create")),
+                React.createElement("div", { className: 'faint indent' }, "We'll create a new, unique username and password for you. After clicking Create, be sure to save your username and password so you can log in again later!"),
+                React.createElement("hr", { className: 'faint' }),
+                React.createElement("div", { className: 'faint' }, "Log in"),
+                React.createElement("form", { className: 'stack indent', onSubmit: () => false },
+                    React.createElement("div", { className: 'flexRow' },
+                        React.createElement("input", { className: 'flexItem flexGrow1', type: "text", placeholder: '@user.xxxxxxxxxxxxxxx' })),
+                    React.createElement("div", { className: 'flexRow' },
+                        React.createElement("input", { className: 'flexItem flexGrow1', type: 'password', placeholder: 'password' }),
+                        React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit' }, "Log in"))));
         }
         else {
             // user is logged in
             return React.createElement("div", { className: 'stack', style: sUserPanel },
-                React.createElement("div", { className: 'faint' }, "Full username"),
+                React.createElement("div", { className: 'faint' }, "Display name in this workspace"),
+                React.createElement("form", { className: 'indent flexRow', onSubmit: (e) => { e.preventDefault(); this.handleSaveDisplayName(); } },
+                    React.createElement("input", { type: 'text', className: 'flexGrow1', value: this.state.displayNameInput, onChange: (e) => this.setState({ displayNameInput: e.target.value }) }),
+                    React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit' }, "Save")),
+                React.createElement("hr", { className: 'faint' }),
+                React.createElement("div", { className: 'faint' }, "Username"),
                 React.createElement("div", { className: 'indent flexRow' },
                     React.createElement("pre", { className: 'flexGrow1', style: {
                             whiteSpace: 'break-spaces',
                             overflowWrap: 'break-word',
                             margin: 0, padding: 0,
                         } }, store.currentUser.authorKeypair.address),
-                    React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, onClick: () => this.handleCopyUsername() }, "Copy")),
-                React.createElement("div", { className: 'faint' }, "Display name in this workspace"),
-                React.createElement("form", { className: 'indent flexRow', onSubmit: (e) => { e.preventDefault(); this.handleSaveDisplayName(); } },
-                    React.createElement("input", { type: 'text', className: 'flexGrow1', value: this.state.displayNameInput, onChange: (e) => this.setState({ displayNameInput: e.target.value }), placeholder: util_1.cutAtPeriod((((_a = this.props.store.currentUser) === null || _a === void 0 ? void 0 : _a.authorKeypair.address) || '@').slice(1)) }),
-                    React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit' }, "Save")),
+                    React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, onClick: () => { var _a; return this.handleCopy(((_a = store.currentUser) === null || _a === void 0 ? void 0 : _a.authorKeypair.address) || ''); } }, "Copy")),
+                React.createElement("div", { className: 'faint' }, "Password"),
+                React.createElement("div", { className: 'indent flexRow' },
+                    React.createElement("pre", { className: 'flexGrow1 faint', style: {
+                            whiteSpace: 'break-spaces',
+                            overflowWrap: 'break-word',
+                            margin: 0, padding: 0,
+                        } }, store.currentUser.authorKeypair.secret),
+                    React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, onClick: () => { var _a; return this.handleCopy(((_a = store.currentUser) === null || _a === void 0 ? void 0 : _a.authorKeypair.secret) || ''); } }, "Copy")),
                 React.createElement("hr", { className: 'faint' }),
                 React.createElement("div", { style: { textAlign: 'center' } },
-                    React.createElement("button", { className: 'button', type: 'button', onClick: () => this.handleLogOut() }, "Log out")));
+                    React.createElement("button", { className: 'button', type: 'button', onClick: () => this.handleLogOut() }, "Log out")),
+                React.createElement("div", { className: 'faint indent' }, "Make sure to save your username and password before you log out!"));
         }
     }
 }
 exports.EarthbarUserPanel = EarthbarUserPanel;
 
-},{"./log":272,"./util":273,"react":221}],270:[function(require,module,exports){
+},{"./log":272,"earthstar":100,"react":221}],270:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;

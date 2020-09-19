@@ -115,7 +115,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
             workspaceLabel = cutAtPeriod(store.currentWorkspace.workspaceAddress);
         }
 
-        let userLabel = 'Guest User';
+        let userLabel = 'log in';
         if (store.currentUser) {
             userLabel = cutAtPeriod(store.currentUser.authorKeypair.address);
         }

@@ -6,8 +6,11 @@ import {
     StorageMemory,
     ValidatorEs4,
     AuthorKeypair,
-    isErr,
     WriteResult,
+    generateAuthorKeypair,
+    checkAuthorKeypairIsValid,
+    isErr,
+    ValidationError,
 } from 'earthstar';
 
 import {
@@ -50,6 +53,10 @@ export class EarthbarStore {
     // non-JSON stuff
     kit: Kit | null = null;
     unsubSyncer: Thunk | null = null;
+
+    // emit change events when we need to re-render the earthbar:
+    // - the kit's Syncer emits a change event
+    // - any state changes in the EarthbarStore (current user or workspace, new Kit, etc)
     onChange: Emitter<null> = new Emitter<null>();
 
     constructor() {
@@ -94,32 +101,40 @@ export class EarthbarStore {
             },
         ];
         this._loadFromLocalStorage();
-        // create initial kit
-        if (this.currentWorkspace !== null) {
+        this._rebuildKit();
+        this._saveToLocalStorage();
+        logEarthbarStore('/constructor');
+    }
+    //--------------------------------------------------
+    // PRIVATE METHODS
+    // None of these should call _bump or _saveToLocalStorage; the public methods are responsible for that.
+    //
+    _rebuildKit() {
+        // set up a new Kit instance to match this.currentWorkspace,
+        // or set kit to null if the currentWorkspace is null.
+        logEarthbarStore('rebuilding kit');
+
+        // unsub from previous kit
+        if (this.unsubSyncer) { this.unsubSyncer(); }
+        this.unsubSyncer = null;
+
+        if (this.currentWorkspace === null) {
+            logEarthbarStore("...it's null because workspace is null");
+            this.kit = null;
+        } else {
+            logEarthbarStore(`...for workspace ${this.currentWorkspace.workspaceAddress} and user ${this.currentUser?.authorKeypair.address || null}`);
             this.kit = new Kit(
                 new StorageMemory([ValidatorEs4], this.currentWorkspace.workspaceAddress),
                 this.currentUser === null ? null : this.currentUser.authorKeypair,
                 this.currentWorkspace.pubs,
             );
+            // load user's displayName from IStorage
             if (this.currentUser !== null) {
                 this.currentUser.displayName = this._readDisplayNameFromIStorage();
             }
-            this._subscribeToKit();
-        }
-        this._saveToLocalStorage();
-        logEarthbarStore('/constructor');
-    }
-    _subscribeToKit() {
-        // call this after making a new kit instance
-        if (this.kit) {
-            // get change events from the kit.syncer and pass them along into our own change feed
+            // subscribe to kit events
             this.unsubSyncer = this.kit.syncer.onChange.subscribe(() => this.onChange.send(null));
         }
-    }
-    _unsubFromKit() {
-        // call this whenever changing the kit or setting it to null
-        if (this.unsubSyncer) { this.unsubSyncer(); }
-        this.unsubSyncer = null;
     }
     _bump() {
         // notify our subscribers of a change to the EarthbarStore's state
@@ -162,6 +177,14 @@ export class EarthbarStore {
         let displayName = this.kit.storage.getContent(path);
         return displayName || null;  // undefined or '' become null
     }
+    _setCurrentUser(keypair: AuthorKeypair): void {
+        logEarthbarStore('_setCurrentUser', keypair);
+        this.currentUser = {
+            authorKeypair: keypair,
+            displayName: null, // TODO: look it up
+        }
+        // TODO: reload kit
+    }
     //--------------------------------------------------
     // VISUAL STATE
     setMode(mode: EbMode): void {
@@ -172,6 +195,29 @@ export class EarthbarStore {
     }
     //--------------------------------------------------
     // USER
+    createUser(shortname: string): void {
+        logEarthbarStore('creating user with shortname ' + shortname);
+        let keypair = generateAuthorKeypair(shortname);
+        if (isErr(keypair)) {
+            console.error(keypair);
+            return;
+        }
+        this._setCurrentUser(keypair);
+        this._bump();
+        this._saveToLocalStorage();
+    }
+    logIn(keypair: AuthorKeypair): ValidationError | true {
+        logEarthbarStore('logging in:', keypair);
+        let valid = checkAuthorKeypairIsValid(keypair);
+        if (isErr(valid)) {
+            console.error(valid.message);
+            return valid;
+        }
+        this._setCurrentUser(keypair);
+        this._bump();
+        this._saveToLocalStorage();
+        return true;
+    }
     setDisplayName(name: string): void {
         if (this.currentUser === null) { return; }
         if (this.kit === null) { return; }
@@ -240,8 +286,7 @@ export class EarthbarStore {
         logEarthbarStore('removeWorkspace', workspaceAddress);
         if (this.currentWorkspace?.workspaceAddress === workspaceAddress) {
             this.currentWorkspace = null;
-            this._unsubFromKit();
-            this.kit = null;
+            this._rebuildKit();
         } else {
             this.otherWorkspaces = this.otherWorkspaces.filter(wc => wc.workspaceAddress !== workspaceAddress);
         }
@@ -269,21 +314,10 @@ export class EarthbarStore {
         // rebuild the kit
         if (workspaceConfig === null) {
             logEarthbarStore(`rebuilding kit: it's null`);
-            this._unsubFromKit();
-            this.kit = null;
         } else {
             logEarthbarStore(`rebuilding kit for ${workspaceConfig.workspaceAddress} with ${workspaceConfig.pubs.length} pubs`);
-            this._unsubFromKit();
-            this.kit = new Kit(
-                new StorageMemory([ValidatorEs4], workspaceConfig.workspaceAddress),
-                this.currentUser === null ? null : this.currentUser.authorKeypair,
-                workspaceConfig.pubs,
-            );
-            if (this.currentUser !== null) {
-                this.currentUser.displayName = this._readDisplayNameFromIStorage();
-            }
-            this._subscribeToKit();
         }
+        this._rebuildKit();
         this._bump();
         this._saveToLocalStorage();
     }
