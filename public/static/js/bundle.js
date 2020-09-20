@@ -68955,12 +68955,12 @@ class EarthbarUserPanel extends React.Component {
                             whiteSpace: 'break-spaces',
                             overflowWrap: 'break-word',
                             margin: 0, padding: 0,
-                        } }, store.currentUser.authorKeypair.secret),
+                        } }, "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"),
                     React.createElement("button", { className: 'button flexItem', type: 'button', style: { marginLeft: 'var(--s-1)' }, onClick: () => { var _a; return this.handleCopy(((_a = store.currentUser) === null || _a === void 0 ? void 0 : _a.authorKeypair.secret) || ''); } }, "Copy")),
                 React.createElement("hr", { className: 'faint' }),
                 React.createElement("div", { className: 'center' },
                     React.createElement("button", { className: 'button', type: 'button', onClick: () => this.handleLogOut() }, "Log out")),
-                React.createElement("div", { className: 'faint indent' }, "Make sure to save your username and password before you log out!"));
+                React.createElement("div", { className: 'faint' }, "Make sure to save your username and password before you log out! There's no way to reset a lost password."));
         }
     }
 }

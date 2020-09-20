@@ -252,7 +252,7 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
                             overflowWrap: 'break-word',
                             margin: 0, padding: 0,
                         }}>
-                        {store.currentUser.authorKeypair.secret}
+                        •••••••••••••••••••••••••••••••••••••••••••••••••••••
                     </pre>
                     <button className='button flexItem' type='button'
                         style={{marginLeft: 'var(--s-1)'}}
@@ -269,8 +269,9 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
                         Log out
                     </button>
                 </div>
-                <div className='faint indent'>
+                <div className='faint'>
                     Make sure to save your username and password before you log out!
+                    There's no way to reset a lost password.
                 </div>
             </div>;
         }
