@@ -5,6 +5,7 @@ import {
     isErr,
     notErr,
     AuthorKeypair,
+    generateAuthorKeypair,
 } from 'earthstar';
 
 import {
@@ -75,34 +76,21 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
         this.setState({shortnameInput: val.trim()});
     }
     handleCreateUser() {
+        logEarthbarPanel('create user');
         let shortname = this.state.shortnameInput;
-        if (this.shortnameIsValid(shortname)) {
-            this.props.store.createUser(this.state.shortnameInput);
-            this.setState({shortnameInput: ''});
-            /*
-            // HACK to try to get 1password to recognize the fake fields
-            let u = document.getElementById('fakeUsername');
-            let p = document.getElementById('fakePassword');
-            setTimeout(() => {
-                if (!u || !p) { return; }
-                u.click();
-                u.focus();
-                u.setAttribute('value', 'abc');
-                setTimeout(() => {
-                if (!u || !p) { return; }
-                    p.click();
-                    p.focus();
-                    p.setAttribute('value', 'def');
-                    setTimeout(() => {
-                        this.props.store.createUser(this.state.shortnameInput);
-                        this.setState({shortnameInput: ''});
-                    }, 1000);
-                }, 1000);
-            }, 1);
-            */
-        } else {
+        if (!this.shortnameIsValid(shortname)) {
             console.warn('invalid shortname: ' + shortname);
+            return;
         }
+        let keypair = generateAuthorKeypair(shortname);
+        if (isErr(keypair)) {
+            console.warn('invalid shortname: ' + shortname, keypair.name, keypair.message);
+            return;
+        }
+        this.setState({
+            usernameInput: keypair.address,
+            passwordInput: keypair.secret,
+        });
     }
     //-------------------------
     // log in
@@ -125,6 +113,7 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
             this.setState({loginError: 'Invalid username or password'});
         } else {
             this.setState({
+                shortnameInput: '',
                 usernameInput: '',
                 passwordInput: '',
                 loginError: '',
@@ -169,19 +158,14 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
                         >
                         Create
                     </button>
-                    {/* fake inputs for 1password
-                    <input className='flexItem flexGrow1' type='text'
-                        name='username' id='fakeUsername'
-                        />
-                    <input className='flexItem flexGrow1' type='password'
-                        name='password' id='fakePassword'
-                        />
-                    */}
                 </form>
                 <div className='faint indent'>
                     We'll create a new, unique username and password for you.
-                    After clicking Create, be sure to save your username and
-                    password so you can log in again later!
+                    Keep clicking Create until you get one you like.
+                </div>
+                <div className='faint indent'>
+                    After logging in, be sure to copy and save your username and password on the next screen!
+                    Your password can't be changed or recovered later.
                 </div>
                 <hr className='faint'/>
                 {/* form to log in */}
@@ -189,15 +173,19 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
                 <form className='stack indent' onSubmit={(e) => {e.preventDefault(); this.handleLogIn()}}>
                     <div className='flexRow'>
                         <input className='flexItem flexGrow1' type="text"
-                            name='username' id='loginUsername'
+                            name='username' id='username'
                             placeholder='@user.xxxxxxxxxxxxxxx'
+                            autoComplete='off'
+                            value={this.state.usernameInput}
                             onChange={(e) => this.handleEditUsername(e.target.value)}
                             />
                     </div>
                     <div className='flexRow'>
                         <input className='flexItem flexGrow1' type='password'
-                            name='password' id='loginPassword'
+                            name='password' id='password'
                             placeholder='password'
+                            autoComplete='off'
+                            value={this.state.passwordInput}
                             onChange={(e) => this.handleEditPassword(e.target.value)}
                             />
                         <button className='button flexItem'
@@ -219,13 +207,14 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
                 <form className='indent flexRow' onSubmit={(e) => {e.preventDefault(); this.handleSaveDisplayName()}}>
                     <input type='text' className='flexGrow1'
                         value={this.state.displayNameInput}
+                        placeholder={cutAtPeriod(store.currentUser.authorKeypair.address).slice(1)}
                         onChange={(e) => this.setState({displayNameInput: e.target.value})}
                         />
                     <button className='button flexItem'
                         type='submit'
                         style={{marginLeft: 'var(--s-1)'}}
                         >
-                        Save
+                        Set
                     </button>
                 </form>
                 <hr className='faint' />
