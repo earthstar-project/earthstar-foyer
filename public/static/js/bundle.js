@@ -68529,31 +68529,6 @@ class EarthbarStore {
     // PRIVATE METHODS
     // None of these should call _bump or _saveToLocalStorage; the public methods are responsible for that.
     //
-    _rebuildKit() {
-        var _a;
-        // set up a new Kit instance to match this.currentWorkspace,
-        // or set kit to null if the currentWorkspace is null.
-        log_1.logEarthbarStore('rebuilding kit');
-        // unsub from previous kit
-        if (this.unsubSyncer) {
-            this.unsubSyncer();
-        }
-        this.unsubSyncer = null;
-        if (this.currentWorkspace === null) {
-            log_1.logEarthbarStore("...it's null because workspace is null");
-            this.kit = null;
-        }
-        else {
-            log_1.logEarthbarStore(`...for workspace ${this.currentWorkspace.workspaceAddress} and user ${((_a = this.currentUser) === null || _a === void 0 ? void 0 : _a.authorKeypair.address) || null}`);
-            this.kit = new kit_1.Kit(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], this.currentWorkspace.workspaceAddress), this.currentUser === null ? null : this.currentUser.authorKeypair, this.currentWorkspace.pubs);
-            // load user's displayName from IStorage
-            if (this.currentUser !== null) {
-                this.currentUser.displayName = this._readDisplayNameFromIStorage();
-            }
-            // subscribe to kit events
-            this.unsubSyncer = this.kit.syncer.onChange.subscribe(() => this.onChange.send(null));
-        }
-    }
     _bump() {
         // notify our subscribers of a change to the EarthbarStore's state
         log_1.logEarthbarStore('_bump');
@@ -68588,7 +68563,41 @@ class EarthbarStore {
             console.warn(e);
         }
     }
-    _readDisplayNameFromIStorage() {
+    //--------------------------------------------------
+    _rebuildKit() {
+        var _a;
+        // set up a new Kit instance to match this.currentWorkspace,
+        // or set kit to null if the currentWorkspace is null.
+        log_1.logEarthbarStore('rebuilding kit');
+        // unsub from previous kit
+        if (this.unsubSyncer) {
+            this.unsubSyncer();
+        }
+        this.unsubSyncer = null;
+        if (this.currentWorkspace === null) {
+            log_1.logEarthbarStore("...it's null because workspace is null");
+            this.kit = null;
+        }
+        else {
+            log_1.logEarthbarStore(`...for workspace ${this.currentWorkspace.workspaceAddress} and user ${((_a = this.currentUser) === null || _a === void 0 ? void 0 : _a.authorKeypair.address) || null}`);
+            this.kit = new kit_1.Kit(new earthstar_1.StorageMemory([earthstar_1.ValidatorEs4], this.currentWorkspace.workspaceAddress), this.currentUser === null ? null : this.currentUser.authorKeypair, this.currentWorkspace.pubs);
+            // load user's displayName from IStorage
+            if (this.currentUser !== null) {
+                this.currentUser.displayName = this.__readDisplayNameFromIStorage();
+            }
+            // subscribe to kit events
+            this.unsubSyncer = this.kit.syncer.onChange.subscribe(() => {
+                var _a, _b;
+                // check if we need to refresh currentUser.displayName
+                if (this.currentUser !== null && this.currentUser.authorKeypair.address === ((_b = (_a = this.kit) === null || _a === void 0 ? void 0 : _a.authorKeypair) === null || _b === void 0 ? void 0 : _b.address)) {
+                    this.currentUser.displayName = this.__readDisplayNameFromIStorage();
+                }
+                // pass events along to subscribers of the earthbarStore
+                this.onChange.send(null);
+            });
+        }
+    }
+    __readDisplayNameFromIStorage() {
         log_1.logEarthbarStore('_readDisplayNameFromIStorage');
         if (this.currentUser === null) {
             return null;
@@ -68606,7 +68615,7 @@ class EarthbarStore {
             authorKeypair: keypair,
             displayName: null,
         };
-        // TODO: reload kit
+        this._rebuildKit(); // this will set the displayName also
     }
     //--------------------------------------------------
     // VISUAL STATE
@@ -68826,6 +68835,21 @@ class EarthbarUserPanel extends React.Component {
             loginError: '',
             displayNameInput: ((_a = this.props.store.currentUser) === null || _a === void 0 ? void 0 : _a.displayName) || '',
         };
+        log_1.logEarthbarPanel('user panel: subscribing to store changes');
+        this.unsub = this.props.store.onChange.subscribe(() => {
+            var _a;
+            log_1.logEarthbarPanel('> user panel: onChange from store');
+            // update displayName input if the store's displayName has changed
+            let storeDisplayName = ((_a = this.props.store.currentUser) === null || _a === void 0 ? void 0 : _a.displayName) || '';
+            let displayNameInput = this.state.displayNameInput;
+            if (storeDisplayName !== displayNameInput) {
+                log_1.logEarthbarPanel('> ...updating display name input from', displayNameInput, 'to', storeDisplayName);
+                this.setState({ displayNameInput: storeDisplayName });
+            }
+        });
+    }
+    componentWillUnmount() {
+        this.unsub();
     }
     //-------------------------
     // create user

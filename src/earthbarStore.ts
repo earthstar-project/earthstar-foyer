@@ -109,33 +109,6 @@ export class EarthbarStore {
     // PRIVATE METHODS
     // None of these should call _bump or _saveToLocalStorage; the public methods are responsible for that.
     //
-    _rebuildKit() {
-        // set up a new Kit instance to match this.currentWorkspace,
-        // or set kit to null if the currentWorkspace is null.
-        logEarthbarStore('rebuilding kit');
-
-        // unsub from previous kit
-        if (this.unsubSyncer) { this.unsubSyncer(); }
-        this.unsubSyncer = null;
-
-        if (this.currentWorkspace === null) {
-            logEarthbarStore("...it's null because workspace is null");
-            this.kit = null;
-        } else {
-            logEarthbarStore(`...for workspace ${this.currentWorkspace.workspaceAddress} and user ${this.currentUser?.authorKeypair.address || null}`);
-            this.kit = new Kit(
-                new StorageMemory([ValidatorEs4], this.currentWorkspace.workspaceAddress),
-                this.currentUser === null ? null : this.currentUser.authorKeypair,
-                this.currentWorkspace.pubs,
-            );
-            // load user's displayName from IStorage
-            if (this.currentUser !== null) {
-                this.currentUser.displayName = this._readDisplayNameFromIStorage();
-            }
-            // subscribe to kit events
-            this.unsubSyncer = this.kit.syncer.onChange.subscribe(() => this.onChange.send(null));
-        }
-    }
     _bump() {
         // notify our subscribers of a change to the EarthbarStore's state
         logEarthbarStore('_bump');
@@ -169,7 +142,42 @@ export class EarthbarStore {
             console.warn(e);
         }
     }
-    _readDisplayNameFromIStorage(): string | null {
+    //--------------------------------------------------
+    _rebuildKit() {
+        // set up a new Kit instance to match this.currentWorkspace,
+        // or set kit to null if the currentWorkspace is null.
+        logEarthbarStore('rebuilding kit');
+
+        // unsub from previous kit
+        if (this.unsubSyncer) { this.unsubSyncer(); }
+        this.unsubSyncer = null;
+
+        if (this.currentWorkspace === null) {
+            logEarthbarStore("...it's null because workspace is null");
+            this.kit = null;
+        } else {
+            logEarthbarStore(`...for workspace ${this.currentWorkspace.workspaceAddress} and user ${this.currentUser?.authorKeypair.address || null}`);
+            this.kit = new Kit(
+                new StorageMemory([ValidatorEs4], this.currentWorkspace.workspaceAddress),
+                this.currentUser === null ? null : this.currentUser.authorKeypair,
+                this.currentWorkspace.pubs,
+            );
+            // load user's displayName from IStorage
+            if (this.currentUser !== null) {
+                this.currentUser.displayName = this.__readDisplayNameFromIStorage();
+            }
+            // subscribe to kit events
+            this.unsubSyncer = this.kit.syncer.onChange.subscribe(() => {
+                // check if we need to refresh currentUser.displayName
+                if (this.currentUser !== null && this.currentUser.authorKeypair.address === this.kit?.authorKeypair?.address) {
+                    this.currentUser.displayName = this.__readDisplayNameFromIStorage();
+                }
+                // pass events along to subscribers of the earthbarStore
+                this.onChange.send(null)
+            });
+        }
+    }
+    __readDisplayNameFromIStorage(): string | null {
         logEarthbarStore('_readDisplayNameFromIStorage');
         if (this.currentUser === null) { return null; }
         if (this.kit === null) { return null; }
@@ -181,9 +189,9 @@ export class EarthbarStore {
         logEarthbarStore('_setCurrentUser', keypair);
         this.currentUser = {
             authorKeypair: keypair,
-            displayName: null, // TODO: look it up
+            displayName: null,
         }
-        // TODO: reload kit
+        this._rebuildKit(); // this will set the displayName also
     }
     //--------------------------------------------------
     // VISUAL STATE

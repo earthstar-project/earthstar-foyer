@@ -9,13 +9,16 @@ import {
 } from 'earthstar';
 
 import {
-    WorkspaceConfig,
-    EarthbarStore,
-} from './earthbarStore';
+    Thunk,
+} from './types';
 import {
     cutAtPeriod,
     sortByField,
 } from './util';
+import {
+    WorkspaceConfig,
+    EarthbarStore,
+} from './earthbarStore';
 import {
     logEarthbarPanel,
 } from './log';
@@ -51,6 +54,7 @@ interface EbUserPanelState {
     displayNameInput: string,
 }
 export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanelState> {
+    unsub: Thunk;
     constructor(props: EbPanelProps) {
         super(props)
         this.state = {
@@ -60,6 +64,20 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
             loginError: '',
             displayNameInput: this.props.store.currentUser?.displayName || '',
         };
+        logEarthbarPanel('user panel: subscribing to store changes');
+        this.unsub = this.props.store.onChange.subscribe(() => {
+            logEarthbarPanel('> user panel: onChange from store');
+            // update displayName input if the store's displayName has changed
+            let storeDisplayName: string = this.props.store.currentUser?.displayName || '';
+            let displayNameInput: string = this.state.displayNameInput;
+            if (storeDisplayName !== displayNameInput) {
+                logEarthbarPanel('> ...updating display name input from', displayNameInput, 'to', storeDisplayName);
+                this.setState({displayNameInput: storeDisplayName});
+            }
+        });
+    }
+    componentWillUnmount() {
+        this.unsub();
     }
     //-------------------------
     // create user
