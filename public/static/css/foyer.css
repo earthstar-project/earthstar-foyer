@@ -155,6 +155,7 @@ textarea::before {
 .earthbarTab {
     padding: var(--s0);
     font-weight: bold;
+    /*font-family: monospace;*/
     border-top-left-radius: var(--round);
     border-top-right-radius: var(--round);
     white-space: nowrap;
@@ -196,6 +197,10 @@ textarea::before {
 }
 .center {
     text-align: center;
+}
+
+.monospace {
+    font-family: monospace;
 }
 
 .wrappyText {

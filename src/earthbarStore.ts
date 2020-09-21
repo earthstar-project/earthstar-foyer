@@ -152,6 +152,12 @@ export class EarthbarStore {
         if (this.unsubSyncer) { this.unsubSyncer(); }
         this.unsubSyncer = null;
 
+        // close previous storage
+        if (this.kit !== null) {
+            this.kit.storage.close();
+        }
+
+        // build new kit
         if (this.currentWorkspace === null) {
             logEarthbarStore("...it's null because workspace is null");
             this.kit = null;
@@ -287,15 +293,22 @@ export class EarthbarStore {
     }
     //--------------------------------------------------
     // WORKSPACES
+    /*
+    TODO: remove this
     hasWorkspace(workspaceAddress: WorkspaceAddress): boolean {
         if (this.currentWorkspace?.workspaceAddress === workspaceAddress) { return true; }
         if (this.otherWorkspaces.filter(wc => wc.workspaceAddress === workspaceAddress).length >= 1) { return true; }
         return false;
     }
+    */
     removeWorkspace(workspaceAddress: WorkspaceAddress) {
         logEarthbarStore('removeWorkspace', workspaceAddress);
+        Kit.deleteWorkspaceFromLocalStorage(workspaceAddress);
         if (this.currentWorkspace?.workspaceAddress === workspaceAddress) {
             this.currentWorkspace = null;
+            if (this.currentUser !== null) {
+                this.currentUser.displayName = null;
+            }
             this._rebuildKit();
         } else {
             this.otherWorkspaces = this.otherWorkspaces.filter(wc => wc.workspaceAddress !== workspaceAddress);

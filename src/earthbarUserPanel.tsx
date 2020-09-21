@@ -232,10 +232,14 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
                     <button className='button flexItem'
                         type='submit'
                         style={{marginLeft: 'var(--s-1)'}}
+                        disabled={store.currentWorkspace === null}
                         >
                         Set
                     </button>
                 </form>
+                {(store.currentWorkspace === null)
+                  ? <div className='faint indent'>(Can't set a display name because you're not in a workspace right now.)</div>
+                  : null}
                 <hr className='faint' />
                 <div className='faint'>Username</div>
                 <div className='indent flexRow'>

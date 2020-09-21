@@ -60,4 +60,9 @@ export class Kit {
         storage.onChange.subscribe(debouncedSave);
         // END HACK        
     }
+    static deleteWorkspaceFromLocalStorage(workspaceAddress: WorkspaceAddress) {
+        logKit('deleting workspace from localStorage:', workspaceAddress);
+        let localStorageKey = `earthstar:${workspaceAddress}`;
+        localStorage.removeItem(localStorageKey);
+    }
 }

@@ -111,12 +111,12 @@ export class Earthbar extends React.Component<EbProps, EbState> {
             ? { }
             : { opacity: 0.3, /*visibility: 'hidden'*/ };
 
-        let workspaceLabel = 'Add a workspace';
+        let workspaceLabel = 'Add workspace';
         if (store.currentWorkspace) {
             workspaceLabel = cutAtPeriod(store.currentWorkspace.workspaceAddress);
         }
 
-        let userLabel = 'log in';
+        let userLabel = 'Log in';
         if (store.currentUser) {
             userLabel = cutAtPeriod(store.currentUser.authorKeypair.address);
         }

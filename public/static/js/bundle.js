@@ -68419,11 +68419,11 @@ class Earthbar extends React.Component {
         let sChildren = mode === earthbarStore_1.EbMode.Closed
             ? {}
             : { opacity: 0.3, };
-        let workspaceLabel = 'Add a workspace';
+        let workspaceLabel = 'Add workspace';
         if (store.currentWorkspace) {
             workspaceLabel = util_1.cutAtPeriod(store.currentWorkspace.workspaceAddress);
         }
-        let userLabel = 'log in';
+        let userLabel = 'Log in';
         if (store.currentUser) {
             userLabel = util_1.cutAtPeriod(store.currentUser.authorKeypair.address);
         }
@@ -68574,6 +68574,11 @@ class EarthbarStore {
             this.unsubSyncer();
         }
         this.unsubSyncer = null;
+        // close previous storage
+        if (this.kit !== null) {
+            this.kit.storage.close();
+        }
+        // build new kit
         if (this.currentWorkspace === null) {
             log_1.logEarthbarStore("...it's null because workspace is null");
             this.kit = null;
@@ -68725,21 +68730,23 @@ class EarthbarStore {
     }
     //--------------------------------------------------
     // WORKSPACES
-    hasWorkspace(workspaceAddress) {
-        var _a;
-        if (((_a = this.currentWorkspace) === null || _a === void 0 ? void 0 : _a.workspaceAddress) === workspaceAddress) {
-            return true;
-        }
-        if (this.otherWorkspaces.filter(wc => wc.workspaceAddress === workspaceAddress).length >= 1) {
-            return true;
-        }
+    /*
+    TODO: remove this
+    hasWorkspace(workspaceAddress: WorkspaceAddress): boolean {
+        if (this.currentWorkspace?.workspaceAddress === workspaceAddress) { return true; }
+        if (this.otherWorkspaces.filter(wc => wc.workspaceAddress === workspaceAddress).length >= 1) { return true; }
         return false;
     }
+    */
     removeWorkspace(workspaceAddress) {
         var _a;
         log_1.logEarthbarStore('removeWorkspace', workspaceAddress);
+        kit_1.Kit.deleteWorkspaceFromLocalStorage(workspaceAddress);
         if (((_a = this.currentWorkspace) === null || _a === void 0 ? void 0 : _a.workspaceAddress) === workspaceAddress) {
             this.currentWorkspace = null;
+            if (this.currentUser !== null) {
+                this.currentUser.displayName = null;
+            }
             this._rebuildKit();
         }
         else {
@@ -68953,7 +68960,10 @@ class EarthbarUserPanel extends React.Component {
                 React.createElement("div", { className: 'faint' }, "Display name in this workspace"),
                 React.createElement("form", { className: 'indent flexRow', onSubmit: (e) => { e.preventDefault(); this.handleSaveDisplayName(); } },
                     React.createElement("input", { type: 'text', className: 'flexGrow1', value: this.state.displayNameInput, placeholder: util_1.cutAtPeriod(store.currentUser.authorKeypair.address).slice(1), onChange: (e) => this.setState({ displayNameInput: e.target.value }) }),
-                    React.createElement("button", { className: 'button flexItem', type: 'submit', style: { marginLeft: 'var(--s-1)' } }, "Set")),
+                    React.createElement("button", { className: 'button flexItem', type: 'submit', style: { marginLeft: 'var(--s-1)' }, disabled: store.currentWorkspace === null }, "Set")),
+                (store.currentWorkspace === null)
+                    ? React.createElement("div", { className: 'faint indent' }, "(Can't set a display name because you're not in a workspace right now.)")
+                    : null,
                 React.createElement("hr", { className: 'faint' }),
                 React.createElement("div", { className: 'faint' }, "Username"),
                 React.createElement("div", { className: 'indent flexRow' },
@@ -69183,6 +69193,11 @@ class Kit {
         let debouncedSave = debounce(saveToLocalStorage, 80, { trailing: true });
         storage.onChange.subscribe(debouncedSave);
         // END HACK        
+    }
+    static deleteWorkspaceFromLocalStorage(workspaceAddress) {
+        log_1.logKit('deleting workspace from localStorage:', workspaceAddress);
+        let localStorageKey = `earthstar:${workspaceAddress}`;
+        localStorage.removeItem(localStorageKey);
     }
 }
 exports.Kit = Kit;
