@@ -82,6 +82,9 @@
     border: var(--test-border-width) solid #880;
     display: block;
 }
+.flexItemVerticalCenter {
+    align-self: center;
+}
 .flexGrow1 {
     flex-grow: 1;
 }
@@ -204,7 +207,17 @@ textarea::before {
 }
 
 .wrappyText {
+    /* make sure text wraps inside its container */
     white-space: break-spaces;
     overflow-wrap: break-word;
     hyphens: auto;
+    overflow: auto;
+}
+
+.wrappyCode {
+    /* make sure text wraps inside its container */
+    /* no hyphens -- use for workspace names and URLs */
+    white-space: break-spaces;
+    overflow-wrap: break-word;
+    overflow: auto;
 }

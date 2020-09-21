@@ -54,6 +54,11 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
             newWorkspaceError: null,
         }
     }
+    //-------------------------
+    handleCopy(val: string) {
+        logEarthbarPanel('copying value to clipboard: ' + val);
+        navigator.clipboard.writeText(val);
+    }
     handleAddPub() {
         let newPub = this.state.newPubInput.trim();
         if (newPub.length > 0) {
@@ -93,6 +98,7 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
             this.setState({ newWorkspaceInput: '' });
         }
     }
+    //-------------------------
     render() {
         logEarthbarPanel('render workspace panel');
         let store = this.props.store;
@@ -111,7 +117,17 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
             ? null
             : <div className='stack'>
                 <div className='faint'>Current workspace</div>
-                    <pre className='indent selectable'>{store.currentWorkspace.workspaceAddress}</pre>
+                <div className='indent flexRow selectable'>
+                    <div className='flexGrow1 flexItemVerticalCenter wrappyCode monospace'>
+                        {store.currentWorkspace.workspaceAddress}
+                    </div>
+                    <button className='button flexItem' type='button'
+                        style={{marginLeft: 'var(--s-1)'}}
+                        onClick={() => this.handleCopy(store.currentWorkspace?.workspaceAddress || '')}
+                        >
+                        Copy
+                    </button>
+                </div>
                 <div className='faint'>Pub servers for this workspace</div>
                     <div className='stack'>
                         {/*
@@ -127,12 +143,10 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
                                 if (pub.syncState === 'success') { icon = '✅'; }
                                 if (pub.syncState === 'failure') { icon = '❗️'; }
                                 return <div key={pub.domain} className='flexRow selectable'>
-                                    <div className='flexItem unselectable unclickable'
-                                        style={{alignSelf: 'center'}}
-                                        >
-                                            {icon}
+                                    <div className='flexItem flexItemVerticalCenter unselectable unclickable'>
+                                        {icon}
                                     </div>
-                                    <div className='flexItem flexGrow1'>
+                                    <div className='flexItem flexGrow1 wrappyCode'>
                                         <a href={pub.domain} target='_blank'
                                             style={{color: 'var(--cText)'}}
                                             >
@@ -177,10 +191,10 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
                 {allWorkspaces.map(wsConfig => {
                     let isCurrent = wsConfig.workspaceAddress === store.currentWorkspace?.workspaceAddress;
                     let style : React.CSSProperties = isCurrent
-                    ? {fontStyle: 'italic', background: 'rgba(255,255,255,0.2)'}
-                    : {};
+                      ? {fontStyle: 'italic', background: 'rgba(255,255,255,0.2)'}
+                      : {};
                     return <div key={wsConfig.workspaceAddress} className='flexRow'>
-                        <a href="#" style={style} className='flexItem flexGrow1 linkButton'
+                        <a href="#" style={style} className='flexItem flexGrow1 flexItemVerticalCenter linkButton monospace wrappyCode'
                             onClick={(e) => store.switchWorkspace(wsConfig)}
                             >
                             {wsConfig.workspaceAddress}
@@ -199,7 +213,7 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
             <div className='faint'>Add workspace or create new one</div>
             <form className='stack indent' onSubmit={(e) => {e.preventDefault(); this.handleAddWorkspace()}}>
                 <input className='fullWidth' type="text"
-                    placeholder="+newworkspace.rjo34irqjf"
+                    placeholder='+myworkspace.z0x7b098xc7'
                     value={this.state.newWorkspaceInput}
                     onChange={(e) => this.handleEditNewWorkspace(e.target.value)}
                     />
@@ -211,8 +225,8 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
                 <div className='faint'>
                     A workspace has two parts: a word up to 15 letters long,
                     and a random part that's hard to guess.
-                    If you're creating a new workspace, make up your own
-                    random part.
+                    If you're creating a new workspace, just make up the random
+                    part by mashing the keyboard.
                 </div>
                 <div className='right'>
                     <button className='button'
