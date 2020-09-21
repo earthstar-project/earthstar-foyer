@@ -145,6 +145,7 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
                 <div className='faint'>Create new user</div>
                 <form className='flexRow indent' onSubmit={(e) => {e.preventDefault(); this.handleCreateUser()}}>
                     <input className='flexItem flexGrow1' type='text'
+                        name='shortname' id='shortname'
                         placeholder='4-letter nickname'
                         maxLength={4}
                         value={this.state.shortnameInput}
@@ -169,7 +170,7 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
                 </div>
                 <hr className='faint'/>
                 {/* form to log in */}
-                <div className='faint'>Log in</div>
+                <div className='faint'>Log In</div>
                 <form className='stack indent' onSubmit={(e) => {e.preventDefault(); this.handleLogIn()}}>
                     <div className='flexRow'>
                         <input className='flexItem flexGrow1' type="text"

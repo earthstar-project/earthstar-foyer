@@ -68386,7 +68386,8 @@ class Earthbar extends React.Component {
                 marginBottom: 'var(--s-2)',
             };
         let sSyncButton = {
-            margin: 'var(--s-2)',
+            marginTop: 'var(--s-2)',
+            marginBottom: 'var(--s-2)',
             // change colors
             '--cText': 'var(--cWhite)',
             '--cBackground': 'var(--cWorkspace)',
@@ -68435,7 +68436,7 @@ class Earthbar extends React.Component {
             React.createElement("div", { className: 'flexRow' },
                 React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: onClickWorkspaceTab }, workspaceLabel),
                 React.createElement("button", { className: 'flexItem button', style: sSyncButton, disabled: !canSync, onClick: () => { var _a; return (_a = store.kit) === null || _a === void 0 ? void 0 : _a.syncer.sync(); } }, "Sync"),
-                React.createElement("div", { className: 'flexItem flexGrow1' }),
+                React.createElement("div", { className: 'flexItem flexGrow1', style: { margin: 0 } }),
                 React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: onClickUserTab }, userLabel)),
             React.createElement("div", { style: { position: 'relative' } },
                 React.createElement("div", { style: sPanel }, panel),
@@ -68908,12 +68909,12 @@ class EarthbarUserPanel extends React.Component {
             return React.createElement("div", { className: 'stack', style: sUserPanel },
                 React.createElement("div", { className: 'faint' }, "Create new user"),
                 React.createElement("form", { className: 'flexRow indent', onSubmit: (e) => { e.preventDefault(); this.handleCreateUser(); } },
-                    React.createElement("input", { className: 'flexItem flexGrow1', type: 'text', placeholder: '4-letter nickname', maxLength: 4, value: this.state.shortnameInput, onChange: (e) => this.handleEditShortname(e.target.value) }),
+                    React.createElement("input", { className: 'flexItem flexGrow1', type: 'text', name: 'shortname', id: 'shortname', placeholder: '4-letter nickname', maxLength: 4, value: this.state.shortnameInput, onChange: (e) => this.handleEditShortname(e.target.value) }),
                     React.createElement("button", { className: 'button flexItem', type: 'submit', id: 'createUser', style: { marginLeft: 'var(--s-1)' }, disabled: !this.canCreateUser() }, "Create")),
                 React.createElement("div", { className: 'faint indent' }, "We'll create a new, unique username and password for you. Keep clicking Create until you get one you like."),
                 React.createElement("div", { className: 'faint indent' }, "After logging in, be sure to copy and save your username and password on the next screen! Your password can't be changed or recovered later."),
                 React.createElement("hr", { className: 'faint' }),
-                React.createElement("div", { className: 'faint' }, "Log in"),
+                React.createElement("div", { className: 'faint' }, "Log In"),
                 React.createElement("form", { className: 'stack indent', onSubmit: (e) => { e.preventDefault(); this.handleLogIn(); } },
                     React.createElement("div", { className: 'flexRow' },
                         React.createElement("input", { className: 'flexItem flexGrow1', type: "text", name: 'username', id: 'username', placeholder: '@user.xxxxxxxxxxxxxxx', autoComplete: 'off', value: this.state.usernameInput, onChange: (e) => this.handleEditUsername(e.target.value) })),
@@ -69055,59 +69056,63 @@ class EarthbarWorkspacePanel extends React.Component {
             allWorkspaces = [...allWorkspaces, store.currentWorkspace];
             util_1.sortByField(allWorkspaces, 'workspaceAddress');
         }
-        return React.createElement("div", { className: 'stack', style: sWorkspacePanel },
+        return React.createElement("div", { className: 'stack unselectable', style: sWorkspacePanel },
             store.currentWorkspace === null
                 ? null
                 : React.createElement("div", { className: 'stack' },
-                    React.createElement("div", { className: 'faint' }, "Current workspace:"),
-                    React.createElement("div", { className: 'stack indent' },
-                        React.createElement("pre", null, store.currentWorkspace.workspaceAddress),
-                        React.createElement("div", { className: 'faint' }, "Pub Servers:"),
-                        React.createElement("div", { className: 'stack indent' },
-                            (store.kit === null ? [] : store.kit.syncer.state.pubs)
-                                .map(pub => {
-                                let icon = '';
-                                if (pub.syncState === 'idle') {
-                                    icon = '📡';
-                                }
-                                if (pub.syncState === 'syncing') {
-                                    icon = '⏳';
-                                }
-                                if (pub.syncState === 'success') {
-                                    icon = '✅';
-                                }
-                                if (pub.syncState === 'failure') {
-                                    icon = '❗️';
-                                }
-                                return React.createElement("div", { key: pub.domain, className: 'flexRow' },
-                                    React.createElement("div", { className: 'flexItem flexGrow1' },
-                                        icon,
-                                        " ",
-                                        pub.domain),
-                                    React.createElement("button", { className: 'flexItem linkButton', onClick: () => store.removePub(pub.domain) }, "\u2715"));
-                            }),
-                            React.createElement("form", { className: 'flexRow', onSubmit: (e) => { e.preventDefault(); this.handleAddPub(); } },
-                                React.createElement("input", { className: 'flexItem flexGrow1', type: "text", placeholder: "http://...", value: this.state.newPubInput, onChange: (e) => this.setState({ newPubInput: e.target.value }) }),
-                                React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit' }, "Add Pub Server"))))),
+                    React.createElement("div", { className: 'faint' }, "Current workspace"),
+                    React.createElement("pre", { className: 'indent selectable' }, store.currentWorkspace.workspaceAddress),
+                    React.createElement("div", { className: 'faint' }, "Pub servers for this workspace"),
+                    React.createElement("div", { className: 'stack' },
+                        (store.kit === null ? [] : store.kit.syncer.state.pubs)
+                            .map(pub => {
+                            let icon = '';
+                            if (pub.syncState === 'idle') {
+                                icon = '📡';
+                            }
+                            if (pub.syncState === 'syncing') {
+                                icon = '⏳';
+                            }
+                            if (pub.syncState === 'success') {
+                                icon = '✅';
+                            }
+                            if (pub.syncState === 'failure') {
+                                icon = '❗️';
+                            }
+                            return React.createElement("div", { key: pub.domain, className: 'flexRow selectable' },
+                                React.createElement("div", { className: 'flexItem unselectable unclickable', style: { alignSelf: 'center' } }, icon),
+                                React.createElement("div", { className: 'flexItem flexGrow1' },
+                                    React.createElement("a", { href: pub.domain, target: '_blank', style: { color: 'var(--cText)' } }, pub.domain)),
+                                React.createElement("button", { className: 'flexItem linkButton unselectable', onClick: () => store.removePub(pub.domain) }, "\u2715"));
+                        }),
+                        React.createElement("form", { className: 'flexRow indent', onSubmit: (e) => { e.preventDefault(); this.handleAddPub(); } },
+                            React.createElement("input", { className: 'flexItem flexGrow1', type: "text", placeholder: "http://...", value: this.state.newPubInput, onChange: (e) => this.setState({ newPubInput: e.target.value }) }),
+                            React.createElement("button", { className: 'button flexItem', type: 'submit' }, "Add")),
+                        (store.kit === null || store.kit.syncer.state.pubs.length === 0)
+                            ? React.createElement("div", { className: 'indent faint' }, "Add pub server(s) if you want to sync with other people. Otherwise your data will only be saved in this browser.")
+                            : null)),
             React.createElement("hr", { className: 'faint' }),
-            React.createElement("div", { className: 'faint' }, "Switch workspace:"),
-            React.createElement("div", { className: 'stack indent' },
-                allWorkspaces.map(wsConfig => {
-                    var _a;
-                    let isCurrent = wsConfig.workspaceAddress === ((_a = store.currentWorkspace) === null || _a === void 0 ? void 0 : _a.workspaceAddress);
-                    let style = isCurrent
-                        ? { fontStyle: 'italic', background: 'rgba(255,255,255,0.2)' }
-                        : {};
-                    return React.createElement("div", { key: wsConfig.workspaceAddress, className: 'flexRow' },
-                        React.createElement("a", { href: "#", style: style, className: 'flexItem flexGrow1 linkButton', onClick: (e) => store.switchWorkspace(wsConfig) }, wsConfig.workspaceAddress),
-                        React.createElement("button", { className: 'flexItem linkButton', onClick: () => store.removeWorkspace(wsConfig.workspaceAddress) }, "\u2715"));
-                }),
-                React.createElement("form", { className: 'flexRow', onSubmit: (e) => { e.preventDefault(); this.handleAddWorkspace(); } },
-                    React.createElement("input", { className: 'flexItem flexGrow1', type: "text", placeholder: "+foo.rjo34irqjf", value: this.state.newWorkspaceInput, onChange: (e) => this.handleEditNewWorkspace(e.target.value) }),
-                    React.createElement("button", { className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, type: 'submit', disabled: this.state.newWorkspaceError !== null }, "Add Workspace")),
+            React.createElement("div", { className: 'faint' }, "Recent workspaces"),
+            React.createElement("div", { className: 'stack indent' }, allWorkspaces.map(wsConfig => {
+                var _a;
+                let isCurrent = wsConfig.workspaceAddress === ((_a = store.currentWorkspace) === null || _a === void 0 ? void 0 : _a.workspaceAddress);
+                let style = isCurrent
+                    ? { fontStyle: 'italic', background: 'rgba(255,255,255,0.2)' }
+                    : {};
+                return React.createElement("div", { key: wsConfig.workspaceAddress, className: 'flexRow' },
+                    React.createElement("a", { href: "#", style: style, className: 'flexItem flexGrow1 linkButton', onClick: (e) => store.switchWorkspace(wsConfig) }, wsConfig.workspaceAddress),
+                    React.createElement("button", { className: 'flexItem linkButton', onClick: () => store.removeWorkspace(wsConfig.workspaceAddress) }, "\u2715"));
+            })),
+            React.createElement("hr", { className: 'faint' }),
+            React.createElement("div", { className: 'faint' }, "Add workspace or create new one"),
+            React.createElement("form", { className: 'stack indent', onSubmit: (e) => { e.preventDefault(); this.handleAddWorkspace(); } },
+                React.createElement("input", { className: 'fullWidth', type: "text", placeholder: "+newworkspace.rjo34irqjf", value: this.state.newWorkspaceInput, onChange: (e) => this.handleEditNewWorkspace(e.target.value) }),
                 this.state.newWorkspaceError === null
                     ? null
-                    : React.createElement("div", { className: 'right' }, this.state.newWorkspaceError)));
+                    : React.createElement("div", null, this.state.newWorkspaceError),
+                React.createElement("div", { className: 'faint' }, "A workspace has two parts: a word up to 15 letters long, and a random part that's hard to guess. If you're creating a new workspace, make up your own random part."),
+                React.createElement("div", { className: 'right' },
+                    React.createElement("button", { className: 'button', type: 'submit', disabled: this.state.newWorkspaceError !== null }, "Add or Create"))));
     }
 }
 exports.EarthbarWorkspacePanel = EarthbarWorkspacePanel;

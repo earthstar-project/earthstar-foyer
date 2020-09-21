@@ -71,7 +71,8 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                 //borderRadius: 'var(--round)',
             };
         let sSyncButton : any = {
-            margin: 'var(--s-2)',
+            marginTop: 'var(--s-2)',
+            marginBottom: 'var(--s-2)',
             // change colors
             '--cText': 'var(--cWhite)',
             '--cBackground': 'var(--cWorkspace)',
@@ -140,7 +141,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                         >
                         Sync
                     </button>
-                    <div className='flexItem flexGrow1' />
+                    <div className='flexItem flexGrow1' style={{margin: 0}}/>
                     <button className='flexItem earthbarTab' style={sUserTab} onClick={onClickUserTab}>
                         {userLabel}
                     </button>

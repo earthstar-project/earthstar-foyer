@@ -105,60 +105,74 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
             sortByField(allWorkspaces, 'workspaceAddress');
         }
 
-        return <div className='stack' style={sWorkspacePanel}>
+        return <div className='stack unselectable' style={sWorkspacePanel}>
             {/* current workspace details */}
             {store.currentWorkspace === null
             ? null
             : <div className='stack'>
-                    <div className='faint'>Current workspace:</div>
-                    <div className='stack indent'>
-                        {/* workspace address in a form easy to copy-paste */}
-                        <pre>{store.currentWorkspace.workspaceAddress}</pre>
-                        <div className='faint'>Pub Servers:</div>
-                        <div className='stack indent'>
-                            {/*
-                                List of pubs.  We could get this from state.currentWorkspace.pubs
-                                but instead let's get it from the Kit we built, from the Syncer,
-                                because there we can also get current syncing status.
-                            */}
-                            {(store.kit === null ? [] : store.kit.syncer.state.pubs)
-                                .map(pub => {
-                                    let icon = '';
-                                    if (pub.syncState === 'idle'   ) { icon = '📡'; }
-                                    if (pub.syncState === 'syncing') { icon = '⏳'; }
-                                    if (pub.syncState === 'success') { icon = '✅'; }
-                                    if (pub.syncState === 'failure') { icon = '❗️'; }
-                                    return <div key={pub.domain} className='flexRow'>
-                                        <div className='flexItem flexGrow1'>{icon} {pub.domain}</div>
-                                        <button className='flexItem linkButton'
-                                            onClick={() => store.removePub(pub.domain)}
-                                            >
-                                            &#x2715;
-                                        </button>
+                <div className='faint'>Current workspace</div>
+                    <pre className='indent selectable'>{store.currentWorkspace.workspaceAddress}</pre>
+                <div className='faint'>Pub servers for this workspace</div>
+                    <div className='stack'>
+                        {/*
+                            List of pubs.  We could get this from state.currentWorkspace.pubs
+                            but instead let's get it from the Kit we built, from the Syncer,
+                            because there we can also get current syncing status.
+                        */}
+                        {(store.kit === null ? [] : store.kit.syncer.state.pubs)
+                            .map(pub => {
+                                let icon = '';
+                                if (pub.syncState === 'idle'   ) { icon = '📡'; }
+                                if (pub.syncState === 'syncing') { icon = '⏳'; }
+                                if (pub.syncState === 'success') { icon = '✅'; }
+                                if (pub.syncState === 'failure') { icon = '❗️'; }
+                                return <div key={pub.domain} className='flexRow selectable'>
+                                    <div className='flexItem unselectable unclickable'
+                                        style={{alignSelf: 'center'}}
+                                        >
+                                            {icon}
                                     </div>
-                                })
-                            }
-                            {/* Form to add new pub */}
-                            <form className='flexRow' onSubmit={(e) => {e.preventDefault(); this.handleAddPub()}}>
-                                <input className='flexItem flexGrow1' type="text"
-                                    placeholder="http://..."
-                                    value={this.state.newPubInput}
-                                    onChange={(e) => this.setState({ newPubInput: e.target.value })}
-                                    />
-                                <button className='button flexItem'
-                                    style={{marginLeft: 'var(--s-1)'}}
-                                    type='submit'
-                                    >
-                                    Add Pub Server
-                                </button>
-                            </form>
-                        </div>
+                                    <div className='flexItem flexGrow1'>
+                                        <a href={pub.domain} target='_blank'
+                                            style={{color: 'var(--cText)'}}
+                                            >
+                                            {pub.domain}
+                                        </a>
+                                    </div>
+                                    <button className='flexItem linkButton unselectable'
+                                        onClick={() => store.removePub(pub.domain)}
+                                        >
+                                        &#x2715;
+                                    </button>
+                                </div>
+                            })
+                        }
+                        {/* Form to add new pub */}
+                        <form className='flexRow indent' onSubmit={(e) => {e.preventDefault(); this.handleAddPub()}}>
+                            <input className='flexItem flexGrow1' type="text"
+                                placeholder="http://..."
+                                value={this.state.newPubInput}
+                                onChange={(e) => this.setState({ newPubInput: e.target.value })}
+                                />
+                            <button className='button flexItem'
+                                type='submit'
+                                >
+                                Add
+                            </button>
+                        </form>
+                        {(store.kit === null || store.kit.syncer.state.pubs.length === 0)
+                          ? <div className='indent faint'>
+                                Add pub server(s) if you want to sync with other people.
+                                Otherwise your data will only be saved in this browser.
+                            </div>
+                          : null
+                        }
                     </div>
                 </div>
             }
             <hr className='faint' />
             {/* list of other workspaces */}
-            <div className='faint'>Switch workspace:</div>
+            <div className='faint'>Recent workspaces</div>
             <div className='stack indent'>
                 {allWorkspaces.map(wsConfig => {
                     let isCurrent = wsConfig.workspaceAddress === store.currentWorkspace?.workspaceAddress;
@@ -179,27 +193,36 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
                     </div>
 
                 })}
-                {/* form to add new workspace */}
-                <form className='flexRow' onSubmit={(e) => {e.preventDefault(); this.handleAddWorkspace()}}>
-                    <input className='flexItem flexGrow1' type="text"
-                        placeholder="+foo.rjo34irqjf"
-                        value={this.state.newWorkspaceInput}
-                        onChange={(e) => this.handleEditNewWorkspace(e.target.value)}
-                        />
-                    <button className='button flexItem'
-                        style={{marginLeft: 'var(--s-1)'}}
+            </div>
+            <hr className='faint' />
+            {/* form to add new workspace */}
+            <div className='faint'>Add workspace or create new one</div>
+            <form className='stack indent' onSubmit={(e) => {e.preventDefault(); this.handleAddWorkspace()}}>
+                <input className='fullWidth' type="text"
+                    placeholder="+newworkspace.rjo34irqjf"
+                    value={this.state.newWorkspaceInput}
+                    onChange={(e) => this.handleEditNewWorkspace(e.target.value)}
+                    />
+                {/* validation error for new workspace form */}
+                {this.state.newWorkspaceError === null
+                    ? null
+                    : <div>{this.state.newWorkspaceError}</div>
+                }
+                <div className='faint'>
+                    A workspace has two parts: a word up to 15 letters long,
+                    and a random part that's hard to guess.
+                    If you're creating a new workspace, make up your own
+                    random part.
+                </div>
+                <div className='right'>
+                    <button className='button'
                         type='submit'
                         disabled={this.state.newWorkspaceError !== null}
                         >
-                        Add Workspace
+                        Add or Create
                     </button>
-                </form>
-                {/* validation error for new workspace form */}
-                {this.state.newWorkspaceError === null
-                  ? null
-                  : <div className='right'>{this.state.newWorkspaceError}</div>
-                }
-            </div>
+                </div>
+            </form>
         </div>;
     }
 }

@@ -56,12 +56,31 @@
     margin-top: var(--s0);
 }
 
+.unclickable {
+    pointer-events: none;
+}
+.unselectable {
+    user-select: none;
+}
+.selectable {
+    user-select: text;
+}
+
+.fullWidth {
+    width: 100%;
+}
+
 .flexRow {
     border: var(--test-border-width) dashed #880;
     display: flex;
 }
+.flexItem:first-child {
+    margin-left: 0px;
+}
 .flexItem {
+    margin-left: var(--s-1);
     border: var(--test-border-width) solid #880;
+    display: block;
 }
 .flexGrow1 {
     flex-grow: 1;
@@ -91,7 +110,14 @@ input[type=text], input[type=password] {
     border: 2px solid var(--cText);
     background: none;
     color: var(--cText);
-    padding: var(--s-2);
+    min-width: 20px;
+
+    /* match button */
+    padding-top: var(--s-1);
+    padding-bottom: var(--s-1);
+    padding-left: var(--s0);
+    padding-right: var(--s0);
+
     margin: none;
     font-family: monospace;
     border-radius: var(--slightlyRound);
@@ -131,6 +157,9 @@ textarea::before {
     font-weight: bold;
     border-top-left-radius: var(--round);
     border-top-right-radius: var(--round);
+    white-space: nowrap;
+    /*text-overflow: ellipsis;*/
+    overflow: hidden;
 }
 
 .button {
@@ -139,6 +168,8 @@ textarea::before {
     border-radius: var(--round);
     background: var(--cText);
     color: var(--cBackground);
+    white-space: nowrap;
+    /*overflow: hidden;*/
     padding-top: var(--s-1);
     padding-bottom: var(--s-1);
     padding-left: var(--s0);
