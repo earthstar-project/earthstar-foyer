@@ -61,13 +61,13 @@ export class EarthbarStore {
 
     constructor() {
         logEarthbarStore('constructor');
-        this.currentUser = {
+        this.currentUser = null, /*{
             authorKeypair: {
                 address: '@suzy.bzrjm4jnvr5luvbgls5ryqrq7jolqw3v5p2cmpabcsoczyhdrdjga',
                 secret: 'bugskupxnwtjt56rsyusoh5oo5x74uoy3kikftv32swmskvw36m7a',
             },
             displayName: 'Suzy',
-        };
+        };*/
         this.currentWorkspace = {
             workspaceAddress: '+lobbydev.a1',
             pubs: [

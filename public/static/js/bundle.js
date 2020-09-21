@@ -68481,19 +68481,19 @@ class EarthbarStore {
         // - any state changes in the EarthbarStore (current user or workspace, new Kit, etc)
         this.onChange = new earthstar_1.Emitter();
         log_1.logEarthbarStore('constructor');
-        this.currentUser = {
+        this.currentUser = null, /*{
             authorKeypair: {
                 address: '@suzy.bzrjm4jnvr5luvbgls5ryqrq7jolqw3v5p2cmpabcsoczyhdrdjga',
                 secret: 'bugskupxnwtjt56rsyusoh5oo5x74uoy3kikftv32swmskvw36m7a',
             },
             displayName: 'Suzy',
-        };
-        this.currentWorkspace = {
-            workspaceAddress: '+lobbydev.a1',
-            pubs: [
-                'https://earthstar-demo-pub-v5-a.glitch.me/',
-            ],
-        };
+        };*/
+            this.currentWorkspace = {
+                workspaceAddress: '+lobbydev.a1',
+                pubs: [
+                    'https://earthstar-demo-pub-v5-a.glitch.me/',
+                ],
+            };
         /*
         this.otherUsers = [
             {
