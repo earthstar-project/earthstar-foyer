@@ -1,0 +1,283 @@
+how a wiki might work in earthstar
+
+
+
+namespaces
+⭐  1. each author has their own namespace, plus a shared namespace (or multiple).
+        separator character for paths: ':' or '/'
+            /wiki/commons:Flowers
+            /wiki/commons/Flowers
+
+        main shared namespace: "shared", "common", "commons"
+
+        other shared namespaces for categories of page?
+            /wiki/soil/Calcium
+            /wiki/landscape/Pavers
+
+        one-author pages
+            /wiki/@suzy.bxxxx/Flowers
+
+
+
+
+links in content
+    this depends on what Markdown will recognize as a link
+
+    absolute links
+        1. full earthstar path
+            /wiki/commons/Flowers
+        2. only within the wiki
+            /commons/Flowers
+    
+    relative links can assume the owner is the same as the current page?
+        #Flowers
+        [Flowers]
+        [flowers](Flowers)
+
+
+
+content format
+    https://en.wikipedia.org/wiki/Lightweight_markup_language
+    https://en.wikipedia.org/wiki/Comparison_of_document-markup_languages
+    
+⭐  markdown
+        https://en.wikipedia.org/wiki/Markdown
+        https://github.github.com/gfm/  -- superset of commonmark
+
+        needs a shorter link format added
+        like #hashtag, [[brackets]], ...
+
+        # Section
+        <https://www.example.com>
+        https://www.example.com
+        [*link*](/wiki/commons/Flowers)
+        [link](/wiki/commons/Flowers)
+        [link](Flowers)
+        [link](<Flowers and bees>)
+        [link](Flowers#section)
+        [link](#section)
+        [link](https://example.com)
+
+        [link][0]
+        [0]: http://www.example.com
+
+        [link]
+        [link]: http://www.example.com
+
+        no: /title
+        no: #hashtags
+
+    mediawiki
+        https://en.wikipedia.org/wiki/Help:Wikitext
+
+        = Section =
+        [[title]]
+        [[title|a cool link]
+        [[#section]]
+        [[title#section]]
+        [https://www.example.com External Link]
+        [https://www.example.com]
+        https://www.example.com
+
+        no: /title
+        no hashtags
+
+    tiddlywiki wikitext
+        https://tiddlywiki.com/static/WikiText.html
+        https://tiddlywiki.com/static/Transclusion%2520in%2520WikiText.html
+
+        ! Section
+        links are similar to mediawiki
+        {{includedPage}} ("transclusion")
+
+    roam format
+        https://roamresearch.com/#/app/roam-tricks/page/OE16pbHJn
+        https://www.reddit.com/r/RoamResearch/comments/hcp9e5/which_flavor_of_markdown_does_roam_use/
+        [[title]]
+        [a cool link]([[link]])
+        #title
+        https://www.example.com
+
+    html
+    org-mode
+    textile
+        https://textile-lang.com/
+    pollen
+    gemini
+
+
+
+titles and paths
+⭐  1. use title of page as earthstar path
+        mitigation: redirects for moved pages
+        ⭐️  + store in doc at original path
+            - store in redirect table in a single big document per user
+                this is weird for shared docs
+                this fails for multi-device users
+
+        - no renaming except by changing all pages with links
+            - you don't own all pages so you can't update every link
+            - this creates a million edit conflicts
+        - urls are not stable, if people try to rename / move pages
+        + urls are meaningful sense
+        + easy linking in wiki text
+        + fast rendering of page text, don't need to alter links
+        + fast listing of pages (just list paths, don't have to read content)
+
+        /wiki/@suzy.bxxxx/Flowers
+
+    2. use UID as path
+        where to store title?
+              document content
+              document metadata
+              a separate document: /wiki/commons/Flowers/title
+            - a big lookup table in a single document (per user)
+                this is weird for shared docs
+                this fails for multi-device users
+
+        + page renaming is possible / easy
+        + urls are stable
+        - urls are not meaningful
+        - hard to link in wiki text: need autocompletion in UI, hard to read when editing, ????
+        - slow rendering (have to look up UID-->title for page text)
+        - slow listing of pages
+
+        this is nice for sub-blocks of a page which might not have titles, or unstable titles
+
+        /wiki/@suzy.bxxxxx/fjoa-a7ionf-o03irxch
+
+        For easier authoring, could use Markdown reference links?
+            [Flowers][0]
+            [0]: /23jf-f24fff2w4fg-fq23j4f9
+
+
+
+
+backlinks
+    example: Flowers has a link to Tulips and Daisies
+
+    + gives you #tags / #categories for free
+
+    note that when pages are made of blocks or included sub-pages,
+    we have to query for backlinks for each of them to render the page,
+    so render-querying needs to be fast
+
+⭐️  1. when editing a doc, save backlinks as separate docs.
+
+        - lots of docs, slower syncing
+        - clients have to do this correctly for others to see the backlinks
+
+    ⭐️  1.1 store backlinks as separate docs under the target page
+            /wiki/commons/Flowers.md
+            /wiki/commons/Daisies/linkedfrom/Flowers = "true"
+            /wiki/commons/Tulips/linkedfrom/Flowers = "true"
+
+            + fast rendering of Daisies: uses a suffix query
+            - slow writing of Flowers: uses a prefix query
+                * or tracks changes more carefully to avoid a query,
+                hopefully won't lose any and leave them as dangling backlinks
+
+        1.2 store backlinks as separate docs under the source page
+            /wiki/commons/Flowers.md
+            /wiki/commons/Flowers/linksto/Daisies = "true"
+            /wiki/commons/Flowers/linksto/Tulips = "true"
+
+            - slow rendering of Daisies: uses a suffix query
+            + fast writing of Flowers: uses a prefix query
+
+⭐️  2. client-side indexing of content text
+
+        + simpler spec for the data
+        + poorly written clients only hurt themselves
+        + less bandwidth needed for all those backlink documents
+        + less storage space overall (index is smaller than backlink documents)
+        - have to figure out the story about client-side indexing
+        - clients have to re-index often if they share storage with other clients
+
+    3. query for backlinks at render time by scanning metadata or content text
+
+        - way too slow, requires fancy and slow querying of metadata
+    
+
+
+
+pages / paragraphs / blocks
+    implement in this order:
+
+    3. just single big pages
+        - lots of edit conflicts
+        + simple
+
+    2. pages which can include other pages
+        * recursive nesting is powerful and confusing
+        * a block can occur on several pages
+        * can mix content from different owners
+        - annoying to read b/c same content occurs all over the place
+        + good for power-users, todo lists, writing books
+
+        - write conflicts from adding and reordering pages
+        + fast rendering: just lookups
+            - rendering has to be careful avoid infinite recursion
+        + fast listing of pages
+
+        - needs backlinks to help users understand where pages are included in other pages
+        - backlinks will often point to sub-pages instead of top-level pages
+
+        - need to modify the markdown syntax with a new kind of link
+
+        + can implement this incrementally on top of basic one-doc pages
+
+        2.1 each doc uses special include-links in the markdown
+
+            /wiki/commons/Flowers.md = "Flowers are cool.  Here's more about tulips: [@include commons/Tulips]"
+            /wiki/commons/Tulips.md = "a paragraph goes here"
+
+⭐️  1. pages made of blocks
+        + simple one-deep nesting, easy to understand
+        + a block only occurs on one page
+        + fewer write conflicts
+        * still possible to add @includes later for power-users
+
+        - more complexity up-front when implementing
+        
+        ownership?
+            let's say all blocks have the same ownership as the parent page
+        backlinks?
+            to parent, or to block?
+
+        1.1 parent has an ordered list of blocks in a single doc
+
+            /wiki/commons/Flowers/index.json = [block123, block7, block2]
+            /wiki/commons/Flowers/block123.md = "a paragraph goes here"
+
+            - write conflicts from adding or reordering blocks
+            + fast rendering: just lookups
+            + fast listing of pages: {startsWith: '/wiki/', endsWith: '/index.json'}
+
+            This is quite similar to option 2 (@include)
+
+    ⭐️  1.2 parent has a set of blocks & each block has a sort index
+
+            /wiki/commons/Flowers/block123.json = {sort: 1000, text: "a paragraph goes here"}
+
+            + no write conflicts
+            + easy rendering: prefix query
+            - slower listing of pages: {startsWith: '/wiki/'} | uniq
+                + we could still make index pages to fix this?
+            - sort indices could run out of resolution on large pages
+
+        1.3 each block has a pointer to its parent & a sort index
+
+            /wiki/commons/block123.md = meta={page: "Flowers", sort: 1000}, content="a paragraph goes here"
+
+            + no write conflicts
+            - slow rendering: query for blocks with a given page, requires metadata
+            - slow listing of pages: {distinct meta.page}
+            - sort indices could run out of resolution on large pages
+
+
+
+different kinds of blocks?
+
+
+
