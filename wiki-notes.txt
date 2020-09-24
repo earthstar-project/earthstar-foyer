@@ -103,7 +103,14 @@ content format
     textile
         https://textile-lang.com/
     pollen
-    gemini
+    gemini (.gmi)
+        # Section
+        ## Section
+        ### Section
+        No links can be embedded into paragraph text.
+        => link my link
+        => /link my link
+        => http://example.com my link
 
 
 
