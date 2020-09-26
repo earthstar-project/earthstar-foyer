@@ -138,7 +138,7 @@ textarea {
 
     padding: var(--s-2);
     margin: none;
-    font-family: monospace;
+    /*font-family: monospace;*/
     width: 100%;
     border-radius: var(--slightlyRound);
 }

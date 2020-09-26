@@ -53,6 +53,7 @@ export class EarthbarStore {
     // non-JSON stuff
     kit: Kit | null = null;
     unsubSyncer: Thunk | null = null;
+    unsubStorage: Thunk | null = null;
 
     // emit change events when we need to re-render the earthbar:
     // - the kit's Syncer emits a change event
@@ -151,6 +152,8 @@ export class EarthbarStore {
         // unsub from previous kit
         if (this.unsubSyncer) { this.unsubSyncer(); }
         this.unsubSyncer = null;
+        if (this.unsubStorage) { this.unsubStorage(); }
+        this.unsubStorage = null;
 
         // close previous storage
         if (this.kit !== null) {
@@ -178,6 +181,10 @@ export class EarthbarStore {
                 if (this.currentUser !== null && this.currentUser.authorKeypair.address === this.kit?.authorKeypair?.address) {
                     this.currentUser.displayName = this.__readDisplayNameFromIStorage();
                 }
+                // pass events along to subscribers of the earthbarStore
+                this.onChange.send(null)
+            });
+            this.unsubStorage = this.kit.storage.onChange.subscribe(() => {
                 // pass events along to subscribers of the earthbarStore
                 this.onChange.send(null)
             });

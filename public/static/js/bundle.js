@@ -68254,70 +68254,19 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LobbyApp = void 0;
 const React = __importStar(require("react"));
 const ReactDOM = __importStar(require("react-dom"));
 const earthbar_1 = require("./earthbar");
-const util_1 = require("./util");
-const log_1 = require("./log");
-const earthstar_1 = require("earthstar");
-class LobbyApp extends React.PureComponent {
-    constructor(props) {
-        super(props);
-    }
-    render() {
-        log_1.logLobbyApp('render');
-        let kit = this.props.kit;
-        let docs = (kit === null || kit === void 0 ? void 0 : kit.storage.documents({ pathPrefix: '/lobby/', includeHistory: false })) || [];
-        docs = docs.filter(doc => doc.content !== ''); // remove empty docs (aka "deleted" docs)
-        util_1.sortByField(docs, 'timestamp');
-        docs.reverse();
-        let colors = 'red orange yellow green blue violet cyan pink'.split(' ');
-        return React.createElement("div", { style: { padding: 'var(--s0)' } },
-            React.createElement("div", { className: '' }, docs.map(doc => {
-                let rand = earthstar_1.detRandom(doc.author);
-                let hue = ((rand * 7) % 1) * 360;
-                let rot = ((rand * 23) % 1);
-                let bgColor = `hsl(${hue}, 50%, 90%)`;
-                let edgeColor = `hsl(${hue}, 56%, 82%)`;
-                let darkColor = `hsl(${hue}, 90%, 20%)`;
-                return React.createElement("div", { key: doc.path, className: 'stack', style: {
-                        transform: `rotate(${(rot * 2 - 1) * 4}deg)`,
-                        borderRadius: 'var(--slightlyRound)',
-                        //background: 'var(--cWhite)',
-                        //background: bgColor,
-                        //background: `linear-gradient(180deg, ${bgColor} 43px, #fff 43px)`,  // top stripe
-                        //background: `linear-gradient(90deg, ${bgColor} 10px, #fff 10px)`,  // left side stripe
-                        //background: `linear-gradient(90deg, ${bgColor} 3px, #fff 40px)`,  // left side gentle
-                        //border: '1px solid #999',
-                        background: `linear-gradient(180deg, ${edgeColor} 3px, ${bgColor} 43px)`,
-                        //background: `linear-gradient(-90deg, ${edgeColor} 10px, ${bgColor} 50px)`,  // right side shading
-                        //background: bgColor,
-                        //borderLeft: '10px solid ' + edgeColor,
-                        marginLeft: `${rand * 20}%`,
-                        marginRight: `${(1 - rand) * 20}%`,
-                        padding: 'var(--s0)',
-                        //paddingTop: 'var(--s1)',
-                        //paddingBottom: 'var(--s1)',
-                        marginBottom: 4,
-                    } },
-                    React.createElement("div", { className: 'flexRow' },
-                        React.createElement("div", { className: 'flexItem', style: { color: darkColor }, title: doc.author },
-                            React.createElement("b", null, util_1.cutAtPeriod(doc.author))),
-                        React.createElement("div", { className: 'flexItem flexGrow1' }),
-                        React.createElement("div", { className: 'flexItem faint' }, new Date(doc.timestamp / 1000).toDateString())),
-                    React.createElement("div", { className: 'wrappyText' }, doc.content));
-            })));
-    }
-}
-exports.LobbyApp = LobbyApp;
-;
+const lobbyApp_1 = require("./lobbyApp");
 //================================================================================
 // MAIN
+// The "Earthbar" is the workspace and user switcher panel across the top.
+// It's responsible for setting up Earthstar classes and rendering the "app".
+// The "app" in this case is LobbyApp.
 ReactDOM.render(React.createElement("div", { className: 'pageColumn' },
-    React.createElement(earthbar_1.Earthbar, { app: LobbyApp })), document.getElementById('react-slot'));
+    React.createElement(earthbar_1.Earthbar, { app: lobbyApp_1.LobbyApp })), document.getElementById('react-slot'));
 
-},{"./earthbar":267,"./log":272,"./util":273,"earthstar":100,"react":221,"react-dom":218}],267:[function(require,module,exports){
+},{"./earthbar":267,"./lobbyApp":272,"react":221,"react-dom":218}],267:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -68449,7 +68398,7 @@ class Earthbar extends React.Component {
 }
 exports.Earthbar = Earthbar;
 
-},{"./earthbarStore":268,"./earthbarUserPanel":269,"./earthbarWorkspacePanel":270,"./log":272,"./util":273,"react":221}],268:[function(require,module,exports){
+},{"./earthbarStore":268,"./earthbarUserPanel":269,"./earthbarWorkspacePanel":270,"./log":273,"./util":274,"react":221}],268:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EarthbarStore = exports.EbMode = void 0;
@@ -68476,6 +68425,7 @@ class EarthbarStore {
         // non-JSON stuff
         this.kit = null;
         this.unsubSyncer = null;
+        this.unsubStorage = null;
         // emit change events when we need to re-render the earthbar:
         // - the kit's Syncer emits a change event
         // - any state changes in the EarthbarStore (current user or workspace, new Kit, etc)
@@ -68574,6 +68524,10 @@ class EarthbarStore {
             this.unsubSyncer();
         }
         this.unsubSyncer = null;
+        if (this.unsubStorage) {
+            this.unsubStorage();
+        }
+        this.unsubStorage = null;
         // close previous storage
         if (this.kit !== null) {
             this.kit.storage.close();
@@ -68597,6 +68551,10 @@ class EarthbarStore {
                 if (this.currentUser !== null && this.currentUser.authorKeypair.address === ((_b = (_a = this.kit) === null || _a === void 0 ? void 0 : _a.authorKeypair) === null || _b === void 0 ? void 0 : _b.address)) {
                     this.currentUser.displayName = this.__readDisplayNameFromIStorage();
                 }
+                // pass events along to subscribers of the earthbarStore
+                this.onChange.send(null);
+            });
+            this.unsubStorage = this.kit.storage.onChange.subscribe(() => {
                 // pass events along to subscribers of the earthbarStore
                 this.onChange.send(null);
             });
@@ -68789,7 +68747,7 @@ class EarthbarStore {
 }
 exports.EarthbarStore = EarthbarStore;
 
-},{"./kit":271,"./log":272,"./util":273,"earthstar":100,"fast-equals":132}],269:[function(require,module,exports){
+},{"./kit":271,"./log":273,"./util":274,"earthstar":100,"fast-equals":132}],269:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -68990,7 +68948,7 @@ class EarthbarUserPanel extends React.Component {
 }
 exports.EarthbarUserPanel = EarthbarUserPanel;
 
-},{"./log":272,"./util":273,"earthstar":100,"react":221}],270:[function(require,module,exports){
+},{"./log":273,"./util":274,"earthstar":100,"react":221}],270:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69159,7 +69117,7 @@ class EarthbarWorkspacePanel extends React.Component {
 }
 exports.EarthbarWorkspacePanel = EarthbarWorkspacePanel;
 
-},{"./log":272,"./util":273,"earthstar":100,"react":221}],271:[function(require,module,exports){
+},{"./log":273,"./util":274,"earthstar":100,"react":221}],271:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Kit = void 0;
@@ -69210,7 +69168,134 @@ class Kit {
 }
 exports.Kit = Kit;
 
-},{"./log":272,"earthstar":100,"lodash.debounce":170}],272:[function(require,module,exports){
+},{"./log":273,"earthstar":100,"lodash.debounce":170}],272:[function(require,module,exports){
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.LobbyComposer = exports.LobbyApp = void 0;
+const React = __importStar(require("react"));
+const util_1 = require("./util");
+const log_1 = require("./log");
+const earthstar_1 = require("earthstar");
+let userStyle = (author, rotate = false) => {
+    let rand = earthstar_1.detRandom(author);
+    let hue = ((rand * 7) % 1) * 360;
+    let rot = ((rand * 23) % 1);
+    let bgColor = `hsl(${hue}, 50%, 90%)`;
+    let edgeColor = `hsl(${hue}, 56%, 82%)`;
+    let darkColor = `hsl(${hue}, 90%, 20%)`;
+    return {
+        '--darkColor': darkColor,
+        transform: rotate ? `rotate(${(rot * 2 - 1) * 4}deg)` : '',
+        borderRadius: 'var(--slightlyRound)',
+        //background: 'var(--cWhite)',
+        //background: bgColor,
+        //background: `linear-gradient(180deg, ${bgColor} 43px, #fff 43px)`,  // top stripe
+        //background: `linear-gradient(90deg, ${bgColor} 10px, #fff 10px)`,  // left side stripe
+        //background: `linear-gradient(90deg, ${bgColor} 3px, #fff 40px)`,  // left side gentle
+        //border: '1px solid #999',
+        background: `linear-gradient(180deg, ${edgeColor} 3px, ${bgColor} 43px)`,
+        //background: `linear-gradient(-90deg, ${edgeColor} 10px, ${bgColor} 50px)`,  // right side shading
+        //background: bgColor,
+        //borderLeft: '10px solid ' + edgeColor,
+        marginLeft: `${rand * 20}%`,
+        marginRight: `${(1 - rand) * 20}%`,
+        padding: 'var(--s0)',
+        //paddingTop: 'var(--s1)',
+        //paddingBottom: 'var(--s1)',
+        marginBottom: 4,
+    };
+};
+class LobbyApp extends React.PureComponent {
+    constructor(props) {
+        super(props);
+    }
+    render() {
+        log_1.logLobbyApp('render.  changeKey:', this.props.changeKey);
+        let kit = this.props.kit;
+        let docs = (kit === null || kit === void 0 ? void 0 : kit.storage.documents({ pathPrefix: '/lobby/', includeHistory: false })) || [];
+        docs = docs.filter(doc => doc.content !== ''); // remove empty docs (aka "deleted" docs)
+        util_1.sortByField(docs, 'timestamp');
+        docs.reverse();
+        let colors = 'red orange yellow green blue violet cyan pink'.split(' ');
+        return React.createElement("div", { className: 'stack', style: { padding: 'var(--s0)' } },
+            (kit === null || kit === void 0 ? void 0 : kit.authorKeypair) ? React.createElement(LobbyComposer, { kit: this.props.kit, changeKey: this.props.changeKey })
+                : null,
+            React.createElement("div", { className: '' }, docs.map(doc => React.createElement("div", { key: doc.path, className: 'stack', style: userStyle(doc.author, true) },
+                React.createElement("div", { className: 'flexRow' },
+                    React.createElement("div", { className: 'flexItem', style: { color: 'var(--darkColor)' }, title: doc.author },
+                        React.createElement("b", null, util_1.cutAtPeriod(doc.author))),
+                    React.createElement("div", { className: 'flexItem flexGrow1' }),
+                    React.createElement("div", { className: 'flexItem faint' }, new Date(doc.timestamp / 1000).toDateString())),
+                React.createElement("div", { className: 'wrappyText' }, doc.content)))));
+    }
+}
+exports.LobbyApp = LobbyApp;
+;
+class LobbyComposer extends React.PureComponent {
+    constructor(props) {
+        super(props);
+        this.state = {
+            text: '',
+        };
+    }
+    handleSubmit() {
+        log_1.logLobbyApp('posting...');
+        this.setState({ text: '' });
+        if (this.props.kit && this.props.kit.authorKeypair) {
+            let keypair = this.props.kit.authorKeypair;
+            let docToSet = {
+                format: 'es.4',
+                path: `/lobby/~${keypair.address}/${Date.now()}.txt`,
+                content: this.state.text,
+            };
+            let result = this.props.kit.storage.set(keypair, docToSet);
+            if (result !== earthstar_1.WriteResult.Accepted) {
+                console.error('post: write failed', result);
+            }
+            else {
+                log_1.logLobbyApp('success');
+            }
+        }
+        else {
+            console.error("post: can't because kit or author keypair are null");
+        }
+    }
+    render() {
+        var _a, _b;
+        let myAddress = ((_b = (_a = this.props.kit) === null || _a === void 0 ? void 0 : _a.authorKeypair) === null || _b === void 0 ? void 0 : _b.address) || '';
+        let buttonStyle = {
+            '--cBackground': 'var(--cBlack)',
+            '--cText': 'var(--cWhite)',
+        };
+        return React.createElement("form", { className: 'stack', style: userStyle(myAddress, false), onSubmit: (e) => { e.preventDefault(); this.handleSubmit(); } },
+            React.createElement("textarea", { rows: 4, style: { resize: 'vertical' }, value: this.state.text, onChange: (e) => this.setState({ text: e.target.value }) }),
+            React.createElement("div", { className: 'flexRow' },
+                React.createElement("div", { className: 'flexItem flexGrow1' }),
+                React.createElement("button", { className: 'flexItem button', type: "submit", style: buttonStyle, disabled: this.state.text.length === 0 }, "Post")));
+    }
+}
+exports.LobbyComposer = LobbyComposer;
+
+},{"./log":273,"./util":274,"earthstar":100,"react":221}],273:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.logLobbyApp = exports.logEarthbarPanel = exports.logEarthbar = exports.logKit = exports.logEarthbarStore = void 0;
@@ -69221,7 +69306,7 @@ exports.logEarthbar = makeLogger('        earthbar view');
 exports.logEarthbarPanel = makeLogger('            earthbar panel');
 exports.logLobbyApp = makeLogger('            lobby view');
 
-},{}],273:[function(require,module,exports){
+},{}],274:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ellipsifyAddress = exports.cutAtPeriod = exports.sortByField = exports.sortFnByField = void 0;

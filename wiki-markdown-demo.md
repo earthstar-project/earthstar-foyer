@@ -34,7 +34,7 @@ no hashtags
 
 #hashtag
 
-[banana][
+[banana]
 [potato][0]
 [x]
 
