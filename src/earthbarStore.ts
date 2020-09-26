@@ -198,13 +198,17 @@ export class EarthbarStore {
         let displayName = this.kit.storage.getContent(path);
         return displayName || null;  // undefined or '' become null
     }
-    _setCurrentUser(keypair: AuthorKeypair): void {
+    _setCurrentUser(keypair: AuthorKeypair | null): void {
         logEarthbarStore('_setCurrentUser', keypair);
-        this.currentUser = {
-            authorKeypair: keypair,
-            displayName: null,
+        if (keypair == null) {
+            this.currentUser = null;
+        } else {
+            this.currentUser = {
+                authorKeypair: keypair,
+                displayName: null,  // set null for a moment...
+            }
         }
-        this._rebuildKit(); // this will set the displayName also
+        this._rebuildKit(); // ...this will load the displayName
     }
     //--------------------------------------------------
     // VISUAL STATE
@@ -242,6 +246,7 @@ export class EarthbarStore {
         return true;
     }
     setDisplayName(name: string): void {
+        logEarthbarStore('setting display name:', name);
         if (this.currentUser === null) { return; }
         if (this.kit === null) { return; }
         this.currentUser.displayName = name;
@@ -263,7 +268,9 @@ export class EarthbarStore {
         this._saveToLocalStorage();
     }
     logOutUser(): void {
+        logEarthbarStore('logging out');
         this.currentUser = null;
+        this._setCurrentUser(null);
         this._bump();
         this._saveToLocalStorage();
     }

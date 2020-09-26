@@ -46,6 +46,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
     }
     render() {
         let store = this.state.store;
+        let kit = this.state.store.kit;
         logEarthbar(`render in ${store.mode} mode`);
         let mode = store.mode;
 
@@ -122,11 +123,16 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         }
 
         let canSync = false;
-        if (store.kit !== null) {
-            canSync = store.kit.syncer.state.pubs.length >= 1 && store.kit.syncer.state.syncState !== 'syncing';
+        if (kit !== null) {
+            canSync = kit.syncer.state.pubs.length >= 1 && kit.syncer.state.syncState !== 'syncing';
         }
 
         let App = this.props.app;
+        let changeKeyForApp =
+            //store.onChange.changeKey + '_' + 
+            (kit?.storage.onChange.changeKey || '') + '_' +
+            (kit?.syncer.onChange.changeKey || '');
+
         return (
             <div>
                 {/* tabs for opening panel, and sync button */}
@@ -156,7 +162,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                           ? null // don't render the app when there's no kit (no workspace)
                           // TODO: how should the app specify which changes it wants?  (storage, syncer)
                           // TODO: how to throttle changes here?
-                          : <App kit={store.kit} changeKey={store.kit.storage.onChange.changeKey + '_' + store.kit.syncer.onChange.changeKey} />
+                          : <App kit={store.kit} changeKey={changeKeyForApp} />
                         }
                     </div>
                 </div>

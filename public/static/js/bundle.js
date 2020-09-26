@@ -68315,6 +68315,7 @@ class Earthbar extends React.Component {
     }
     render() {
         let store = this.state.store;
+        let kit = this.state.store.kit;
         log_1.logEarthbar(`render in ${store.mode} mode`);
         let mode = store.mode;
         // tab styles
@@ -68377,10 +68378,14 @@ class Earthbar extends React.Component {
             userLabel = util_1.cutAtPeriod(store.currentUser.authorKeypair.address);
         }
         let canSync = false;
-        if (store.kit !== null) {
-            canSync = store.kit.syncer.state.pubs.length >= 1 && store.kit.syncer.state.syncState !== 'syncing';
+        if (kit !== null) {
+            canSync = kit.syncer.state.pubs.length >= 1 && kit.syncer.state.syncState !== 'syncing';
         }
         let App = this.props.app;
+        let changeKeyForApp = 
+        //store.onChange.changeKey + '_' + 
+        ((kit === null || kit === void 0 ? void 0 : kit.storage.onChange.changeKey) || '') + '_' +
+            ((kit === null || kit === void 0 ? void 0 : kit.syncer.onChange.changeKey) || '');
         return (React.createElement("div", null,
             React.createElement("div", { className: 'flexRow' },
                 React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: onClickWorkspaceTab }, workspaceLabel),
@@ -68393,7 +68398,7 @@ class Earthbar extends React.Component {
                     ? null // don't render the app when there's no kit (no workspace)
                     // TODO: how should the app specify which changes it wants?  (storage, syncer)
                     // TODO: how to throttle changes here?
-                    : React.createElement(App, { kit: store.kit, changeKey: store.kit.storage.onChange.changeKey + '_' + store.kit.syncer.onChange.changeKey })))));
+                    : React.createElement(App, { kit: store.kit, changeKey: changeKeyForApp })))));
     }
 }
 exports.Earthbar = Earthbar;
@@ -68574,11 +68579,16 @@ class EarthbarStore {
     }
     _setCurrentUser(keypair) {
         log_1.logEarthbarStore('_setCurrentUser', keypair);
-        this.currentUser = {
-            authorKeypair: keypair,
-            displayName: null,
-        };
-        this._rebuildKit(); // this will set the displayName also
+        if (keypair == null) {
+            this.currentUser = null;
+        }
+        else {
+            this.currentUser = {
+                authorKeypair: keypair,
+                displayName: null,
+            };
+        }
+        this._rebuildKit(); // ...this will load the displayName
     }
     //--------------------------------------------------
     // VISUAL STATE
@@ -68618,6 +68628,7 @@ class EarthbarStore {
         return true;
     }
     setDisplayName(name) {
+        log_1.logEarthbarStore('setting display name:', name);
         if (this.currentUser === null) {
             return;
         }
@@ -68645,7 +68656,9 @@ class EarthbarStore {
         this._saveToLocalStorage();
     }
     logOutUser() {
+        log_1.logEarthbarStore('logging out');
         this.currentUser = null;
+        this._setCurrentUser(null);
         this._bump();
         this._saveToLocalStorage();
     }
@@ -69202,6 +69215,7 @@ let userStyle = (author, rotate = false) => {
     let bgColor = `hsl(${hue}, 50%, 90%)`;
     let edgeColor = `hsl(${hue}, 56%, 82%)`;
     let darkColor = `hsl(${hue}, 90%, 20%)`;
+    //let colors = 'red orange yellow green blue violet cyan pink'.split(' ');
     return {
         '--darkColor': darkColor,
         transform: rotate ? `rotate(${(rot * 2 - 1) * 4}deg)` : '',
@@ -69229,13 +69243,18 @@ class LobbyApp extends React.PureComponent {
         super(props);
     }
     render() {
+        var _a;
         log_1.logLobbyApp('render.  changeKey:', this.props.changeKey);
         let kit = this.props.kit;
         let docs = (kit === null || kit === void 0 ? void 0 : kit.storage.documents({ pathPrefix: '/lobby/', includeHistory: false })) || [];
         docs = docs.filter(doc => doc.content !== ''); // remove empty docs (aka "deleted" docs)
         util_1.sortByField(docs, 'timestamp');
         docs.reverse();
-        let colors = 'red orange yellow green blue violet cyan pink'.split(' ');
+        log_1.logLobbyApp('author:', (_a = kit === null || kit === void 0 ? void 0 : kit.authorKeypair) === null || _a === void 0 ? void 0 : _a.address);
+        setTimeout(() => {
+            var _a, _b;
+            log_1.logLobbyApp('author:', (_b = (_a = this.props.kit) === null || _a === void 0 ? void 0 : _a.authorKeypair) === null || _b === void 0 ? void 0 : _b.address);
+        }, 100);
         return React.createElement("div", { className: 'stack', style: { padding: 'var(--s0)' } },
             (kit === null || kit === void 0 ? void 0 : kit.authorKeypair) ? React.createElement(LobbyComposer, { kit: this.props.kit, changeKey: this.props.changeKey })
                 : null,

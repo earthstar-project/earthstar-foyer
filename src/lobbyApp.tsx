@@ -16,6 +16,7 @@ let userStyle = (author: AuthorAddress, rotate: boolean = false) : React.CSSProp
     let bgColor = `hsl(${hue}, 50%, 90%)`;
     let edgeColor = `hsl(${hue}, 56%, 82%)`;
     let darkColor = `hsl(${hue}, 90%, 20%)`;
+    //let colors = 'red orange yellow green blue violet cyan pink'.split(' ');
     return {
         '--darkColor': darkColor,
         transform: rotate ? `rotate(${(rot * 2 - 1) * 4}deg)` : '',
@@ -63,7 +64,10 @@ export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
         docs = docs.filter(doc => doc.content !== '');  // remove empty docs (aka "deleted" docs)
         sortByField(docs, 'timestamp');
         docs.reverse();
-        let colors = 'red orange yellow green blue violet cyan pink'.split(' ');
+        logLobbyApp('author:', kit?.authorKeypair?.address);
+        setTimeout(() => {
+            logLobbyApp('author:', this.props.kit?.authorKeypair?.address);
+        }, 100);
         return <div className='stack' style={{padding: 'var(--s0)'}}>
             {kit?.authorKeypair
                 ? <LobbyComposer kit={this.props.kit} changeKey={this.props.changeKey} />
