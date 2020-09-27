@@ -68646,6 +68646,7 @@ class EarthbarStore {
         // earthstar-lobby way
         let result = this.kit.storage.set(this.currentUser.authorKeypair, {
             format: 'es.4',
+            // TODO: bug: this needs a ~ but we're matching earthstar-lobby for now
             path: `/about/${this.currentUser.authorKeypair.address}/name`,
             content: name,
         });
@@ -69238,33 +69239,65 @@ let userStyle = (author, rotate = false) => {
         marginBottom: 4,
     };
 };
+let getDisplayName = (kit, authorAddress) => {
+    // TODO: bug in earthstar-lobby: the author address needs to have a ~
+    let path = `/about/${authorAddress}/name`;
+    let displayName = kit.storage.getContent(path);
+    return displayName === undefined ? null : displayName;
+};
+let humanDate = (earthstarTimestamp) => {
+    let d = new Date(earthstarTimestamp / 1000);
+    let weekday = 'Su Mo Tu We Th Fr Sa'.split(' ')[d.getDay()];
+    let month = `Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec`.split(' ')[d.getMonth()];
+    let hr = d.getHours(); // 0 to 23
+    let mn = ('' + d.getMinutes()).padStart(2, '0');
+    let ampm = hr < 12 ? 'a' : 'p';
+    hr = hr % 12;
+    if (hr === 0) {
+        hr = 12;
+    }
+    ;
+    return `${weekday} ${month} ${d.getDate()} ${hr}:${mn}${ampm}`;
+};
 class LobbyApp extends React.PureComponent {
     constructor(props) {
         super(props);
     }
     render() {
-        var _a;
         log_1.logLobbyApp('render.  changeKey:', this.props.changeKey);
         let kit = this.props.kit;
-        let docs = (kit === null || kit === void 0 ? void 0 : kit.storage.documents({ pathPrefix: '/lobby/', includeHistory: false })) || [];
+        if (kit === null) {
+            return null;
+        }
+        // load docs
+        let docs = kit.storage.documents({ pathPrefix: '/lobby/', includeHistory: false }) || [];
         docs = docs.filter(doc => doc.content !== ''); // remove empty docs (aka "deleted" docs)
         util_1.sortByField(docs, 'timestamp');
         docs.reverse();
-        log_1.logLobbyApp('author:', (_a = kit === null || kit === void 0 ? void 0 : kit.authorKeypair) === null || _a === void 0 ? void 0 : _a.address);
-        setTimeout(() => {
-            var _a, _b;
-            log_1.logLobbyApp('author:', (_b = (_a = this.props.kit) === null || _a === void 0 ? void 0 : _a.authorKeypair) === null || _b === void 0 ? void 0 : _b.address);
-        }, 100);
         return React.createElement("div", { className: 'stack', style: { padding: 'var(--s0)' } },
-            (kit === null || kit === void 0 ? void 0 : kit.authorKeypair) ? React.createElement(LobbyComposer, { kit: this.props.kit, changeKey: this.props.changeKey })
+            kit.authorKeypair
+                ? React.createElement(LobbyComposer, { kit: this.props.kit, changeKey: this.props.changeKey })
                 : null,
-            React.createElement("div", { className: '' }, docs.map(doc => React.createElement("div", { key: doc.path, className: 'stack', style: userStyle(doc.author, true) },
-                React.createElement("div", { className: 'flexRow' },
-                    React.createElement("div", { className: 'flexItem', style: { color: 'var(--darkColor)' }, title: doc.author },
-                        React.createElement("b", null, util_1.cutAtPeriod(doc.author))),
-                    React.createElement("div", { className: 'flexItem flexGrow1' }),
-                    React.createElement("div", { className: 'flexItem faint' }, new Date(doc.timestamp / 1000).toDateString())),
-                React.createElement("div", { className: 'wrappyText' }, doc.content)))));
+            React.createElement("div", { className: '' }, docs.map(doc => {
+                let displayName = getDisplayName(kit, doc.author);
+                let address = util_1.cutAtPeriod(doc.author);
+                let name1, name2;
+                if (displayName) {
+                    name1 = displayName;
+                    name2 = address;
+                }
+                else {
+                    name1 = address;
+                    name2 = null;
+                }
+                return React.createElement("div", { key: doc.path, className: 'stack', style: userStyle(doc.author, true) },
+                    React.createElement("div", { className: 'flexRow flexWrap', title: doc.author },
+                        React.createElement("div", { className: 'flexItem singleLineTextEllipsis bold', style: { color: 'var(--darkColor)' } }, name1),
+                        React.createElement("div", { className: 'flexItem singleLineTextEllipsis bold faint', style: { color: 'var(--darkColor)' } }, name2),
+                        React.createElement("div", { className: 'flexItem flexGrow1' }),
+                        React.createElement("div", { className: 'flexItem singleLineTextEllipsis faint' }, humanDate(doc.timestamp))),
+                    React.createElement("div", { className: 'wrappyText' }, doc.content));
+            })));
     }
 }
 exports.LobbyApp = LobbyApp;

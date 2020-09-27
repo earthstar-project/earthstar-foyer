@@ -260,6 +260,7 @@ export class EarthbarStore {
         // earthstar-lobby way
         let result = this.kit.storage.set(this.currentUser.authorKeypair, {
             format: 'es.4',
+            // TODO: bug: this needs a ~ but we're matching earthstar-lobby for now
             path: `/about/${this.currentUser.authorKeypair.address}/name`,
             content: name,
         });

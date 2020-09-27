@@ -7,7 +7,7 @@ import {
 import {
     logLobbyApp,
 } from './log';
-import { detChoice, detInt, detRandom, detRange, AuthorAddress, DocToSet, WriteResult } from 'earthstar';
+import { detChoice, detInt, detRandom, detRange, AuthorAddress, DocToSet, WriteResult, EarthstarError } from 'earthstar';
 
 let userStyle = (author: AuthorAddress, rotate: boolean = false) : React.CSSProperties => {
     let rand = detRandom(author);
@@ -43,6 +43,26 @@ let userStyle = (author: AuthorAddress, rotate: boolean = false) : React.CSSProp
     } as React.CSSProperties;
 };
 
+let getDisplayName = (kit: Kit, authorAddress: AuthorAddress): string | null => {
+    // TODO: bug in earthstar-lobby: the author address needs to have a ~
+    let path = `/about/${authorAddress}/name`;
+    let displayName = kit.storage.getContent(path);
+    return displayName === undefined ? null : displayName;
+}
+
+let humanDate = (earthstarTimestamp: number): string => {
+    let d = new Date(earthstarTimestamp / 1000);
+    let weekday = 'Su Mo Tu We Th Fr Sa'.split(' ')[d.getDay()];
+    let month = `Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec`.split(' ')[d.getMonth()];
+    let hr = d.getHours(); // 0 to 23
+    let mn = ('' + d.getMinutes()).padStart(2, '0');
+    let ampm = hr < 12 ? 'a' : 'p';
+    hr = hr % 12;
+    if (hr === 0) { hr = 12 };
+    return `${weekday} ${month} ${d.getDate()} ${hr}:${mn}${ampm}`;
+
+}
+
 export interface LobbyProps {
     // This prop changes whenever something in the earthstar kit has changed,
     // helping trigger a re-render.
@@ -60,38 +80,50 @@ export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
     render() {
         logLobbyApp('render.  changeKey:', this.props.changeKey);
         let kit = this.props.kit;
-        let docs = kit?.storage.documents({ pathPrefix: '/lobby/', includeHistory: false }) || [];
+
+        if (kit === null) { return null; }
+
+        // load docs
+        let docs = kit.storage.documents({ pathPrefix: '/lobby/', includeHistory: false }) || [];
         docs = docs.filter(doc => doc.content !== '');  // remove empty docs (aka "deleted" docs)
         sortByField(docs, 'timestamp');
         docs.reverse();
-        logLobbyApp('author:', kit?.authorKeypair?.address);
-        setTimeout(() => {
-            logLobbyApp('author:', this.props.kit?.authorKeypair?.address);
-        }, 100);
+
         return <div className='stack' style={{padding: 'var(--s0)'}}>
-            {kit?.authorKeypair
+            {kit.authorKeypair
                 ? <LobbyComposer kit={this.props.kit} changeKey={this.props.changeKey} />
                 : null}
             {/*
             <h1 style={{fontStyle: 'italic', fontFamily: 'georgia, serif'}}>Welcome To The Foyer</h1>
             <pre className='faint' style={{marginBottom: 50, overflow: 'hidden'}}>{
-                `workspace address: ${kit?.workspaceAddress || '(no workspace)'}\n`+
-                `user address: ${kit?.authorKeypair?.address || '(guest user)'}\n`+
-                `pubs: ${(kit?.syncer.state.pubs.map(p => p.domain) || ['(none)']).join('\n')}`
+                `workspace address: ${kit.workspaceAddress || '(no workspace)'}\n`+
+                `user address: ${kit.authorKeypair?.address || '(guest user)'}\n`+
+                `pubs: ${(kit.syncer.state.pubs.map(p => p.domain) || ['(none)']).join('\n')}`
             }</pre>
             */}
             {/* lobby messages */}
             <div className=''>
-                {docs.map(doc =>
-                    <div key={doc.path} className='stack' style={userStyle(doc.author, true)}>
-                        <div className='flexRow'>
-                            <div className='flexItem' style={{color: 'var(--darkColor)'}} title={doc.author}><b>{cutAtPeriod(doc.author)}</b></div>
+                {docs.map(doc => {
+                    let displayName = getDisplayName(kit as Kit, doc.author);
+                    let address = cutAtPeriod(doc.author);
+                    let name1: string, name2: string | null;
+                    if (displayName) {
+                        name1 = displayName;
+                        name2 = address;
+                    } else {
+                        name1 = address;
+                        name2 = null;
+                    }
+                    return <div key={doc.path} className='stack' style={userStyle(doc.author, true)}>
+                        <div className='flexRow flexWrap' title={doc.author}>
+                            <div className='flexItem singleLineTextEllipsis bold' style={{color: 'var(--darkColor)'}}>{name1}</div>
+                            <div className='flexItem singleLineTextEllipsis bold faint' style={{color: 'var(--darkColor)'}}>{name2}</div>
                             <div className='flexItem flexGrow1' />
-                            <div className='flexItem faint'>{new Date(doc.timestamp/1000).toDateString()}</div>
+                            <div className='flexItem singleLineTextEllipsis faint'>{humanDate(doc.timestamp)}</div>
                         </div>
                         <div className='wrappyText'>{doc.content}</div>
                     </div>
-                )}
+                })}
             </div>
         </div>;
     }

@@ -74,6 +74,10 @@
     border: var(--test-border-width) dashed #880;
     display: flex;
 }
+.flexWrap {
+    flex-wrap: wrap;
+}
+
 .flexItem:first-child {
     margin-left: 0px;
 }
@@ -88,8 +92,8 @@
 .flexGrow1 {
     flex-grow: 1;
 }
-.flexGrow0 {
-    flex-grow: 1;
+.flexShrink0 {
+    flex-shrink: 0;
 }
 
 hr {
@@ -210,8 +214,8 @@ textarea::before {
     /* make sure text wraps inside its container */
     white-space: break-spaces;
     overflow-wrap: break-word;
-    hyphens: auto;
     overflow: auto;
+    /*hyphens: auto;*/
 }
 
 .wrappyCode {
@@ -220,4 +224,16 @@ textarea::before {
     white-space: break-spaces;
     overflow-wrap: break-word;
     overflow: auto;
+}
+
+.singleLineTextComplete {
+    white-space: nowrap;
+    overflow: hidden;
+    /*text-overflow: ellipsis;*/
+}
+
+.singleLineTextEllipsis {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
