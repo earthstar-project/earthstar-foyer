@@ -44,8 +44,7 @@ let userStyle = (author: AuthorAddress, rotate: boolean = false) : React.CSSProp
 };
 
 let getDisplayName = (kit: Kit, authorAddress: AuthorAddress): string | null => {
-    // TODO: bug in earthstar-lobby: the author address needs to have a ~
-    let path = `/about/${authorAddress}/name`;
+    let path = `/about/~${authorAddress}/displayName.txt`;
     let displayName = kit.storage.getContent(path);
     return displayName === undefined ? null : displayName;
 }

@@ -194,7 +194,7 @@ export class EarthbarStore {
         logEarthbarStore('_readDisplayNameFromIStorage');
         if (this.currentUser === null) { return null; }
         if (this.kit === null) { return null; }
-        let path = `/about/${this.currentUser.authorKeypair.address}/name`;
+        let path = `/about/~${this.currentUser.authorKeypair.address}/displayName.txt`;
         let displayName = this.kit.storage.getContent(path);
         return displayName || null;  // undefined or '' become null
     }
@@ -260,8 +260,7 @@ export class EarthbarStore {
         // earthstar-lobby way
         let result = this.kit.storage.set(this.currentUser.authorKeypair, {
             format: 'es.4',
-            // TODO: bug: this needs a ~ but we're matching earthstar-lobby for now
-            path: `/about/${this.currentUser.authorKeypair.address}/name`,
+            path: `/about/~${this.currentUser.authorKeypair.address}/displayName.txt`,
             content: name,
         });
         if (result !== WriteResult.Accepted) { console.warn(result); }

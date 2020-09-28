@@ -68573,7 +68573,7 @@ class EarthbarStore {
         if (this.kit === null) {
             return null;
         }
-        let path = `/about/${this.currentUser.authorKeypair.address}/name`;
+        let path = `/about/~${this.currentUser.authorKeypair.address}/displayName.txt`;
         let displayName = this.kit.storage.getContent(path);
         return displayName || null; // undefined or '' become null
     }
@@ -68646,8 +68646,7 @@ class EarthbarStore {
         // earthstar-lobby way
         let result = this.kit.storage.set(this.currentUser.authorKeypair, {
             format: 'es.4',
-            // TODO: bug: this needs a ~ but we're matching earthstar-lobby for now
-            path: `/about/${this.currentUser.authorKeypair.address}/name`,
+            path: `/about/~${this.currentUser.authorKeypair.address}/displayName.txt`,
             content: name,
         });
         if (result !== earthstar_1.WriteResult.Accepted) {
@@ -69240,8 +69239,7 @@ let userStyle = (author, rotate = false) => {
     };
 };
 let getDisplayName = (kit, authorAddress) => {
-    // TODO: bug in earthstar-lobby: the author address needs to have a ~
-    let path = `/about/${authorAddress}/name`;
+    let path = `/about/~${authorAddress}/displayName.txt`;
     let displayName = kit.storage.getContent(path);
     return displayName === undefined ? null : displayName;
 };
