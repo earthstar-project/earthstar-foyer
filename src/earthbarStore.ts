@@ -34,15 +34,9 @@ export interface WorkspaceConfig {
     workspaceAddress: WorkspaceAddress,
     pubs: string[],
 }
-export enum EbMode {
-    Closed = 'CLOSED',
-    Workspace = 'WORKSPACE',
-    User = 'USER',
-}
 
 export class EarthbarStore {
     // UI state
-    mode: EbMode = EbMode.Closed;  // which tab are we looking at
 
     // state to preserve in localHost
     currentUser: UserConfig | null = null;
@@ -118,7 +112,6 @@ export class EarthbarStore {
     _saveToLocalStorage() {
         logEarthbarStore('_save to localStorage');
         localStorage.setItem('earthbar', JSON.stringify({
-            //mode: this.mode,
             currentUser: this.currentUser,
             currentWorkspace: this.currentWorkspace,
             //otherUsers: this.otherUsers,
@@ -209,14 +202,6 @@ export class EarthbarStore {
             }
         }
         this._rebuildKit(); // ...this will load the displayName
-    }
-    //--------------------------------------------------
-    // VISUAL STATE
-    setMode(mode: EbMode): void {
-        logEarthbarStore('setMode', mode);
-        if (mode === this.mode) { return; }
-        this.mode = mode;
-        this._bump();
     }
     //--------------------------------------------------
     // USER

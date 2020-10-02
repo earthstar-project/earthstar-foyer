@@ -5,7 +5,6 @@ import {
     cutAtPeriod,
 } from './util';
 import {
-    EbMode,
     EarthbarStore,
 } from './earthbarStore';
 import {
@@ -21,34 +20,47 @@ import {
 //================================================================================
 // EARTHBAR VIEWS
 
+export enum EbMode {
+    Closed = 'CLOSED',
+    Workspace = 'WORKSPACE',
+    User = 'USER',
+}
+
 export interface EbProps {
     app: React.ReactType,
 }
 
 export interface EbState {
-    store : EarthbarStore,
+    store: EarthbarStore,
+    mode: EbMode,  // which tab are we looking at
 }
 
 export class Earthbar extends React.Component<EbProps, EbState> {
-    unsub: Thunk | null = null;
+    unsubFromStore: Thunk | null = null;
     constructor(props: EbProps) {
         super(props);
-        this.state = { store: new EarthbarStore() };
+        this.state = {
+            store: new EarthbarStore(),
+            mode: EbMode.Closed,
+        };
     }
     componentDidMount() {
-        this.unsub = this.state.store.onChange.subscribe((v) => {
-            logEarthbar('forceUpdate from EarthbarStore');
+        this.unsubFromStore = this.state.store.onChange.subscribe((v) => {
+            logEarthbar('EarthbarStore.onChange --> forceUpdate the Earthbar');
             this.forceUpdate();
         });
     }
     componentWillUnmount() {
-        if (this.unsub) { this.unsub(); this.unsub = null; }
+        if (this.unsubFromStore) {
+            this.unsubFromStore();
+            this.unsubFromStore = null;
+        }
     }
     render() {
         let store = this.state.store;
         let kit = this.state.store.kit;
-        logEarthbar(`render in ${store.mode} mode`);
-        let mode = store.mode;
+        let mode = this.state.mode;
+        logEarthbar(`render in ${mode} mode`);
 
         // tab styles
         let sWorkspaceTab : React.CSSProperties =
@@ -82,12 +94,12 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         // tab click actions
         let onClickWorkspaceTab =
             mode === EbMode.Workspace
-            ? (e: any) => store.setMode(EbMode.Closed)
-            : (e: any) => store.setMode(EbMode.Workspace);
+            ? (e: any) => this.setState({ mode: EbMode.Closed })
+            : (e: any) => this.setState({ mode: EbMode.Workspace });
         let onClickUserTab =
             mode === EbMode.User
-            ? (e: any) => store.setMode(EbMode.Closed)
-            : (e: any) => store.setMode(EbMode.User);
+            ? (e: any) => this.setState({ mode: EbMode.Closed })
+            : (e: any) => this.setState({ mode: EbMode.User });
 
         // which panel to show
         let panel : JSX.Element | null = null;
@@ -102,8 +114,8 @@ export class Earthbar extends React.Component<EbProps, EbState> {
             position: 'absolute',
             zIndex: 99,
             top: 0,
-            left: store.mode === EbMode.User ? 20 : 0,
-            right: store.mode === EbMode.Workspace ? 20 : 0,
+            left: mode === EbMode.User ? 20 : 0,
+            right: mode === EbMode.Workspace ? 20 : 0,
         };
 
         // style to hide children when a panel is open

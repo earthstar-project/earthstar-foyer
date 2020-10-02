@@ -68288,38 +68288,49 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Earthbar = void 0;
+exports.Earthbar = exports.EbMode = void 0;
 const React = __importStar(require("react"));
 const util_1 = require("./util");
 const earthbarStore_1 = require("./earthbarStore");
 const earthbarWorkspacePanel_1 = require("./earthbarWorkspacePanel");
 const earthbarUserPanel_1 = require("./earthbarUserPanel");
 const log_1 = require("./log");
+//================================================================================
+// EARTHBAR VIEWS
+var EbMode;
+(function (EbMode) {
+    EbMode["Closed"] = "CLOSED";
+    EbMode["Workspace"] = "WORKSPACE";
+    EbMode["User"] = "USER";
+})(EbMode = exports.EbMode || (exports.EbMode = {}));
 class Earthbar extends React.Component {
     constructor(props) {
         super(props);
-        this.unsub = null;
-        this.state = { store: new earthbarStore_1.EarthbarStore() };
+        this.unsubFromStore = null;
+        this.state = {
+            store: new earthbarStore_1.EarthbarStore(),
+            mode: EbMode.Closed,
+        };
     }
     componentDidMount() {
-        this.unsub = this.state.store.onChange.subscribe((v) => {
-            log_1.logEarthbar('forceUpdate from EarthbarStore');
+        this.unsubFromStore = this.state.store.onChange.subscribe((v) => {
+            log_1.logEarthbar('EarthbarStore.onChange --> forceUpdate the Earthbar');
             this.forceUpdate();
         });
     }
     componentWillUnmount() {
-        if (this.unsub) {
-            this.unsub();
-            this.unsub = null;
+        if (this.unsubFromStore) {
+            this.unsubFromStore();
+            this.unsubFromStore = null;
         }
     }
     render() {
         let store = this.state.store;
         let kit = this.state.store.kit;
-        log_1.logEarthbar(`render in ${store.mode} mode`);
-        let mode = store.mode;
+        let mode = this.state.mode;
+        log_1.logEarthbar(`render in ${mode} mode`);
         // tab styles
-        let sWorkspaceTab = mode === earthbarStore_1.EbMode.Workspace
+        let sWorkspaceTab = mode === EbMode.Workspace
             ? { color: 'var(--cWhite)', background: 'var(--cWorkspace)', opacity: 0.66 } // selected
             : { color: 'var(--cWhite)', background: 'var(--cWorkspace)',
                 //marginTop: 'var(--s-2)',
@@ -68327,7 +68338,7 @@ class Earthbar extends React.Component {
                 paddingBottom: 'var(--s-1)',
                 marginBottom: 'var(--s-2)',
             };
-        let sUserTab = mode === earthbarStore_1.EbMode.User
+        let sUserTab = mode === EbMode.User
             ? { color: 'var(--cWhite)', background: 'var(--cUser)', opacity: 0.66 } // selected
             : { color: 'var(--cWhite)', background: 'var(--cUser)',
                 //marginTop: 'var(--s-2)',
@@ -68343,18 +68354,18 @@ class Earthbar extends React.Component {
             '--cBackground': 'var(--cWorkspace)',
         };
         // tab click actions
-        let onClickWorkspaceTab = mode === earthbarStore_1.EbMode.Workspace
-            ? (e) => store.setMode(earthbarStore_1.EbMode.Closed)
-            : (e) => store.setMode(earthbarStore_1.EbMode.Workspace);
-        let onClickUserTab = mode === earthbarStore_1.EbMode.User
-            ? (e) => store.setMode(earthbarStore_1.EbMode.Closed)
-            : (e) => store.setMode(earthbarStore_1.EbMode.User);
+        let onClickWorkspaceTab = mode === EbMode.Workspace
+            ? (e) => this.setState({ mode: EbMode.Closed })
+            : (e) => this.setState({ mode: EbMode.Workspace });
+        let onClickUserTab = mode === EbMode.User
+            ? (e) => this.setState({ mode: EbMode.Closed })
+            : (e) => this.setState({ mode: EbMode.User });
         // which panel to show
         let panel = null;
-        if (mode === earthbarStore_1.EbMode.Workspace) {
+        if (mode === EbMode.Workspace) {
             panel = React.createElement(earthbarWorkspacePanel_1.EarthbarWorkspacePanel, { store: store });
         }
-        else if (mode === earthbarStore_1.EbMode.User) {
+        else if (mode === EbMode.User) {
             panel = React.createElement(earthbarUserPanel_1.EarthbarUserPanel, { store: store });
         }
         // panel style
@@ -68362,11 +68373,11 @@ class Earthbar extends React.Component {
             position: 'absolute',
             zIndex: 99,
             top: 0,
-            left: store.mode === earthbarStore_1.EbMode.User ? 20 : 0,
-            right: store.mode === earthbarStore_1.EbMode.Workspace ? 20 : 0,
+            left: mode === EbMode.User ? 20 : 0,
+            right: mode === EbMode.Workspace ? 20 : 0,
         };
         // style to hide children when a panel is open
-        let sChildren = mode === earthbarStore_1.EbMode.Closed
+        let sChildren = mode === EbMode.Closed
             ? {}
             : { opacity: 0.3, };
         let workspaceLabel = 'Add workspace';
@@ -68406,22 +68417,15 @@ exports.Earthbar = Earthbar;
 },{"./earthbarStore":268,"./earthbarUserPanel":269,"./earthbarWorkspacePanel":270,"./log":273,"./util":274,"react":221}],268:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EarthbarStore = exports.EbMode = void 0;
+exports.EarthbarStore = void 0;
 const fast_equals_1 = require("fast-equals");
 const earthstar_1 = require("earthstar");
 const util_1 = require("./util");
 const kit_1 = require("./kit");
 const log_1 = require("./log");
-var EbMode;
-(function (EbMode) {
-    EbMode["Closed"] = "CLOSED";
-    EbMode["Workspace"] = "WORKSPACE";
-    EbMode["User"] = "USER";
-})(EbMode = exports.EbMode || (exports.EbMode = {}));
 class EarthbarStore {
     constructor() {
         // UI state
-        this.mode = EbMode.Closed; // which tab are we looking at
         // state to preserve in localHost
         this.currentUser = null;
         this.currentWorkspace = null;
@@ -68492,7 +68496,6 @@ class EarthbarStore {
     _saveToLocalStorage() {
         log_1.logEarthbarStore('_save to localStorage');
         localStorage.setItem('earthbar', JSON.stringify({
-            //mode: this.mode,
             currentUser: this.currentUser,
             currentWorkspace: this.currentWorkspace,
             //otherUsers: this.otherUsers,
@@ -68589,16 +68592,6 @@ class EarthbarStore {
             };
         }
         this._rebuildKit(); // ...this will load the displayName
-    }
-    //--------------------------------------------------
-    // VISUAL STATE
-    setMode(mode) {
-        log_1.logEarthbarStore('setMode', mode);
-        if (mode === this.mode) {
-            return;
-        }
-        this.mode = mode;
-        this._bump();
     }
     //--------------------------------------------------
     // USER
