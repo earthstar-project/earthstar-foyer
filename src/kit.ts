@@ -57,7 +57,7 @@ export class Kit {
             localStorage.setItem(localStorageKey, JSON.stringify((storage as StorageMemory)._docs));
         };
         let debouncedSave = debounce(saveToLocalStorage, 80, { trailing: true });
-        storage.onChange.subscribe(debouncedSave);
+        storage.onWrite.subscribe(debouncedSave);
         // END HACK        
     }
     static deleteWorkspaceFromLocalStorage(workspaceAddress: WorkspaceAddress) {

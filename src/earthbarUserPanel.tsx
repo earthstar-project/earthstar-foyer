@@ -154,7 +154,7 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
     }
     //-------------------------
     render() {
-        logEarthbarPanel('render user panel');
+        logEarthbarPanel('🎨 render user panel');
         let store = this.props.store;
 
         if (store.currentUser === null) {

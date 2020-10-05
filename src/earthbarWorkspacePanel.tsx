@@ -100,7 +100,7 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
     }
     //-------------------------
     render() {
-        logEarthbarPanel('render workspace panel');
+        logEarthbarPanel('🎨 render workspace panel');
         let store = this.props.store;
 
         let pubs: string[] = [];

@@ -77,7 +77,7 @@ export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
         super(props);
     }
     render() {
-        logLobbyApp('render.  changeKey:', this.props.changeKey);
+        logLobbyApp('🎨 render.  changeKey:', this.props.changeKey);
         let kit = this.props.kit;
 
         if (kit === null) { return null; }

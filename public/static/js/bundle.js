@@ -18800,6 +18800,7 @@ class StorageMemory {
             throw workspaceErr;
         }
         this.workspace = workspace;
+        this.onWrite = new emitter_1.Emitter();
         this.onChange = new emitter_1.Emitter();
         this.validatorMap = {};
         for (let validator of validators) {
@@ -18951,7 +18952,7 @@ class StorageMemory {
         this._assertNotClosed();
         return (_a = this.getDocument(path, now)) === null || _a === void 0 ? void 0 : _a.content;
     }
-    ingestDocument(doc, now) {
+    ingestDocument(doc, now, isLocal) {
         // Given a doc from elsewhere, validate, decide if we want it, and possibly store it.
         // Return true if we kept it, false if we rejected it.
         // It can be rejected if it's not the latest one from the same author,
@@ -18996,6 +18997,11 @@ class StorageMemory {
         }
         existingDocsByPath[doc.author] = doc;
         this._docs[doc.path] = existingDocsByPath;
+        this.onWrite.send({
+            kind: 'DOCUMENT_WRITE',
+            isLocal: isLocal === undefined ? false : isLocal,
+            document: doc,
+        });
         this.onChange.send(undefined);
         return types_1.WriteResult.Accepted;
     }
@@ -19035,7 +19041,7 @@ class StorageMemory {
         if (types_1.isErr(signedDoc)) {
             return signedDoc;
         }
-        return this.ingestDocument(signedDoc, now);
+        return this.ingestDocument(signedDoc, now, true);
     }
     _syncFrom(otherStore, existing, live) {
         // Pull all docs from the other Store and ingest them one by one.
@@ -68313,8 +68319,9 @@ class Earthbar extends React.Component {
         };
     }
     componentDidMount() {
-        this.unsubFromStore = this.state.store.onChange.subscribe((v) => {
-            log_1.logEarthbar('EarthbarStore.onChange --> forceUpdate the Earthbar');
+        this.unsubFromStore = this.state.store.onChange.subscribe((e) => {
+            log_1.logEarthbar('>> EarthbarStore event ' + e.kind);
+            log_1.logEarthbar('   --> forceUpdate the Earthbar');
             this.forceUpdate();
         });
     }
@@ -68328,7 +68335,7 @@ class Earthbar extends React.Component {
         let store = this.state.store;
         let kit = this.state.store.kit;
         let mode = this.state.mode;
-        log_1.logEarthbar(`render in ${mode} mode`);
+        log_1.logEarthbar(`🎨 render in ${mode} mode`);
         // tab styles
         let sWorkspaceTab = mode === EbMode.Workspace
             ? { color: 'var(--cWhite)', background: 'var(--cWorkspace)', opacity: 0.66 } // selected
@@ -68394,9 +68401,9 @@ class Earthbar extends React.Component {
         }
         let App = this.props.app;
         let changeKeyForApp = 
-        //store.onChange.changeKey + '_' + 
-        ((kit === null || kit === void 0 ? void 0 : kit.storage.onChange.changeKey) || '') + '_' +
-            ((kit === null || kit === void 0 ? void 0 : kit.syncer.onChange.changeKey) || '');
+        //`store.onChange:${store.onChange.changeKey}__` +
+        `storage.onWrite:${kit === null || kit === void 0 ? void 0 : kit.storage.onWrite.changeKey}__`;
+        //`syncer.onChange:${kit?.syncer.onChange.changeKey}`;
         return (React.createElement("div", null,
             React.createElement("div", { className: 'flexRow' },
                 React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: onClickWorkspaceTab }, workspaceLabel),
@@ -68436,8 +68443,9 @@ class EarthbarStore {
         this.unsubSyncer = null;
         this.unsubStorage = null;
         // emit change events when we need to re-render the earthbar:
-        // - the kit's Syncer emits a change event
-        // - any state changes in the EarthbarStore (current user or workspace, new Kit, etc)
+        // - SyncEvent: the Syncer has emitted an onChange
+        // - WriteEvent: the IStorage data has changed
+        // - EarthstarEvent: state changes in EarthbarStore: new Kit, changed current user, etc
         this.onChange = new earthstar_1.Emitter();
         log_1.logEarthbarStore('constructor');
         this.currentUser = null, /*{
@@ -68491,7 +68499,8 @@ class EarthbarStore {
     _bump() {
         // notify our subscribers of a change to the EarthbarStore's state
         log_1.logEarthbarStore('_bump');
-        this.onChange.send(null);
+        log_1.logEarthbarStore('>>>> EARTHBAR_EVENT');
+        this.onChange.send({ kind: 'EARTHBAR_EVENT' });
     }
     _saveToLocalStorage() {
         log_1.logEarthbarStore('_save to localStorage');
@@ -68554,17 +68563,18 @@ class EarthbarStore {
             }
             // subscribe to kit events
             this.unsubSyncer = this.kit.syncer.onChange.subscribe(() => {
-                var _a, _b;
+                log_1.logEarthbarStore('>>>> SYNC_EVENT');
+                // pass events along to subscribers of the earthbarStore
+                this.onChange.send({ kind: 'SYNC_EVENT' });
+            });
+            this.unsubStorage = this.kit.storage.onWrite.subscribe((e) => {
+                log_1.logEarthbarStore('>>>> ' + e.kind);
                 // check if we need to refresh currentUser.displayName
-                if (this.currentUser !== null && this.currentUser.authorKeypair.address === ((_b = (_a = this.kit) === null || _a === void 0 ? void 0 : _a.authorKeypair) === null || _b === void 0 ? void 0 : _b.address)) {
+                if (this.currentUser !== null) {
                     this.currentUser.displayName = this.__readDisplayNameFromIStorage();
                 }
                 // pass events along to subscribers of the earthbarStore
-                this.onChange.send(null);
-            });
-            this.unsubStorage = this.kit.storage.onChange.subscribe(() => {
-                // pass events along to subscribers of the earthbarStore
-                this.onChange.send(null);
+                this.onChange.send(e);
             });
         }
     }
@@ -68898,7 +68908,7 @@ class EarthbarUserPanel extends React.Component {
     }
     //-------------------------
     render() {
-        log_1.logEarthbarPanel('render user panel');
+        log_1.logEarthbarPanel('🎨 render user panel');
         let store = this.props.store;
         if (store.currentUser === null) {
             return React.createElement("div", { className: 'stack', style: sUserPanel },
@@ -69051,7 +69061,7 @@ class EarthbarWorkspacePanel extends React.Component {
     }
     //-------------------------
     render() {
-        log_1.logEarthbarPanel('render workspace panel');
+        log_1.logEarthbarPanel('🎨 render workspace panel');
         let store = this.props.store;
         let pubs = [];
         let allWorkspaces = store.otherWorkspaces;
@@ -69163,7 +69173,7 @@ class Kit {
             localStorage.setItem(localStorageKey, JSON.stringify(storage._docs));
         };
         let debouncedSave = debounce(saveToLocalStorage, 80, { trailing: true });
-        storage.onChange.subscribe(debouncedSave);
+        storage.onWrite.subscribe(debouncedSave);
         // END HACK        
     }
     static deleteWorkspaceFromLocalStorage(workspaceAddress) {
@@ -69255,7 +69265,7 @@ class LobbyApp extends React.PureComponent {
         super(props);
     }
     render() {
-        log_1.logLobbyApp('render.  changeKey:', this.props.changeKey);
+        log_1.logLobbyApp('🎨 render.  changeKey:', this.props.changeKey);
         let kit = this.props.kit;
         if (kit === null) {
             return null;
@@ -69342,12 +69352,15 @@ exports.LobbyComposer = LobbyComposer;
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.logLobbyApp = exports.logEarthbarPanel = exports.logEarthbar = exports.logKit = exports.logEarthbarStore = void 0;
-let makeLogger = (tag) => (...args) => console.log(tag + ' |', ...args);
-exports.logEarthbarStore = makeLogger('earthbar store');
-exports.logKit = makeLogger('    kit');
-exports.logEarthbar = makeLogger('        earthbar view');
-exports.logEarthbarPanel = makeLogger('            earthbar panel');
-exports.logLobbyApp = makeLogger('            lobby view');
+let smul = (s, n) => 
+// repeat a string, n times
+Array.from(Array(n)).map(x => s).join('');
+let makeLogger = (indent, tag, style = '') => (...args) => console.log(`${smul('    ', indent)}%c| ${tag} `, style, ...args);
+exports.logEarthbarStore = makeLogger(0, 'earthbar store', 'color: black; background: pink');
+exports.logKit = makeLogger(1, 'kit', 'color: black; background: #f94ac5');
+exports.logEarthbar = makeLogger(2, 'earthbar view', 'color: black; background: cyan');
+exports.logEarthbarPanel = makeLogger(3, 'earthbar panel', 'color: black; background: #08f');
+exports.logLobbyApp = makeLogger(3, 'lobby view', 'color: black; background: orange');
 
 },{}],274:[function(require,module,exports){
 "use strict";

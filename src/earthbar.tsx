@@ -45,8 +45,9 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         };
     }
     componentDidMount() {
-        this.unsubFromStore = this.state.store.onChange.subscribe((v) => {
-            logEarthbar('EarthbarStore.onChange --> forceUpdate the Earthbar');
+        this.unsubFromStore = this.state.store.onChange.subscribe((e) => {
+            logEarthbar('>> EarthbarStore event ' + e.kind);
+            logEarthbar('   --> forceUpdate the Earthbar');
             this.forceUpdate();
         });
     }
@@ -60,7 +61,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         let store = this.state.store;
         let kit = this.state.store.kit;
         let mode = this.state.mode;
-        logEarthbar(`render in ${mode} mode`);
+        logEarthbar(`🎨 render in ${mode} mode`);
 
         // tab styles
         let sWorkspaceTab : React.CSSProperties =
@@ -141,9 +142,9 @@ export class Earthbar extends React.Component<EbProps, EbState> {
 
         let App = this.props.app;
         let changeKeyForApp =
-            //store.onChange.changeKey + '_' + 
-            (kit?.storage.onChange.changeKey || '') + '_' +
-            (kit?.syncer.onChange.changeKey || '');
+            //`store.onChange:${store.onChange.changeKey}__` +
+            `storage.onWrite:${kit?.storage.onWrite.changeKey}__`;
+            //`syncer.onChange:${kit?.syncer.onChange.changeKey}`;
 
         return (
             <div>

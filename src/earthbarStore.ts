@@ -11,6 +11,7 @@ import {
     checkAuthorKeypairIsValid,
     isErr,
     ValidationError,
+    WriteEvent,
 } from 'earthstar';
 
 import {
@@ -35,6 +36,17 @@ export interface WorkspaceConfig {
     pubs: string[],
 }
 
+export type EarthbarEvent = {
+    kind: 'EARTHBAR_EVENT',
+}
+export type SyncEvent = {
+    kind: 'SYNC_EVENT',
+}
+export type AnyEarthbarEvent =
+    SyncEvent |
+    EarthbarEvent |
+    WriteEvent;
+
 export class EarthbarStore {
     // UI state
 
@@ -50,9 +62,10 @@ export class EarthbarStore {
     unsubStorage: Thunk | null = null;
 
     // emit change events when we need to re-render the earthbar:
-    // - the kit's Syncer emits a change event
-    // - any state changes in the EarthbarStore (current user or workspace, new Kit, etc)
-    onChange: Emitter<null> = new Emitter<null>();
+    // - SyncEvent: the Syncer has emitted an onChange
+    // - WriteEvent: the IStorage data has changed
+    // - EarthstarEvent: state changes in EarthbarStore: new Kit, changed current user, etc
+    onChange: Emitter<AnyEarthbarEvent> = new Emitter();
 
     constructor() {
         logEarthbarStore('constructor');
@@ -107,7 +120,8 @@ export class EarthbarStore {
     _bump() {
         // notify our subscribers of a change to the EarthbarStore's state
         logEarthbarStore('_bump');
-        this.onChange.send(null);
+        logEarthbarStore('>>>> EARTHBAR_EVENT');
+        this.onChange.send({ kind: 'EARTHBAR_EVENT' });
     }
     _saveToLocalStorage() {
         logEarthbarStore('_save to localStorage');
@@ -170,16 +184,18 @@ export class EarthbarStore {
             }
             // subscribe to kit events
             this.unsubSyncer = this.kit.syncer.onChange.subscribe(() => {
+                logEarthbarStore('>>>> SYNC_EVENT');
+                // pass events along to subscribers of the earthbarStore
+                this.onChange.send({ kind: 'SYNC_EVENT' });
+            });
+            this.unsubStorage = this.kit.storage.onWrite.subscribe((e : WriteEvent) => {
+                logEarthbarStore('>>>> ' + e.kind);
                 // check if we need to refresh currentUser.displayName
-                if (this.currentUser !== null && this.currentUser.authorKeypair.address === this.kit?.authorKeypair?.address) {
+                if (this.currentUser !== null) {
                     this.currentUser.displayName = this.__readDisplayNameFromIStorage();
                 }
                 // pass events along to subscribers of the earthbarStore
-                this.onChange.send(null)
-            });
-            this.unsubStorage = this.kit.storage.onChange.subscribe(() => {
-                // pass events along to subscribers of the earthbarStore
-                this.onChange.send(null)
+                this.onChange.send(e);
             });
         }
     }
