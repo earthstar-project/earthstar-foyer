@@ -68316,7 +68316,9 @@ class HelloApp extends React.PureComponent {
     }
     render() {
         log_1.logHelloApp('🎨 render.  changeKey:', this.props.changeKey);
-        return React.createElement("div", { className: 'stack', style: { padding: 'var(--s0)' } }, "Hello world!");
+        return React.createElement("div", { className: 'stack', style: { padding: 'var(--s0)' } },
+            React.createElement("h3", null, "Hello world"),
+            "This is an example app.");
     }
 }
 exports.HelloApp = HelloApp;
@@ -68429,7 +68431,7 @@ class LobbyApp extends React.PureComponent {
                     name2 = null;
                 }
                 return React.createElement("div", { key: doc.path, className: 'stack', style: userStyle(doc.author, true) },
-                    React.createElement("div", { className: 'flexRow flexWrap', title: doc.author },
+                    React.createElement("div", { className: 'flexRow flexRowWrap', title: doc.author },
                         React.createElement("div", { className: 'flexItem singleLineTextEllipsis bold', style: { color: 'var(--darkColor)' } }, name1),
                         React.createElement("div", { className: 'flexItem singleLineTextEllipsis bold faint', style: { color: 'var(--darkColor)' } }, name2),
                         React.createElement("div", { className: 'flexItem flexGrow1' }),
@@ -68473,8 +68475,8 @@ class LobbyComposer extends React.PureComponent {
         var _a, _b;
         let myAddress = ((_b = (_a = this.props.kit) === null || _a === void 0 ? void 0 : _a.authorKeypair) === null || _b === void 0 ? void 0 : _b.address) || '';
         let buttonStyle = {
-            '--cBackground': 'var(--cBlack)',
-            '--cText': 'var(--cWhite)',
+            '--cPaper': 'var(--cBlack)',
+            '--cInk': 'var(--cWhite)',
         };
         return React.createElement("form", { className: 'stack', style: userStyle(myAddress, false), onSubmit: (e) => { e.preventDefault(); this.handleSubmit(); } },
             React.createElement("textarea", { rows: 4, style: { resize: 'vertical' }, value: this.state.text, onChange: (e) => this.setState({ text: e.target.value }) }),
@@ -68588,8 +68590,8 @@ class Earthbar extends React.Component {
             marginTop: 'var(--s-2)',
             marginBottom: 'var(--s-2)',
             // change colors
-            '--cText': 'var(--cWhite)',
-            '--cBackground': 'var(--cWorkspace)',
+            '--cInk': 'var(--cWhite)',
+            '--cPaper': 'var(--cWorkspace)',
         };
         // tab click actions
         let onClickTab = (tab) => {
@@ -68690,11 +68692,11 @@ const log_1 = require("./log");
 let sAppPanel = {
     padding: 'var(--s0)',
     // change colors
-    '--cBackground': 'var(--cApp)',
-    '--cText': 'var(--cWhite)',
+    '--cPaper': 'var(--cApp)',
+    '--cInk': 'var(--cWhite)',
     // apply color variables
-    background: 'var(--cBackground)',
-    color: 'var(--cText)',
+    background: 'var(--cPaper)',
+    color: 'var(--cInk)',
     borderTopLeftRadius: 'var(--round)',
     borderTopRightRadius: 'var(--round)',
     borderBottomLeftRadius: 'var(--round)',
@@ -69091,11 +69093,11 @@ const log_1 = require("./log");
 let sUserPanel = {
     padding: 'var(--s0)',
     // change colors
-    '--cBackground': 'var(--cUser)',
-    '--cText': 'var(--cWhite)',
+    '--cPaper': 'var(--cUser)',
+    '--cInk': 'var(--cWhite)',
     // apply color variables
-    background: 'var(--cBackground)',
-    color: 'var(--cText)',
+    background: 'var(--cPaper)',
+    color: 'var(--cInk)',
     borderTopLeftRadius: 'var(--round)',
     borderTopRightRadius: 0,
     borderBottomLeftRadius: 'var(--round)',
@@ -69211,18 +69213,18 @@ class EarthbarUserPanel extends React.Component {
             return React.createElement("div", { className: 'stack', style: sUserPanel },
                 React.createElement("div", { className: 'faint' }, "Create new user"),
                 React.createElement("form", { className: 'flexRow indent', onSubmit: (e) => { e.preventDefault(); this.handleCreateUser(); } },
-                    React.createElement("input", { className: 'flexItem flexGrow1', type: 'text', name: 'shortname', id: 'shortname', placeholder: '4-letter nickname', maxLength: 4, value: this.state.shortnameInput, onChange: (e) => this.handleEditShortname(e.target.value) }),
-                    React.createElement("button", { className: 'button flexItem', type: 'submit', id: 'createUser', style: { marginLeft: 'var(--s-1)' }, disabled: !this.canCreateUser() }, "Create")),
+                    React.createElement("input", { type: 'text', className: 'flexItem flexGrow1 monospace', name: 'shortname', id: 'shortname', placeholder: '4-letter nickname', maxLength: 4, value: this.state.shortnameInput, onChange: (e) => this.handleEditShortname(e.target.value) }),
+                    React.createElement("button", { type: 'submit', className: 'button flexItem', id: 'createUser', style: { marginLeft: 'var(--s-1)' }, disabled: !this.canCreateUser() }, "Create")),
                 React.createElement("div", { className: 'faint indent' }, "We'll create a new, unique username and password for you. Keep clicking Create until you get one you like."),
                 React.createElement("div", { className: 'faint indent' }, "After logging in, be sure to copy and save your username and password on the next screen! Your password can't be changed or recovered later."),
                 React.createElement("hr", { className: 'faint' }),
                 React.createElement("div", { className: 'faint' }, "Log In"),
                 React.createElement("form", { className: 'stack indent', onSubmit: (e) => { e.preventDefault(); this.handleLogIn(); } },
                     React.createElement("div", { className: 'flexRow' },
-                        React.createElement("input", { className: 'flexItem flexGrow1', type: "text", name: 'username', id: 'username', placeholder: '@user.xxxxxxxxxxxxxxx', autoComplete: 'off', value: this.state.usernameInput, onChange: (e) => this.handleEditUsername(e.target.value) })),
+                        React.createElement("input", { type: 'text', className: 'flexItem flexGrow1 monospace', name: 'username', id: 'username', placeholder: '@user.xxxxxxxxxxxxxxx', autoComplete: 'off', value: this.state.usernameInput, onChange: (e) => this.handleEditUsername(e.target.value) })),
                     React.createElement("div", { className: 'flexRow' },
-                        React.createElement("input", { className: 'flexItem flexGrow1', type: 'password', name: 'password', id: 'password', placeholder: 'password', autoComplete: 'off', value: this.state.passwordInput, onChange: (e) => this.handleEditPassword(e.target.value) }),
-                        React.createElement("button", { className: 'button flexItem', type: 'submit', id: 'logIn', style: { marginLeft: 'var(--s-1)' }, disabled: !this.canLogIn() }, "Log in")),
+                        React.createElement("input", { type: 'password', className: 'flexItem flexGrow1 monospace', name: 'password', id: 'password', placeholder: 'password', autoComplete: 'off', value: this.state.passwordInput, onChange: (e) => this.handleEditPassword(e.target.value) }),
+                        React.createElement("button", { type: 'submit', className: 'button flexItem', id: 'logIn', style: { marginLeft: 'var(--s-1)' }, disabled: !this.canLogIn() }, "Log in")),
                     React.createElement("div", { className: 'indent right' }, this.state.loginError)));
         }
         else {
@@ -69230,8 +69232,8 @@ class EarthbarUserPanel extends React.Component {
             return React.createElement("div", { className: 'stack', style: sUserPanel },
                 React.createElement("div", { className: 'faint' }, "Display name in this workspace"),
                 React.createElement("form", { className: 'indent flexRow', onSubmit: (e) => { e.preventDefault(); this.handleSaveDisplayName(); } },
-                    React.createElement("input", { type: 'text', className: 'flexGrow1', value: this.state.displayNameInput, placeholder: util_1.cutAtPeriod(store.currentUser.authorKeypair.address).slice(1), onChange: (e) => this.setState({ displayNameInput: e.target.value }) }),
-                    React.createElement("button", { className: 'button flexItem', type: 'submit', style: { marginLeft: 'var(--s-1)' }, disabled: store.currentWorkspace === null }, "Set")),
+                    React.createElement("input", { type: 'text', className: 'flexGrow1 monospace', value: this.state.displayNameInput, placeholder: util_1.cutAtPeriod(store.currentUser.authorKeypair.address).slice(1), onChange: (e) => this.setState({ displayNameInput: e.target.value }) }),
+                    React.createElement("button", { type: 'submit', className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, disabled: store.currentWorkspace === null }, "Set")),
                 (store.currentWorkspace === null)
                     ? React.createElement("div", { className: 'faint indent' }, "(Can't set a display name because you're not in a workspace right now.)")
                     : null,
@@ -69243,7 +69245,7 @@ class EarthbarUserPanel extends React.Component {
                             overflowWrap: 'break-word',
                             margin: 0, padding: 0,
                         } }, store.currentUser.authorKeypair.address),
-                    React.createElement("button", { className: 'button flexItem', type: 'button', style: { marginLeft: 'var(--s-1)' }, onClick: () => { var _a; return this.handleCopy(((_a = store.currentUser) === null || _a === void 0 ? void 0 : _a.authorKeypair.address) || ''); } }, "Copy")),
+                    React.createElement("button", { type: 'button', className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, onClick: () => { var _a; return this.handleCopy(((_a = store.currentUser) === null || _a === void 0 ? void 0 : _a.authorKeypair.address) || ''); } }, "Copy")),
                 React.createElement("div", { className: 'faint' }, "Password"),
                 React.createElement("div", { className: 'indent flexRow' },
                     React.createElement("pre", { className: 'flexGrow1 faint', style: {
@@ -69251,10 +69253,10 @@ class EarthbarUserPanel extends React.Component {
                             overflowWrap: 'break-word',
                             margin: 0, padding: 0,
                         } }, "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"),
-                    React.createElement("button", { className: 'button flexItem', type: 'button', style: { marginLeft: 'var(--s-1)' }, onClick: () => { var _a; return this.handleCopy(((_a = store.currentUser) === null || _a === void 0 ? void 0 : _a.authorKeypair.secret) || ''); } }, "Copy")),
+                    React.createElement("button", { type: 'button', className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, onClick: () => { var _a; return this.handleCopy(((_a = store.currentUser) === null || _a === void 0 ? void 0 : _a.authorKeypair.secret) || ''); } }, "Copy")),
                 React.createElement("hr", { className: 'faint' }),
                 React.createElement("div", { className: 'center' },
-                    React.createElement("button", { className: 'button', type: 'button', onClick: () => this.handleLogOut() }, "Log out")),
+                    React.createElement("button", { type: 'button', className: 'button', onClick: () => this.handleLogOut() }, "Log out")),
                 React.createElement("div", { className: 'faint' }, "Make sure to save your username and password before you log out! There's no way to reset a lost password."));
         }
     }
@@ -69292,11 +69294,11 @@ const log_1 = require("./log");
 let sWorkspacePanel = {
     padding: 'var(--s0)',
     // change colors
-    '--cBackground': 'var(--cWorkspace)',
-    '--cText': 'var(--cWhite)',
+    '--cPaper': 'var(--cWorkspace)',
+    '--cInk': 'var(--cWhite)',
     // apply color variables
-    background: 'var(--cBackground)',
-    color: 'var(--cText)',
+    background: 'var(--cPaper)',
+    color: 'var(--cInk)',
     borderTopLeftRadius: 0,
     borderTopRightRadius: 'var(--round)',
     borderBottomLeftRadius: 'var(--round)',
@@ -69373,7 +69375,7 @@ class EarthbarWorkspacePanel extends React.Component {
                 : React.createElement("div", { className: 'stack' },
                     React.createElement("div", { className: 'faint' }, "Current workspace"),
                     React.createElement("div", { className: 'indent flexRow selectable' },
-                        React.createElement("div", { className: 'flexGrow1 flexItemVerticalCenter wrappyCode monospace' }, store.currentWorkspace.workspaceAddress),
+                        React.createElement("div", { className: 'flexGrow1 flexItemVerticalCenter wrappyText monospace' }, store.currentWorkspace.workspaceAddress),
                         React.createElement("button", { className: 'button flexItem', type: 'button', style: { marginLeft: 'var(--s-1)' }, onClick: () => { var _a; return this.handleCopy(((_a = store.currentWorkspace) === null || _a === void 0 ? void 0 : _a.workspaceAddress) || ''); } }, "Copy")),
                     React.createElement("div", { className: 'faint' }, "Pub servers for this workspace"),
                     React.createElement("div", { className: 'stack' },
@@ -69394,12 +69396,12 @@ class EarthbarWorkspacePanel extends React.Component {
                             }
                             return React.createElement("div", { key: pub.domain, className: 'flexRow selectable' },
                                 React.createElement("div", { className: 'flexItem flexItemVerticalCenter unselectable unclickable' }, icon),
-                                React.createElement("div", { className: 'flexItem flexGrow1 wrappyCode' },
+                                React.createElement("div", { className: 'flexItem flexGrow1 wrappyText' },
                                     React.createElement("a", { href: pub.domain, target: '_blank', style: { color: 'var(--cText)' } }, pub.domain)),
                                 React.createElement("button", { className: 'flexItem linkButton unselectable', onClick: () => store.removePub(pub.domain) }, "\u2715"));
                         }),
                         React.createElement("form", { className: 'flexRow indent', onSubmit: (e) => { e.preventDefault(); this.handleAddPub(); } },
-                            React.createElement("input", { className: 'flexItem flexGrow1', type: "text", placeholder: "http://...", value: this.state.newPubInput, onChange: (e) => this.setState({ newPubInput: e.target.value }) }),
+                            React.createElement("input", { type: 'text', className: 'flexItem flexGrow1 monospace', placeholder: "http://...", value: this.state.newPubInput, onChange: (e) => this.setState({ newPubInput: e.target.value }) }),
                             React.createElement("button", { className: 'button flexItem', type: 'submit' }, "Add")),
                         (store.kit === null || store.kit.syncer.state.pubs.length === 0)
                             ? React.createElement("div", { className: 'indent faint' }, "Add pub server(s) if you want to sync with other people. Otherwise your data will only be saved in this browser.")
@@ -69413,13 +69415,13 @@ class EarthbarWorkspacePanel extends React.Component {
                     ? { fontStyle: 'italic', background: 'rgba(255,255,255,0.2)' }
                     : {};
                 return React.createElement("div", { key: wsConfig.workspaceAddress, className: 'flexRow' },
-                    React.createElement("a", { href: "#", style: style, className: 'flexItem flexGrow1 flexItemVerticalCenter linkButton monospace wrappyCode', onClick: (e) => store.switchWorkspace(wsConfig) }, wsConfig.workspaceAddress),
+                    React.createElement("a", { href: "#", style: style, className: 'flexItem flexGrow1 flexItemVerticalCenter linkButton monospace wrappyText', onClick: (e) => store.switchWorkspace(wsConfig) }, wsConfig.workspaceAddress),
                     React.createElement("button", { className: 'flexItem linkButton', onClick: () => store.removeWorkspace(wsConfig.workspaceAddress) }, "\u2715"));
             })),
             React.createElement("hr", { className: 'faint' }),
             React.createElement("div", { className: 'faint' }, "Add workspace or create new one"),
             React.createElement("form", { className: 'stack indent', onSubmit: (e) => { e.preventDefault(); this.handleAddWorkspace(); } },
-                React.createElement("input", { className: 'fullWidth', type: "text", placeholder: '+myworkspace.z0x7b098xc7', value: this.state.newWorkspaceInput, onChange: (e) => this.handleEditNewWorkspace(e.target.value) }),
+                React.createElement("input", { type: 'text', className: 'width100 monospace', placeholder: '+myworkspace.z0x7b098xc7', value: this.state.newWorkspaceInput, onChange: (e) => this.handleEditNewWorkspace(e.target.value) }),
                 this.state.newWorkspaceError === null
                     ? null
                     : React.createElement("div", null, this.state.newWorkspaceError),

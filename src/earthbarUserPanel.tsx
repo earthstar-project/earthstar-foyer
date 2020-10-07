@@ -28,11 +28,11 @@ import {
 let sUserPanel : React.CSSProperties = {
     padding: 'var(--s0)',
     // change colors
-    '--cBackground': 'var(--cUser)',
-    '--cText': 'var(--cWhite)',
+    '--cPaper': 'var(--cUser)',
+    '--cInk': 'var(--cWhite)',
     // apply color variables
-    background: 'var(--cBackground)',
-    color: 'var(--cText)',
+    background: 'var(--cPaper)',
+    color: 'var(--cInk)',
     borderTopLeftRadius: 'var(--round)',
     borderTopRightRadius: 0,
     borderBottomLeftRadius: 'var(--round)',
@@ -162,15 +162,15 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
                 {/* form to create new user */}
                 <div className='faint'>Create new user</div>
                 <form className='flexRow indent' onSubmit={(e) => {e.preventDefault(); this.handleCreateUser()}}>
-                    <input className='flexItem flexGrow1' type='text'
+                    <input type='text' className='flexItem flexGrow1 monospace'
                         name='shortname' id='shortname'
                         placeholder='4-letter nickname'
                         maxLength={4}
                         value={this.state.shortnameInput}
                         onChange={(e) => this.handleEditShortname(e.target.value)}
                         />
-                    <button className='button flexItem'
-                        type='submit'
+                    <button type='submit'
+                        className='button flexItem'
                         id='createUser'
                         style={{marginLeft: 'var(--s-1)'}}
                         disabled={!this.canCreateUser()}
@@ -191,7 +191,7 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
                 <div className='faint'>Log In</div>
                 <form className='stack indent' onSubmit={(e) => {e.preventDefault(); this.handleLogIn()}}>
                     <div className='flexRow'>
-                        <input className='flexItem flexGrow1' type="text"
+                        <input type='text' className='flexItem flexGrow1 monospace'
                             name='username' id='username'
                             placeholder='@user.xxxxxxxxxxxxxxx'
                             autoComplete='off'
@@ -200,15 +200,15 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
                             />
                     </div>
                     <div className='flexRow'>
-                        <input className='flexItem flexGrow1' type='password'
+                        <input type='password' className='flexItem flexGrow1 monospace'
                             name='password' id='password'
                             placeholder='password'
                             autoComplete='off'
                             value={this.state.passwordInput}
                             onChange={(e) => this.handleEditPassword(e.target.value)}
                             />
-                        <button className='button flexItem'
-                            type='submit'
+                        <button type='submit'
+                            className='button flexItem'
                             id='logIn'
                             style={{marginLeft: 'var(--s-1)'}}
                             disabled={!this.canLogIn()}
@@ -224,13 +224,13 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
             return <div className='stack' style={sUserPanel}>
                 <div className='faint'>Display name in this workspace</div>
                 <form className='indent flexRow' onSubmit={(e) => {e.preventDefault(); this.handleSaveDisplayName()}}>
-                    <input type='text' className='flexGrow1'
+                    <input type='text' className='flexGrow1 monospace'
                         value={this.state.displayNameInput}
                         placeholder={cutAtPeriod(store.currentUser.authorKeypair.address).slice(1)}
                         onChange={(e) => this.setState({displayNameInput: e.target.value})}
                         />
-                    <button className='button flexItem'
-                        type='submit'
+                    <button type='submit'
+                        className='button flexItem'
                         style={{marginLeft: 'var(--s-1)'}}
                         disabled={store.currentWorkspace === null}
                         >
@@ -250,7 +250,8 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
                         }}>
                         {store.currentUser.authorKeypair.address}
                     </pre>
-                    <button className='button flexItem' type='button'
+                    <button type='button'
+                        className='button flexItem'
                         style={{marginLeft: 'var(--s-1)'}}
                         onClick={() => this.handleCopy(store.currentUser?.authorKeypair.address || '')}
                         >
@@ -266,7 +267,8 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
                         }}>
                         •••••••••••••••••••••••••••••••••••••••••••••••••••••
                     </pre>
-                    <button className='button flexItem' type='button'
+                    <button type='button'
+                        className='button flexItem'
                         style={{marginLeft: 'var(--s-1)'}}
                         onClick={() => this.handleCopy(store.currentUser?.authorKeypair.secret || '')}
                         >
@@ -275,7 +277,8 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
                 </div>
                 <hr className='faint' />
                 <div className='center'>
-                    <button className='button' type='button'
+                    <button type='button'
+                        className='button'
                         onClick={() => this.handleLogOut()}
                         >
                         Log out

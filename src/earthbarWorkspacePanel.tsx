@@ -22,11 +22,11 @@ import {
 let sWorkspacePanel : React.CSSProperties = {
     padding: 'var(--s0)',
     // change colors
-    '--cBackground': 'var(--cWorkspace)',
-    '--cText': 'var(--cWhite)',
+    '--cPaper': 'var(--cWorkspace)',
+    '--cInk': 'var(--cWhite)',
     // apply color variables
-    background: 'var(--cBackground)',
-    color: 'var(--cText)',
+    background: 'var(--cPaper)',
+    color: 'var(--cInk)',
     borderTopLeftRadius: 0,
     borderTopRightRadius: 'var(--round)',
     borderBottomLeftRadius: 'var(--round)',
@@ -118,7 +118,7 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
             : <div className='stack'>
                 <div className='faint'>Current workspace</div>
                 <div className='indent flexRow selectable'>
-                    <div className='flexGrow1 flexItemVerticalCenter wrappyCode monospace'>
+                    <div className='flexGrow1 flexItemVerticalCenter wrappyText monospace'>
                         {store.currentWorkspace.workspaceAddress}
                     </div>
                     <button className='button flexItem' type='button'
@@ -146,7 +146,7 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
                                     <div className='flexItem flexItemVerticalCenter unselectable unclickable'>
                                         {icon}
                                     </div>
-                                    <div className='flexItem flexGrow1 wrappyCode'>
+                                    <div className='flexItem flexGrow1 wrappyText'>
                                         <a href={pub.domain} target='_blank'
                                             style={{color: 'var(--cText)'}}
                                             >
@@ -163,7 +163,7 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
                         }
                         {/* Form to add new pub */}
                         <form className='flexRow indent' onSubmit={(e) => {e.preventDefault(); this.handleAddPub()}}>
-                            <input className='flexItem flexGrow1' type="text"
+                            <input type='text' className='flexItem flexGrow1 monospace'
                                 placeholder="http://..."
                                 value={this.state.newPubInput}
                                 onChange={(e) => this.setState({ newPubInput: e.target.value })}
@@ -194,7 +194,7 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
                       ? {fontStyle: 'italic', background: 'rgba(255,255,255,0.2)'}
                       : {};
                     return <div key={wsConfig.workspaceAddress} className='flexRow'>
-                        <a href="#" style={style} className='flexItem flexGrow1 flexItemVerticalCenter linkButton monospace wrappyCode'
+                        <a href="#" style={style} className='flexItem flexGrow1 flexItemVerticalCenter linkButton monospace wrappyText'
                             onClick={(e) => store.switchWorkspace(wsConfig)}
                             >
                             {wsConfig.workspaceAddress}
@@ -212,7 +212,7 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
             {/* form to add new workspace */}
             <div className='faint'>Add workspace or create new one</div>
             <form className='stack indent' onSubmit={(e) => {e.preventDefault(); this.handleAddWorkspace()}}>
-                <input className='fullWidth' type="text"
+                <input type='text' className='width100 monospace'
                     placeholder='+myworkspace.z0x7b098xc7'
                     value={this.state.newWorkspaceInput}
                     onChange={(e) => this.handleEditNewWorkspace(e.target.value)}

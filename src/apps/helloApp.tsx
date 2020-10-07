@@ -21,7 +21,8 @@ export class HelloApp extends React.PureComponent<HelloProps, HelloState> {
     render() {
         logHelloApp('🎨 render.  changeKey:', this.props.changeKey);
         return <div className='stack' style={{padding: 'var(--s0)'}}>
-            Hello world!
+            <h3>Hello world</h3>
+            This is an example app.
         </div>;
     }
 }

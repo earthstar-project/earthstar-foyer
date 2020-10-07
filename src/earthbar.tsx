@@ -109,8 +109,8 @@ export class Earthbar extends React.Component<EbProps, EbState> {
             marginTop: 'var(--s-2)',
             marginBottom: 'var(--s-2)',
             // change colors
-            '--cText': 'var(--cWhite)',
-            '--cBackground': 'var(--cWorkspace)',
+            '--cInk': 'var(--cWhite)',
+            '--cPaper': 'var(--cWorkspace)',
         };
 
         // tab click actions

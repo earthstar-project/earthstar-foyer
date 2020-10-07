@@ -19,7 +19,7 @@
     --slightlyRound: var(--s-2);
     --test-border-width: 0px;
 
-    /* colors */
+    /* palette */
     --cWorkspace: #760a9d;
     --cUser: #29367a;
     --cApp: #0a5323;
@@ -31,18 +31,19 @@
     --cBlack: #222;
 
     /* color roles */
-    --cBackground: var(--cEggplant);
-    --cText: var(--cBlack);
+    --cPaper: var(--cEggplant);
+    --cInk: var(--cBlack);
+
+    /* default colors */
+    background: var(--cPaper);
+    color: var(--cInk);
 
     line-height: 21px;
     font-size: 16px;
     font-family: sans-serif;
-    background: var(--cBackground);
-    color: var(--cText);
 }
 
 .pageColumn {
-    border: var(--test-border-width) solid #f90;
     max-width: 70ch;
     box-sizing: content-box;
     margin-left: auto;
@@ -50,32 +51,20 @@
     padding: var(--s0);
 }
 
-.stack {
-    border: var(--test-border-width) solid red;
-}
+/* === LAYOUT: STACK ===================================================== */
+
+.stack { }
 .stack > * + * {
     margin-top: var(--s0);
 }
 
-.unclickable {
-    pointer-events: none;
-}
-.unselectable {
-    user-select: none;
-}
-.selectable {
-    user-select: text;
-}
-
-.fullWidth {
-    width: 100%;
-}
+/* === LAYOUT: FLEX ROW ===================================================== */
 
 .flexRow {
     border: var(--test-border-width) dashed #880;
     display: flex;
 }
-.flexWrap {
+.flexRowWrap {
     flex-wrap: wrap;
 }
 
@@ -87,78 +76,120 @@
     border: var(--test-border-width) solid #880;
     display: block;
 }
-.flexItemVerticalCenter {
-    align-self: center;
+.flexItemVerticalCenter { align-self: center; }
+.flexGrow1 { flex-grow: 1; }
+.flexShrink0 { flex-shrink: 0; }
+
+/* === HELPERS: LAYOUT ===================================================== */
+
+.block { display: block; }
+
+.width100 { width: 100%; }
+.indent { margin-left: var(--s1); }
+
+.right { text-align: right; }
+.center { text-align: center; }
+
+/* === HELPERS: MOUSE ===================================================== */
+
+.unclickable { pointer-events: none; }
+
+.unselectable { user-select: none; }
+.selectable { user-select: text; }
+
+/* === HELPERS: APPEARANCE ===================================================== */
+
+.faint { opacity: 0.5; }
+
+/* === HELPERS: FONT AND TEXT ===================================================== */
+
+.bold { font-weight: bold; }
+.monospace { font-family: monospace; }
+
+.wrappyText {
+    /* make sure text wraps inside its container */
+    white-space: break-spaces;
+    overflow-wrap: break-word;
+    overflow: auto;
 }
-.flexGrow1 {
-    flex-grow: 1;
+
+.singleLineTextComplete {
+    /* show ALL the text on one line */
+    white-space: nowrap;
+    overflow: hidden;
 }
-.flexShrink0 {
-    flex-shrink: 0;
+
+.singleLineTextEllipsis {
+    /* show text on one line, with ellipsis if too long */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
+
+/* === HTML STYLE RESET ===================================================== */
 
 hr {
     border: none;
-    border-top: 2px solid var(--cText);
-}
-
-.indent {
-    margin-left: var(--s1);
-}
-
-.faint {
-    opacity: 0.5;
-}
-
-.bold {
-    font-weight: bold;
+    border-top: 2px solid var(--cInk);
 }
 
 input[type=text], input[type=password] {
-    border: 2px solid var(--cText);
+    border: 2px solid var(--cInk);
     background: none;
-    color: var(--cText);
+    color: var(--cInk);
     min-width: 20px;
 
-    /* match button */
+    /* same padding as button */
     padding-top: var(--s-1);
     padding-bottom: var(--s-1);
     padding-left: var(--s0);
     padding-right: var(--s0);
 
     margin: none;
-    font-family: monospace;
     border-radius: var(--slightlyRound);
 }
 
 textarea {
-    /*
-    background: var(--cBackground);
-    border: none;
-    */
-    border: 2px solid var(--cText);
+    border: 2px solid var(--cInk);
     background: none;
 
-    color: var(--cText);
+    color: var(--cInk);
 
     padding: var(--s-2);
     margin: none;
-    /*font-family: monospace;*/
     width: 100%;
     border-radius: var(--slightlyRound);
 }
 
-/*
-textarea::before {
-    content: "";
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    left: 0;
-    background-color: red;
-    opacity: 0.3;
+.button {
+    border: none;
+    font-weight: bold;
+    border-radius: var(--round);
+    background: var(--cInk);
+    color: var(--cPaper);
+    white-space: nowrap;
+    /*overflow: hidden;*/
+    padding-top: var(--s-1);
+    padding-bottom: var(--s-1);
+    padding-left: var(--s0);
+    padding-right: var(--s0);
 }
-*/
+.button:disabled {
+    opacity: 0.5;
+}
+
+/* for <a> that look like text and act as buttons */
+.linkButton {
+    font-weight: bold;
+    text-decoration: none;
+    color: var(--cInk);
+    background: none;
+}
+.linkButton:hover {
+    background: red;
+}
+
+/* === EARTHBAR TABS AND PANELS ============================================= */
 
 .earthbarTabRow {
 }
@@ -174,70 +205,8 @@ textarea::before {
     overflow: hidden;
 }
 
-.button {
-    border: none;
-    font-weight: bold;
-    border-radius: var(--round);
-    background: var(--cText);
-    color: var(--cBackground);
-    white-space: nowrap;
-    /*overflow: hidden;*/
-    padding-top: var(--s-1);
-    padding-bottom: var(--s-1);
-    padding-left: var(--s0);
-    padding-right: var(--s0);
-}
-.button:disabled {
-    opacity: 0.5;
-}
+/* ========================================================================== */
+/* ========================================================================== */
+/* ========================================================================== */
+/* ========================================================================== */
 
-/* for <a> that look like text and act as buttons */
-.block { display: block; }
-.linkButton {
-    font-weight: bold;
-    text-decoration: none;
-    color: var(--cText);
-    background: none;
-}
-.linkButton:hover {
-    background: red;
-}
-
-.right {
-    text-align: right;
-}
-.center {
-    text-align: center;
-}
-
-.monospace {
-    font-family: monospace;
-}
-
-.wrappyText {
-    /* make sure text wraps inside its container */
-    white-space: break-spaces;
-    overflow-wrap: break-word;
-    overflow: auto;
-    /*hyphens: auto;*/
-}
-
-.wrappyCode {
-    /* make sure text wraps inside its container */
-    /* no hyphens -- use for workspace names and URLs */
-    white-space: break-spaces;
-    overflow-wrap: break-word;
-    overflow: auto;
-}
-
-.singleLineTextComplete {
-    white-space: nowrap;
-    overflow: hidden;
-    /*text-overflow: ellipsis;*/
-}
-
-.singleLineTextEllipsis {
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-}

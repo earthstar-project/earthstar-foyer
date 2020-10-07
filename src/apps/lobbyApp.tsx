@@ -114,7 +114,7 @@ export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
                         name2 = null;
                     }
                     return <div key={doc.path} className='stack' style={userStyle(doc.author, true)}>
-                        <div className='flexRow flexWrap' title={doc.author}>
+                        <div className='flexRow flexRowWrap' title={doc.author}>
                             <div className='flexItem singleLineTextEllipsis bold' style={{color: 'var(--darkColor)'}}>{name1}</div>
                             <div className='flexItem singleLineTextEllipsis bold faint' style={{color: 'var(--darkColor)'}}>{name2}</div>
                             <div className='flexItem flexGrow1' />
@@ -161,8 +161,8 @@ export class LobbyComposer extends React.PureComponent<LobbyProps, LobbyComposer
     render() {
         let myAddress = this.props.kit?.authorKeypair?.address || '';
         let buttonStyle = {
-            '--cBackground': 'var(--cBlack)',
-            '--cText': 'var(--cWhite)',
+            '--cPaper': 'var(--cBlack)',
+            '--cInk': 'var(--cWhite)',
         } as React.CSSProperties;
         return <form className='stack' style={userStyle(myAddress, false)}
             onSubmit={(e) => {e.preventDefault(); this.handleSubmit();}}

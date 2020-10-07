@@ -28,11 +28,11 @@ import {
 let sAppPanel : React.CSSProperties = {
     padding: 'var(--s0)',
     // change colors
-    '--cBackground': 'var(--cApp)',
-    '--cText': 'var(--cWhite)',
+    '--cPaper': 'var(--cApp)',
+    '--cInk': 'var(--cWhite)',
     // apply color variables
-    background: 'var(--cBackground)',
-    color: 'var(--cText)',
+    background: 'var(--cPaper)',
+    color: 'var(--cInk)',
     borderTopLeftRadius: 'var(--round)',
     borderTopRightRadius: 'var(--round)',
     borderBottomLeftRadius: 'var(--round)',
