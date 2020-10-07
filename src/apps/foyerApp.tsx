@@ -5,7 +5,7 @@ import {
     sortByField,
 } from '../util';
 import {
-    logLobbyApp,
+    logFoyerApp,
 } from '../log';
 import { detChoice, detInt, detRandom, detRange, AuthorAddress, DocToSet, WriteResult, EarthstarError } from 'earthstar';
 
@@ -62,7 +62,7 @@ let humanDate = (earthstarTimestamp: number): string => {
 
 }
 
-export interface LobbyProps {
+export interface FoyerProps {
     // This prop changes whenever something in the earthstar kit has changed,
     // helping trigger a re-render.
     changeKey: string;
@@ -70,14 +70,14 @@ export interface LobbyProps {
     // See kit.ts
     kit: Kit | null;
 }
-export interface LobbyState {
+export interface FoyerState {
 }
-export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
-    constructor(props: LobbyProps) {
+export class FoyerApp extends React.PureComponent<FoyerProps, FoyerState> {
+    constructor(props: FoyerProps) {
         super(props);
     }
     render() {
-        logLobbyApp('🎨 render.  changeKey:', this.props.changeKey);
+        logFoyerApp('🎨 render.  changeKey:', this.props.changeKey);
         let kit = this.props.kit;
 
         if (kit === null) { return null; }
@@ -88,58 +88,66 @@ export class LobbyApp extends React.PureComponent<LobbyProps, LobbyState> {
         sortByField(docs, 'timestamp');
         docs.reverse();
 
-        return <div className='stack' style={{padding: 'var(--s0)'}}>
-            {kit.authorKeypair
-                ? <LobbyComposer kit={this.props.kit} changeKey={this.props.changeKey} />
-                : null}
-            {/*
-            <h1 style={{fontStyle: 'italic', fontFamily: 'georgia, serif'}}>Welcome To The Foyer</h1>
-            <pre className='faint' style={{marginBottom: 50, overflow: 'hidden'}}>{
-                `workspace address: ${kit.workspaceAddress || '(no workspace)'}\n`+
-                `user address: ${kit.authorKeypair?.address || '(guest user)'}\n`+
-                `pubs: ${(kit.syncer.state.pubs.map(p => p.domain) || ['(none)']).join('\n')}`
-            }</pre>
-            */}
-            {/* lobby messages */}
-            <div className=''>
-                {docs.map(doc => {
-                    let displayName = getDisplayName(kit as Kit, doc.author);
-                    let address = cutAtPeriod(doc.author);
-                    let name1: string, name2: string | null;
-                    if (displayName) {
-                        name1 = displayName;
-                        name2 = address;
-                    } else {
-                        name1 = address;
-                        name2 = null;
-                    }
-                    return <div key={doc.path} className='stack' style={userStyle(doc.author, true)}>
-                        <div className='flexRow flexRowWrap' title={doc.author}>
-                            <div className='flexItem singleLineTextEllipsis bold' style={{color: 'var(--darkColor)'}}>{name1}</div>
-                            <div className='flexItem singleLineTextEllipsis bold faint' style={{color: 'var(--darkColor)'}}>{name2}</div>
-                            <div className='flexItem flexGrow1' />
-                            <div className='flexItem singleLineTextEllipsis faint'>{humanDate(doc.timestamp)}</div>
+        let sAppBackground = {
+            '--cPaper': 'var(--cEggplant)',
+            background: 'var(--cPaper)',
+            minHeight: '100vh',
+        } as React.CSSProperties;
+
+        return <div style={sAppBackground}>
+            <div className='stack centeredReadableWidth' style={{padding: 'var(--s0)'}}>
+                <h1 style={{fontStyle: 'italic', fontFamily: 'georgia, serif'}}>Welcome To The Foyer</h1>
+                {kit.authorKeypair
+                    ? <FoyerComposer kit={this.props.kit} changeKey={this.props.changeKey} />
+                    : null}
+                {/*
+                <pre className='faint' style={{marginBottom: 50, overflow: 'hidden'}}>{
+                    `workspace address: ${kit.workspaceAddress || '(no workspace)'}\n`+
+                    `user address: ${kit.authorKeypair?.address || '(guest user)'}\n`+
+                    `pubs: ${(kit.syncer.state.pubs.map(p => p.domain) || ['(none)']).join('\n')}`
+                }</pre>
+                */}
+                {/* lobby messages */}
+                <div>
+                    {docs.map(doc => {
+                        let displayName = getDisplayName(kit as Kit, doc.author);
+                        let address = cutAtPeriod(doc.author);
+                        let name1: string, name2: string | null;
+                        if (displayName) {
+                            name1 = displayName;
+                            name2 = address;
+                        } else {
+                            name1 = address;
+                            name2 = null;
+                        }
+                        return <div key={doc.path} className='stack' style={userStyle(doc.author, true)}>
+                            <div className='flexRow flexRowWrap' title={doc.author}>
+                                <div className='flexItem singleLineTextEllipsis bold' style={{color: 'var(--darkColor)'}}>{name1}</div>
+                                <div className='flexItem singleLineTextEllipsis bold faint' style={{color: 'var(--darkColor)'}}>{name2}</div>
+                                <div className='flexItem flexGrow1' />
+                                <div className='flexItem singleLineTextEllipsis faint'>{humanDate(doc.timestamp)}</div>
+                            </div>
+                            <div className='wrappyText'>{doc.content}</div>
                         </div>
-                        <div className='wrappyText'>{doc.content}</div>
-                    </div>
-                })}
+                    })}
+                </div>
             </div>
         </div>;
     }
 };
 
-export interface LobbyComposerState {
+export interface FoyerComposerState {
     text: string,
 }
-export class LobbyComposer extends React.PureComponent<LobbyProps, LobbyComposerState> {
-    constructor(props: LobbyProps) {
+export class FoyerComposer extends React.PureComponent<FoyerProps, FoyerComposerState> {
+    constructor(props: FoyerProps) {
         super(props);
         this.state = {
             text: '',
         };
     }
     handleSubmit() {
-        logLobbyApp('posting...');
+        logFoyerApp('posting...');
         this.setState({text: ''});
         if (this.props.kit && this.props.kit.authorKeypair) {
             let keypair = this.props.kit.authorKeypair;
@@ -152,7 +160,7 @@ export class LobbyComposer extends React.PureComponent<LobbyProps, LobbyComposer
             if (result !== WriteResult.Accepted) {
                 console.error('post: write failed', result);
             } else {
-                logLobbyApp('success');
+                logFoyerApp('success');
             }
         } else {
             console.error("post: can't because kit or author keypair are null");

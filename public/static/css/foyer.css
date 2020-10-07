@@ -31,8 +31,11 @@
     --cBlack: #222;
 
     /* color roles */
-    --cPaper: var(--cEggplant);
+    --cPaper: var(--cWhite);
     --cInk: var(--cBlack);
+
+    --cEarthbarPaper: var(--cBlack);
+    --cEarthbarInk: var(--cWhite);
 
     /* default colors */
     background: var(--cPaper);
@@ -43,12 +46,11 @@
     font-family: sans-serif;
 }
 
-.pageColumn {
-    max-width: 70ch;
+.centeredReadableWidth {
+    max-width: 50ch;  /* 70ch */
     box-sizing: content-box;
     margin-left: auto;
     margin-right: auto;
-    padding: var(--s0);
 }
 
 /* === LAYOUT: STACK ===================================================== */
@@ -191,7 +193,17 @@ textarea {
 
 /* === EARTHBAR TABS AND PANELS ============================================= */
 
+.earthbarColors {
+    --cPaper: var(--cEarthbarPaper);
+    --cInk: var(--cEarthbarInk);
+
+    background: var(--cPaper);
+    color: var(--cInk);
+}
+
 .earthbarTabRow {
+    padding: var(--s0);
+    padding-bottom: 0;
 }
 
 .earthbarTab {
@@ -204,9 +216,3 @@ textarea {
     /*text-overflow: ellipsis;*/
     overflow: hidden;
 }
-
-/* ========================================================================== */
-/* ========================================================================== */
-/* ========================================================================== */
-/* ========================================================================== */
-

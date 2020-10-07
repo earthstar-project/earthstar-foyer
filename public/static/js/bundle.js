@@ -68271,7 +68271,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const React = __importStar(require("react"));
 const ReactDOM = __importStar(require("react-dom"));
 const earthbar_1 = require("./earthbar");
-const lobbyApp_1 = require("./apps/lobbyApp");
+const foyerApp_1 = require("./apps/foyerApp");
 const helloApp_1 = require("./apps/helloApp");
 //================================================================================
 // MAIN
@@ -68279,13 +68279,12 @@ const helloApp_1 = require("./apps/helloApp");
 // It's responsible for setting up Earthstar classes and rendering the "app".
 // The "app" in this case is LobbyApp.
 let apps = {
-    Lobby: lobbyApp_1.LobbyApp,
+    Foyer: foyerApp_1.FoyerApp,
     Hello: helloApp_1.HelloApp,
 };
-ReactDOM.render(React.createElement("div", { className: 'pageColumn' },
-    React.createElement(earthbar_1.Earthbar, { apps: apps })), document.getElementById('react-slot'));
+ReactDOM.render(React.createElement(earthbar_1.Earthbar, { apps: apps }), document.getElementById('react-slot'));
 
-},{"./apps/helloApp":267,"./apps/lobbyApp":268,"./earthbar":269,"react":221,"react-dom":218}],267:[function(require,module,exports){
+},{"./apps/foyerApp":267,"./apps/helloApp":268,"./earthbar":269,"react":221,"react-dom":218}],267:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -68307,45 +68306,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.HelloApp = void 0;
-const React = __importStar(require("react"));
-const log_1 = require("../log");
-class HelloApp extends React.PureComponent {
-    constructor(props) {
-        super(props);
-    }
-    render() {
-        log_1.logHelloApp('🎨 render.  changeKey:', this.props.changeKey);
-        return React.createElement("div", { className: 'stack', style: { padding: 'var(--s0)' } },
-            React.createElement("h3", null, "Hello world"),
-            "This is an example app.");
-    }
-}
-exports.HelloApp = HelloApp;
-
-},{"../log":275,"react":221}],268:[function(require,module,exports){
-"use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.LobbyComposer = exports.LobbyApp = void 0;
+exports.FoyerComposer = exports.FoyerApp = void 0;
 const React = __importStar(require("react"));
 const util_1 = require("../util");
 const log_1 = require("../log");
@@ -68399,12 +68360,12 @@ let humanDate = (earthstarTimestamp) => {
     ;
     return `${weekday} ${month} ${d.getDate()} ${hr}:${mn}${ampm}`;
 };
-class LobbyApp extends React.PureComponent {
+class FoyerApp extends React.PureComponent {
     constructor(props) {
         super(props);
     }
     render() {
-        log_1.logLobbyApp('🎨 render.  changeKey:', this.props.changeKey);
+        log_1.logFoyerApp('🎨 render.  changeKey:', this.props.changeKey);
         let kit = this.props.kit;
         if (kit === null) {
             return null;
@@ -68414,35 +68375,42 @@ class LobbyApp extends React.PureComponent {
         docs = docs.filter(doc => doc.content !== ''); // remove empty docs (aka "deleted" docs)
         util_1.sortByField(docs, 'timestamp');
         docs.reverse();
-        return React.createElement("div", { className: 'stack', style: { padding: 'var(--s0)' } },
-            kit.authorKeypair
-                ? React.createElement(LobbyComposer, { kit: this.props.kit, changeKey: this.props.changeKey })
-                : null,
-            React.createElement("div", { className: '' }, docs.map(doc => {
-                let displayName = getDisplayName(kit, doc.author);
-                let address = util_1.cutAtPeriod(doc.author);
-                let name1, name2;
-                if (displayName) {
-                    name1 = displayName;
-                    name2 = address;
-                }
-                else {
-                    name1 = address;
-                    name2 = null;
-                }
-                return React.createElement("div", { key: doc.path, className: 'stack', style: userStyle(doc.author, true) },
-                    React.createElement("div", { className: 'flexRow flexRowWrap', title: doc.author },
-                        React.createElement("div", { className: 'flexItem singleLineTextEllipsis bold', style: { color: 'var(--darkColor)' } }, name1),
-                        React.createElement("div", { className: 'flexItem singleLineTextEllipsis bold faint', style: { color: 'var(--darkColor)' } }, name2),
-                        React.createElement("div", { className: 'flexItem flexGrow1' }),
-                        React.createElement("div", { className: 'flexItem singleLineTextEllipsis faint' }, humanDate(doc.timestamp))),
-                    React.createElement("div", { className: 'wrappyText' }, doc.content));
-            })));
+        let sAppBackground = {
+            '--cPaper': 'var(--cEggplant)',
+            background: 'var(--cPaper)',
+            minHeight: '100vh',
+        };
+        return React.createElement("div", { style: sAppBackground },
+            React.createElement("div", { className: 'stack centeredReadableWidth', style: { padding: 'var(--s0)' } },
+                React.createElement("h1", { style: { fontStyle: 'italic', fontFamily: 'georgia, serif' } }, "Welcome To The Foyer"),
+                kit.authorKeypair
+                    ? React.createElement(FoyerComposer, { kit: this.props.kit, changeKey: this.props.changeKey })
+                    : null,
+                React.createElement("div", null, docs.map(doc => {
+                    let displayName = getDisplayName(kit, doc.author);
+                    let address = util_1.cutAtPeriod(doc.author);
+                    let name1, name2;
+                    if (displayName) {
+                        name1 = displayName;
+                        name2 = address;
+                    }
+                    else {
+                        name1 = address;
+                        name2 = null;
+                    }
+                    return React.createElement("div", { key: doc.path, className: 'stack', style: userStyle(doc.author, true) },
+                        React.createElement("div", { className: 'flexRow flexRowWrap', title: doc.author },
+                            React.createElement("div", { className: 'flexItem singleLineTextEllipsis bold', style: { color: 'var(--darkColor)' } }, name1),
+                            React.createElement("div", { className: 'flexItem singleLineTextEllipsis bold faint', style: { color: 'var(--darkColor)' } }, name2),
+                            React.createElement("div", { className: 'flexItem flexGrow1' }),
+                            React.createElement("div", { className: 'flexItem singleLineTextEllipsis faint' }, humanDate(doc.timestamp))),
+                        React.createElement("div", { className: 'wrappyText' }, doc.content));
+                }))));
     }
 }
-exports.LobbyApp = LobbyApp;
+exports.FoyerApp = FoyerApp;
 ;
-class LobbyComposer extends React.PureComponent {
+class FoyerComposer extends React.PureComponent {
     constructor(props) {
         super(props);
         this.state = {
@@ -68450,7 +68418,7 @@ class LobbyComposer extends React.PureComponent {
         };
     }
     handleSubmit() {
-        log_1.logLobbyApp('posting...');
+        log_1.logFoyerApp('posting...');
         this.setState({ text: '' });
         if (this.props.kit && this.props.kit.authorKeypair) {
             let keypair = this.props.kit.authorKeypair;
@@ -68464,7 +68432,7 @@ class LobbyComposer extends React.PureComponent {
                 console.error('post: write failed', result);
             }
             else {
-                log_1.logLobbyApp('success');
+                log_1.logFoyerApp('success');
             }
         }
         else {
@@ -68485,9 +68453,48 @@ class LobbyComposer extends React.PureComponent {
                 React.createElement("button", { className: 'flexItem button', type: "submit", style: buttonStyle, disabled: this.state.text.length === 0 }, "Post")));
     }
 }
-exports.LobbyComposer = LobbyComposer;
+exports.FoyerComposer = FoyerComposer;
 
-},{"../log":275,"../util":276,"earthstar":100,"react":221}],269:[function(require,module,exports){
+},{"../log":275,"../util":276,"earthstar":100,"react":221}],268:[function(require,module,exports){
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.HelloApp = void 0;
+const React = __importStar(require("react"));
+const log_1 = require("../log");
+class HelloApp extends React.PureComponent {
+    constructor(props) {
+        super(props);
+    }
+    render() {
+        log_1.logHelloApp('🎨 render.  changeKey:', this.props.changeKey);
+        return React.createElement("div", { style: { background: '#ddd', minHeight: '100vh' } },
+            React.createElement("div", { className: 'stack centeredReadableWidth', style: { padding: 'var(--s0)' } },
+                React.createElement("h3", null, "Hello world"),
+                "This is an example app."));
+    }
+}
+exports.HelloApp = HelloApp;
+
+},{"../log":275,"react":221}],269:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -68621,10 +68628,16 @@ class Earthbar extends React.Component {
             left: 0,
             right: 0,
         };
-        // style to hide children when a panel is open
-        let sChildren = activeTab === EbTab.AllClosed
-            ? {}
-            : { opacity: 0.3, };
+        // wall behind a panel that hides the app
+        let sPanelBackdrop = {
+            position: 'absolute',
+            zIndex: 98,
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            opacity: 0.7,
+        };
         // labels for tabs
         let workspaceLabel = 'Add workspace';
         if (store.currentWorkspace) {
@@ -68645,20 +68658,24 @@ class Earthbar extends React.Component {
         //`store.onChange:${store.onChange.changeKey}__` +
         `storage.onWrite:${kit === null || kit === void 0 ? void 0 : kit.storage.onWrite.changeKey}__`;
         //`syncer.onChange:${kit?.syncer.onChange.changeKey}`;
-        return (React.createElement("div", null,
-            React.createElement("div", { className: 'flexRow earthbarTabRow' },
-                React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: () => onClickTab(EbTab.Workspace) }, workspaceLabel),
-                React.createElement("button", { className: 'flexItem button', style: sSyncButton, disabled: !canSync, onClick: () => { var _a; return (_a = store.kit) === null || _a === void 0 ? void 0 : _a.syncer.sync(); } }, "Sync"),
-                React.createElement("button", { className: 'flexItem earthbarTab', style: sAppTab, onClick: () => onClickTab(EbTab.App) }, appLabel),
-                React.createElement("div", { className: 'flexItem flexGrow1', style: { margin: 0 } }),
-                React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: () => onClickTab(EbTab.User) }, userLabel)),
-            React.createElement("div", { style: { position: 'relative' } },
-                React.createElement("div", { style: sPanel }, panel),
-                React.createElement("div", { style: sChildren }, store.kit === null
+        return React.createElement(React.Fragment, null,
+            React.createElement("div", { className: 'earthbarColors earthbarTabRow' },
+                React.createElement("div", { className: 'flexRow centeredReadableWidth' },
+                    React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: () => onClickTab(EbTab.Workspace) }, workspaceLabel),
+                    React.createElement("button", { className: 'flexItem button', style: sSyncButton, disabled: !canSync, onClick: () => { var _a; return (_a = store.kit) === null || _a === void 0 ? void 0 : _a.syncer.sync(); } }, "Sync"),
+                    React.createElement("button", { className: 'flexItem earthbarTab', style: sAppTab, onClick: () => onClickTab(EbTab.App) }, appLabel),
+                    React.createElement("div", { className: 'flexItem flexGrow1', style: { margin: 0 } }),
+                    React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: () => onClickTab(EbTab.User) }, userLabel))),
+            React.createElement("div", { style: { position: 'relative', height: '100vh' } },
+                React.createElement("div", { style: sPanel, className: 'centeredReadableWidth' }, panel),
+                activeTab === EbTab.AllClosed
+                    ? null
+                    : React.createElement("div", { className: 'earthbarColors', style: sPanelBackdrop, onClick: () => onClickTab(EbTab.AllClosed) }),
+                store.kit === null
                     ? null // don't render the app when there's no kit (no workspace)
                     // TODO: how should the app specify which changes it wants?  (storage, syncer)
                     // TODO: how to throttle changes here?
-                    : React.createElement(App, { kit: store.kit, changeKey: changeKeyForApp })))));
+                    : React.createElement(App, { kit: store.kit, changeKey: changeKeyForApp })));
     }
 }
 exports.Earthbar = Earthbar;
@@ -69486,7 +69503,7 @@ exports.Kit = Kit;
 },{"./log":275,"earthstar":100,"lodash.debounce":170}],275:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logHelloApp = exports.logLobbyApp = exports.logEarthbarPanel = exports.logEarthbar = exports.logKit = exports.logEarthbarStore = void 0;
+exports.logHelloApp = exports.logFoyerApp = exports.logEarthbarPanel = exports.logEarthbar = exports.logKit = exports.logEarthbarStore = void 0;
 let smul = (s, n) => 
 // repeat a string, n times
 Array.from(Array(n)).map(x => s).join('');
@@ -69495,7 +69512,7 @@ exports.logEarthbarStore = makeLogger(0, 'earthbar store', 'color: black; backgr
 exports.logKit = makeLogger(1, 'kit', 'color: black; background: #f94ac5');
 exports.logEarthbar = makeLogger(2, 'earthbar view', 'color: black; background: cyan');
 exports.logEarthbarPanel = makeLogger(3, 'earthbar panel', 'color: black; background: #08f');
-exports.logLobbyApp = makeLogger(3, 'lobby app', 'color: black; background: orange');
+exports.logFoyerApp = makeLogger(3, 'foyer app', 'color: black; background: orange');
 exports.logHelloApp = makeLogger(3, 'hello app', 'color: black; background: yellow');
 
 },{}],276:[function(require,module,exports){

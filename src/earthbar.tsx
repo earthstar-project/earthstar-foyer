@@ -145,11 +145,16 @@ export class Earthbar extends React.Component<EbProps, EbState> {
             right: 0, //mode === EbTab.Workspace ? 20 : 0,
         };
 
-        // style to hide children when a panel is open
-        let sChildren : React.CSSProperties =
-            activeTab === EbTab.AllClosed
-            ? { }
-            : { opacity: 0.3, /*visibility: 'hidden'*/ };
+        // wall behind a panel that hides the app
+        let sPanelBackdrop : React.CSSProperties = {
+            position: 'absolute',
+            zIndex: 98,
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            opacity: 0.7,
+        };
 
         // labels for tabs
         let workspaceLabel = 'Add workspace';
@@ -177,10 +182,10 @@ export class Earthbar extends React.Component<EbProps, EbState> {
             `storage.onWrite:${kit?.storage.onWrite.changeKey}__`;
             //`syncer.onChange:${kit?.syncer.onChange.changeKey}`;
 
-        return (
-            <div>
-                {/* tabs for opening panel, and sync button */}
-                <div className='flexRow earthbarTabRow'>
+        return <>
+            {/* tabs for opening panel, and sync button */}
+            <div className='earthbarColors earthbarTabRow'>
+                <div className='flexRow centeredReadableWidth'>
                     <button className='flexItem earthbarTab' style={sWorkspaceTab}
                         onClick={() => onClickTab(EbTab.Workspace)}
                         >
@@ -205,21 +210,25 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                         {userLabel}
                     </button>
                 </div>
-                {/* panel itself, and app */}
-                <div style={{position: 'relative'}}>
-                    <div style={sPanel}>
-                        {panel}
-                    </div>
-                    <div style={sChildren}>
-                        {store.kit === null
-                          ? null // don't render the app when there's no kit (no workspace)
-                          // TODO: how should the app specify which changes it wants?  (storage, syncer)
-                          // TODO: how to throttle changes here?
-                          : <App kit={store.kit} changeKey={changeKeyForApp} />
-                        }
-                    </div>
-                </div>
             </div>
-        );
+            {/* panel itself, and app */}
+            <div style={{position: 'relative', height: '100vh'}}>
+                <div style={sPanel} className='centeredReadableWidth'>
+                    {panel}
+                </div>
+                {activeTab === EbTab.AllClosed
+                  ? null
+                  : <div className='earthbarColors' style={sPanelBackdrop}
+                        onClick={() => onClickTab(EbTab.AllClosed)}
+                        />
+                }
+                {store.kit === null
+                    ? null // don't render the app when there's no kit (no workspace)
+                    // TODO: how should the app specify which changes it wants?  (storage, syncer)
+                    // TODO: how to throttle changes here?
+                    : <App kit={store.kit} changeKey={changeKeyForApp} />
+                }
+            </div>
+        </>;
     }
 }

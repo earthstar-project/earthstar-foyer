@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
 import { Earthbar } from './earthbar';
-import { LobbyApp } from './apps/lobbyApp';
+import { FoyerApp } from './apps/foyerApp';
 import { HelloApp } from './apps/helloApp';
 
 //================================================================================
@@ -13,13 +13,11 @@ import { HelloApp } from './apps/helloApp';
 // The "app" in this case is LobbyApp.
 
 let apps = {
-    Lobby: LobbyApp,
+    Foyer: FoyerApp,
     Hello: HelloApp,
 }
 
 ReactDOM.render(
-    <div className='pageColumn'>
-        <Earthbar apps={apps} />
-    </div>,
+    <Earthbar apps={apps} />,
     document.getElementById('react-slot')
 );
