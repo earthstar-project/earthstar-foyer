@@ -22,6 +22,7 @@
     /* colors */
     --cWorkspace: #760a9d;
     --cUser: #29367a;
+    --cApp: #0a5323;
     --cWhite: #fff;
     /*--cGray: #dcded0;*/
     /*--cGray: #eee;*/
@@ -158,6 +159,9 @@ textarea::before {
     opacity: 0.3;
 }
 */
+
+.earthbarTabRow {
+}
 
 .earthbarTab {
     padding: var(--s0);

@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { Kit } from './kit';
+import { Kit } from '../kit';
 import {
     cutAtPeriod,
     sortByField,
-} from './util';
+} from '../util';
 import {
     logLobbyApp,
-} from './log';
+} from '../log';
 import { detChoice, detInt, detRandom, detRange, AuthorAddress, DocToSet, WriteResult, EarthstarError } from 'earthstar';
 
 let userStyle = (author: AuthorAddress, rotate: boolean = false) : React.CSSProperties => {

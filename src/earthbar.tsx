@@ -16,23 +16,26 @@ import {
 import {
     logEarthbar,
 } from './log';
+import { EarthbarAppPanel } from './earthbarAppPanel';
 
 //================================================================================
 // EARTHBAR VIEWS
 
-export enum EbMode {
-    Closed = 'CLOSED',
+export enum EbTab {
+    AllClosed = 'ALL_CLOSED',
     Workspace = 'WORKSPACE',
+    App = 'APP',
     User = 'USER',
 }
 
 export interface EbProps {
-    app: React.ReactType,
+    apps: Record<string, React.ReactType>,
 }
 
 export interface EbState {
     store: EarthbarStore,
-    mode: EbMode,  // which tab are we looking at
+    activeTab: EbTab,
+    activeApp: string,
 }
 
 export class Earthbar extends React.Component<EbProps, EbState> {
@@ -41,7 +44,8 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         super(props);
         this.state = {
             store: new EarthbarStore(),
-            mode: EbMode.Closed,
+            activeTab: EbTab.AllClosed,
+            activeApp: Object.keys(this.props.apps)[0],
         };
     }
     componentDidMount() {
@@ -57,15 +61,22 @@ export class Earthbar extends React.Component<EbProps, EbState> {
             this.unsubFromStore = null;
         }
     }
+    changeApp(appName: string) {
+        logEarthbar('change app to', appName);
+        this.setState({
+            activeTab: EbTab.AllClosed,
+            activeApp: appName,
+        });
+    }
     render() {
         let store = this.state.store;
         let kit = this.state.store.kit;
-        let mode = this.state.mode;
-        logEarthbar(`🎨 render in ${mode} mode`);
+        let activeTab = this.state.activeTab;
+        logEarthbar(`🎨 render.  tab = ${activeTab}`);
 
         // tab styles
         let sWorkspaceTab : React.CSSProperties =
-            mode === EbMode.Workspace
+            activeTab === EbTab.Workspace
             ? { color: 'var(--cWhite)', background: 'var(--cWorkspace)', opacity: 0.66 }  // selected
             : { color: 'var(--cWhite)', background: 'var(--cWorkspace)',
                 //marginTop: 'var(--s-2)',
@@ -74,8 +85,18 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                 marginBottom: 'var(--s-2)',
                 //borderRadius: 'var(--round)',
             };
+        let sAppTab : React.CSSProperties =
+            activeTab === EbTab.App
+            ? { color: 'var(--cWhite)', background: 'var(--cApp)', opacity: 0.66 }  // selected
+            : { color: 'var(--cWhite)', background: 'var(--cApp)',
+                //marginTop: 'var(--s-2)',
+                //paddingTop: 'var(--s-1)',
+                paddingBottom: 'var(--s-1)',
+                marginBottom: 'var(--s-2)',
+                //borderRadius: 'var(--round)',
+            };
         let sUserTab : React.CSSProperties =
-            mode === EbMode.User
+            activeTab === EbTab.User
             ? { color: 'var(--cWhite)', background: 'var(--cUser)', opacity: 0.66 }  // selected
             : { color: 'var(--cWhite)', background: 'var(--cUser)',
                 //marginTop: 'var(--s-2)',
@@ -93,42 +114,50 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         };
 
         // tab click actions
-        let onClickWorkspaceTab =
-            mode === EbMode.Workspace
-            ? (e: any) => this.setState({ mode: EbMode.Closed })
-            : (e: any) => this.setState({ mode: EbMode.Workspace });
-        let onClickUserTab =
-            mode === EbMode.User
-            ? (e: any) => this.setState({ mode: EbMode.Closed })
-            : (e: any) => this.setState({ mode: EbMode.User });
+        let onClickTab = (tab: EbTab) => {
+            if (this.state.activeTab === tab) {
+                this.setState({ activeTab: EbTab.AllClosed });
+            } else {
+                this.setState({ activeTab: tab });
+            }
+        }
 
         // which panel to show
         let panel : JSX.Element | null = null;
-        if (mode === EbMode.Workspace) {
+        if (activeTab === EbTab.Workspace) {
             panel = <EarthbarWorkspacePanel store={store} />;
-        } else if (mode === EbMode.User) {
+        } else if (activeTab === EbTab.App) {
+            panel = <EarthbarAppPanel
+                appNames={Object.keys(this.props.apps)}
+                activeApp={this.state.activeApp}
+                changeApp={this.changeApp.bind(this)}
+                />;
+        } else if (activeTab === EbTab.User) {
             panel = <EarthbarUserPanel store={store} />;
-        }
+        } 
 
         // panel style
         let sPanel : React.CSSProperties = {
             position: 'absolute',
             zIndex: 99,
             top: 0,
-            left: mode === EbMode.User ? 20 : 0,
-            right: mode === EbMode.Workspace ? 20 : 0,
+            left: 0, //mode === EbTab.User ? 20 : 0,
+            right: 0, //mode === EbTab.Workspace ? 20 : 0,
         };
 
         // style to hide children when a panel is open
         let sChildren : React.CSSProperties =
-            mode === EbMode.Closed
+            activeTab === EbTab.AllClosed
             ? { }
             : { opacity: 0.3, /*visibility: 'hidden'*/ };
 
+        // labels for tabs
         let workspaceLabel = 'Add workspace';
         if (store.currentWorkspace) {
             workspaceLabel = cutAtPeriod(store.currentWorkspace.workspaceAddress);
         }
+
+        let appLabel = this.state.activeApp;
 
         let userLabel = 'Log in';
         if (store.currentUser) {
@@ -140,7 +169,9 @@ export class Earthbar extends React.Component<EbProps, EbState> {
             canSync = kit.syncer.state.pubs.length >= 1 && kit.syncer.state.syncState !== 'syncing';
         }
 
-        let App = this.props.app;
+        // get appropriate app component
+        let App = this.props.apps[this.state.activeApp];
+
         let changeKeyForApp =
             //`store.onChange:${store.onChange.changeKey}__` +
             `storage.onWrite:${kit?.storage.onWrite.changeKey}__`;
@@ -149,8 +180,10 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         return (
             <div>
                 {/* tabs for opening panel, and sync button */}
-                <div className='flexRow'>
-                    <button className='flexItem earthbarTab' style={sWorkspaceTab} onClick={onClickWorkspaceTab}>
+                <div className='flexRow earthbarTabRow'>
+                    <button className='flexItem earthbarTab' style={sWorkspaceTab}
+                        onClick={() => onClickTab(EbTab.Workspace)}
+                        >
                         {workspaceLabel}
                     </button>
                     <button className='flexItem button'
@@ -160,8 +193,15 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                         >
                         Sync
                     </button>
+                    <button className='flexItem earthbarTab' style={sAppTab}
+                        onClick={() => onClickTab(EbTab.App)}
+                        >
+                        {appLabel}
+                    </button>
                     <div className='flexItem flexGrow1' style={{margin: 0}}/>
-                    <button className='flexItem earthbarTab' style={sUserTab} onClick={onClickUserTab}>
+                    <button className='flexItem earthbarTab' style={sUserTab}
+                        onClick={() => onClickTab(EbTab.User)}
+                        >
                         {userLabel}
                     </button>
                 </div>

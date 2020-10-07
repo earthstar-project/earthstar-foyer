@@ -2,7 +2,8 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
 import { Earthbar } from './earthbar';
-import { LobbyApp } from './lobbyApp';
+import { LobbyApp } from './apps/lobbyApp';
+import { HelloApp } from './apps/helloApp';
 
 //================================================================================
 // MAIN
@@ -11,9 +12,14 @@ import { LobbyApp } from './lobbyApp';
 // It's responsible for setting up Earthstar classes and rendering the "app".
 // The "app" in this case is LobbyApp.
 
+let apps = {
+    Lobby: LobbyApp,
+    Hello: HelloApp,
+}
+
 ReactDOM.render(
     <div className='pageColumn'>
-        <Earthbar app={LobbyApp}/>
+        <Earthbar apps={apps} />
     </div>,
     document.getElementById('react-slot')
 );
