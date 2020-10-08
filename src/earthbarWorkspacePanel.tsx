@@ -22,12 +22,12 @@ import {
 let sWorkspacePanel : React.CSSProperties = {
     padding: 'var(--s0)',
     // change colors
-    '--cPaper': 'var(--cWorkspace)',
-    '--cInk': 'var(--cWhite)',
+    '--cPaper': 'var(--cWorkspacePaper)',
+    '--cInk': 'var(--cWorkspaceInk)',
     // apply color variables
     background: 'var(--cPaper)',
     color: 'var(--cInk)',
-    borderTopLeftRadius: 0,
+    borderTopLeftRadius: 'var(--round)',
     borderTopRightRadius: 'var(--round)',
     borderBottomLeftRadius: 'var(--round)',
     borderBottomRightRadius: 'var(--round)',

@@ -28,16 +28,17 @@ import {
 let sAppPanel : React.CSSProperties = {
     padding: 'var(--s0)',
     // change colors
-    '--cPaper': 'var(--cApp)',
-    '--cInk': 'var(--cWhite)',
+    '--cPaper': 'var(--cAppPaper)',
+    '--cInk': 'var(--cAppInk)',
     // apply color variables
     background: 'var(--cPaper)',
     color: 'var(--cInk)',
     borderTopLeftRadius: 'var(--round)',
-    borderTopRightRadius: 'var(--round)',
+    borderTopRightRadius: 0,
     borderBottomLeftRadius: 'var(--round)',
     borderBottomRightRadius: 'var(--round)',
     boxShadow: '0px 13px 10px 0px rgba(0,0,0,0.3)',
+    marginLeft: '40%',
 } as React.CSSProperties;
 
 //================================================================================
@@ -53,7 +54,6 @@ export class EarthbarAppPanel extends React.Component<EbPanelProps, any> {
         logEarthbarPanel('🎨 render app panel');
         return <div className='stack' style={sAppPanel}>
             <div className='faint'>Apps</div>
-            <hr className='faint' />
             {this.props.appNames.map(appName => {
                 logEarthbarPanel(appName, this.props.activeApp);
                 let style : React.CSSProperties = appName === this.props.activeApp

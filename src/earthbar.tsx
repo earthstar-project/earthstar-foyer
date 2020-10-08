@@ -75,10 +75,11 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         logEarthbar(`🎨 render.  tab = ${activeTab}`);
 
         // tab styles
+        let selectedTabOpacity = 1;  // 0.66
         let sWorkspaceTab : React.CSSProperties =
             activeTab === EbTab.Workspace
-            ? { color: 'var(--cWhite)', background: 'var(--cWorkspace)', opacity: 0.66 }  // selected
-            : { color: 'var(--cWhite)', background: 'var(--cWorkspace)',
+            ? { color: 'var(--cWorkspaceInk)', background: 'var(--cWorkspacePaper)', opacity: selectedTabOpacity }  // selected
+            : { color: 'var(--cWorkspaceInk)', background: 'var(--cWorkspacePaper)',
                 //marginTop: 'var(--s-2)',
                 //paddingTop: 'var(--s-1)',
                 paddingBottom: 'var(--s-1)',
@@ -87,8 +88,8 @@ export class Earthbar extends React.Component<EbProps, EbState> {
             };
         let sAppTab : React.CSSProperties =
             activeTab === EbTab.App
-            ? { color: 'var(--cWhite)', background: 'var(--cApp)', opacity: 0.66 }  // selected
-            : { color: 'var(--cWhite)', background: 'var(--cApp)',
+            ? { color: 'var(--cAppInk)', background: 'var(--cAppPaper)', opacity: selectedTabOpacity }  // selected
+            : { color: 'var(--cAppInk)', background: 'var(--cAppPaper)',
                 //marginTop: 'var(--s-2)',
                 //paddingTop: 'var(--s-1)',
                 paddingBottom: 'var(--s-1)',
@@ -97,8 +98,8 @@ export class Earthbar extends React.Component<EbProps, EbState> {
             };
         let sUserTab : React.CSSProperties =
             activeTab === EbTab.User
-            ? { color: 'var(--cWhite)', background: 'var(--cUser)', opacity: 0.66 }  // selected
-            : { color: 'var(--cWhite)', background: 'var(--cUser)',
+            ? { color: 'var(--cUserInk)', background: 'var(--cUserPaper)', opacity: selectedTabOpacity }  // selected
+            : { color: 'var(--cUserInk)', background: 'var(--cUserPaper)',
                 //marginTop: 'var(--s-2)',
                 //paddingTop: 'var(--s-1)',
                 paddingBottom: 'var(--s-1)',
@@ -106,11 +107,11 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                 //borderRadius: 'var(--round)',
             };
         let sSyncButton : any = {
+            background: 'var(--cWorkspaceInk)',
+            color: 'var(--cWorkspacePaper)',
+            //border: '2px solid var(--cWorkspacePaper)',
             marginTop: 'var(--s-2)',
             marginBottom: 'var(--s-2)',
-            // change colors
-            '--cInk': 'var(--cWhite)',
-            '--cPaper': 'var(--cWorkspace)',
         };
 
         // tab click actions
@@ -135,26 +136,6 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         } else if (activeTab === EbTab.User) {
             panel = <EarthbarUserPanel store={store} />;
         } 
-
-        // panel style
-        let sPanel : React.CSSProperties = {
-            position: 'absolute',
-            zIndex: 99,
-            top: 0,
-            left: 0, //mode === EbTab.User ? 20 : 0,
-            right: 0, //mode === EbTab.Workspace ? 20 : 0,
-        };
-
-        // wall behind a panel that hides the app
-        let sPanelBackdrop : React.CSSProperties = {
-            position: 'absolute',
-            zIndex: 98,
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            opacity: 0.7,
-        };
 
         // labels for tabs
         let workspaceLabel = 'Add workspace';
@@ -186,6 +167,11 @@ export class Earthbar extends React.Component<EbProps, EbState> {
             {/* tabs for opening panel, and sync button */}
             <div className='earthbarColors earthbarTabRow'>
                 <div className='flexRow centeredReadableWidth'>
+                    <button className='flexItem earthbarTab' style={sUserTab}
+                        onClick={() => onClickTab(EbTab.User)}
+                        >
+                        {userLabel}
+                    </button>
                     <button className='flexItem earthbarTab' style={sWorkspaceTab}
                         onClick={() => onClickTab(EbTab.Workspace)}
                         >
@@ -198,27 +184,24 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                         >
                         Sync
                     </button>
+                    <div className='flexItem flexGrow1' style={{margin: 0}}/>
                     <button className='flexItem earthbarTab' style={sAppTab}
                         onClick={() => onClickTab(EbTab.App)}
                         >
                         {appLabel}
                     </button>
-                    <div className='flexItem flexGrow1' style={{margin: 0}}/>
-                    <button className='flexItem earthbarTab' style={sUserTab}
-                        onClick={() => onClickTab(EbTab.User)}
-                        >
-                        {userLabel}
-                    </button>
                 </div>
             </div>
             {/* panel itself, and app */}
-            <div style={{position: 'relative', height: '100vh'}}>
-                <div style={sPanel} className='centeredReadableWidth'>
-                    {panel}
+            <div style={{position: 'relative', minHeight: '100vh'}}>
+                <div className='earthbarPanel'>
+                    <div className='centeredReadableWidth'>
+                        {panel}
+                    </div>
                 </div>
                 {activeTab === EbTab.AllClosed
                   ? null
-                  : <div className='earthbarColors' style={sPanelBackdrop}
+                  : <div className='earthbarPanelBackdrop earthbarColors'
                         onClick={() => onClickTab(EbTab.AllClosed)}
                         />
                 }

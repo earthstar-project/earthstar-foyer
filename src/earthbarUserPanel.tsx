@@ -28,13 +28,13 @@ import {
 let sUserPanel : React.CSSProperties = {
     padding: 'var(--s0)',
     // change colors
-    '--cPaper': 'var(--cUser)',
-    '--cInk': 'var(--cWhite)',
+    '--cPaper': 'var(--cUserPaper)',
+    '--cInk': 'var(--cUserInk)',
     // apply color variables
     background: 'var(--cPaper)',
     color: 'var(--cInk)',
-    borderTopLeftRadius: 'var(--round)',
-    borderTopRightRadius: 0,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 'var(--round)',
     borderBottomLeftRadius: 'var(--round)',
     borderBottomRightRadius: 'var(--round)',
     boxShadow: '0px 13px 10px 0px rgba(0,0,0,0.3)',
@@ -222,7 +222,7 @@ export class EarthbarUserPanel extends React.Component<EbPanelProps, EbUserPanel
         } else {
             // user is logged in
             return <div className='stack' style={sUserPanel}>
-                <div className='faint'>Display name in this workspace</div>
+                <div className='faint'>Your display name in this workspace</div>
                 <form className='indent flexRow' onSubmit={(e) => {e.preventDefault(); this.handleSaveDisplayName()}}>
                     <input type='text' className='flexGrow1 monospace'
                         value={this.state.displayNameInput}

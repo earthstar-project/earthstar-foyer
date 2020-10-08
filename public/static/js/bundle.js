@@ -68486,7 +68486,7 @@ class HelloApp extends React.PureComponent {
     }
     render() {
         log_1.logHelloApp('🎨 render.  changeKey:', this.props.changeKey);
-        return React.createElement("div", { style: { background: '#ddd', minHeight: '100vh' } },
+        return React.createElement("div", { style: { background: '#ccc', minHeight: '100vh' } },
             React.createElement("div", { className: 'stack centeredReadableWidth', style: { padding: 'var(--s0)' } },
                 React.createElement("h3", null, "Hello world"),
                 "This is an example app."));
@@ -68569,36 +68569,37 @@ class Earthbar extends React.Component {
         let activeTab = this.state.activeTab;
         log_1.logEarthbar(`🎨 render.  tab = ${activeTab}`);
         // tab styles
+        let selectedTabOpacity = 1; // 0.66
         let sWorkspaceTab = activeTab === EbTab.Workspace
-            ? { color: 'var(--cWhite)', background: 'var(--cWorkspace)', opacity: 0.66 } // selected
-            : { color: 'var(--cWhite)', background: 'var(--cWorkspace)',
+            ? { color: 'var(--cWorkspaceInk)', background: 'var(--cWorkspacePaper)', opacity: selectedTabOpacity } // selected
+            : { color: 'var(--cWorkspaceInk)', background: 'var(--cWorkspacePaper)',
                 //marginTop: 'var(--s-2)',
                 //paddingTop: 'var(--s-1)',
                 paddingBottom: 'var(--s-1)',
                 marginBottom: 'var(--s-2)',
             };
         let sAppTab = activeTab === EbTab.App
-            ? { color: 'var(--cWhite)', background: 'var(--cApp)', opacity: 0.66 } // selected
-            : { color: 'var(--cWhite)', background: 'var(--cApp)',
+            ? { color: 'var(--cAppInk)', background: 'var(--cAppPaper)', opacity: selectedTabOpacity } // selected
+            : { color: 'var(--cAppInk)', background: 'var(--cAppPaper)',
                 //marginTop: 'var(--s-2)',
                 //paddingTop: 'var(--s-1)',
                 paddingBottom: 'var(--s-1)',
                 marginBottom: 'var(--s-2)',
             };
         let sUserTab = activeTab === EbTab.User
-            ? { color: 'var(--cWhite)', background: 'var(--cUser)', opacity: 0.66 } // selected
-            : { color: 'var(--cWhite)', background: 'var(--cUser)',
+            ? { color: 'var(--cUserInk)', background: 'var(--cUserPaper)', opacity: selectedTabOpacity } // selected
+            : { color: 'var(--cUserInk)', background: 'var(--cUserPaper)',
                 //marginTop: 'var(--s-2)',
                 //paddingTop: 'var(--s-1)',
                 paddingBottom: 'var(--s-1)',
                 marginBottom: 'var(--s-2)',
             };
         let sSyncButton = {
+            background: 'var(--cWorkspaceInk)',
+            color: 'var(--cWorkspacePaper)',
+            //border: '2px solid var(--cWorkspacePaper)',
             marginTop: 'var(--s-2)',
             marginBottom: 'var(--s-2)',
-            // change colors
-            '--cInk': 'var(--cWhite)',
-            '--cPaper': 'var(--cWorkspace)',
         };
         // tab click actions
         let onClickTab = (tab) => {
@@ -68620,24 +68621,6 @@ class Earthbar extends React.Component {
         else if (activeTab === EbTab.User) {
             panel = React.createElement(earthbarUserPanel_1.EarthbarUserPanel, { store: store });
         }
-        // panel style
-        let sPanel = {
-            position: 'absolute',
-            zIndex: 99,
-            top: 0,
-            left: 0,
-            right: 0,
-        };
-        // wall behind a panel that hides the app
-        let sPanelBackdrop = {
-            position: 'absolute',
-            zIndex: 98,
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            opacity: 0.7,
-        };
         // labels for tabs
         let workspaceLabel = 'Add workspace';
         if (store.currentWorkspace) {
@@ -68661,16 +68644,17 @@ class Earthbar extends React.Component {
         return React.createElement(React.Fragment, null,
             React.createElement("div", { className: 'earthbarColors earthbarTabRow' },
                 React.createElement("div", { className: 'flexRow centeredReadableWidth' },
+                    React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: () => onClickTab(EbTab.User) }, userLabel),
                     React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: () => onClickTab(EbTab.Workspace) }, workspaceLabel),
                     React.createElement("button", { className: 'flexItem button', style: sSyncButton, disabled: !canSync, onClick: () => { var _a; return (_a = store.kit) === null || _a === void 0 ? void 0 : _a.syncer.sync(); } }, "Sync"),
-                    React.createElement("button", { className: 'flexItem earthbarTab', style: sAppTab, onClick: () => onClickTab(EbTab.App) }, appLabel),
                     React.createElement("div", { className: 'flexItem flexGrow1', style: { margin: 0 } }),
-                    React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: () => onClickTab(EbTab.User) }, userLabel))),
-            React.createElement("div", { style: { position: 'relative', height: '100vh' } },
-                React.createElement("div", { style: sPanel, className: 'centeredReadableWidth' }, panel),
+                    React.createElement("button", { className: 'flexItem earthbarTab', style: sAppTab, onClick: () => onClickTab(EbTab.App) }, appLabel))),
+            React.createElement("div", { style: { position: 'relative', minHeight: '100vh' } },
+                React.createElement("div", { className: 'earthbarPanel' },
+                    React.createElement("div", { className: 'centeredReadableWidth' }, panel)),
                 activeTab === EbTab.AllClosed
                     ? null
-                    : React.createElement("div", { className: 'earthbarColors', style: sPanelBackdrop, onClick: () => onClickTab(EbTab.AllClosed) }),
+                    : React.createElement("div", { className: 'earthbarPanelBackdrop earthbarColors', onClick: () => onClickTab(EbTab.AllClosed) }),
                 store.kit === null
                     ? null // don't render the app when there's no kit (no workspace)
                     // TODO: how should the app specify which changes it wants?  (storage, syncer)
@@ -68709,23 +68693,23 @@ const log_1 = require("./log");
 let sAppPanel = {
     padding: 'var(--s0)',
     // change colors
-    '--cPaper': 'var(--cApp)',
-    '--cInk': 'var(--cWhite)',
+    '--cPaper': 'var(--cAppPaper)',
+    '--cInk': 'var(--cAppInk)',
     // apply color variables
     background: 'var(--cPaper)',
     color: 'var(--cInk)',
     borderTopLeftRadius: 'var(--round)',
-    borderTopRightRadius: 'var(--round)',
+    borderTopRightRadius: 0,
     borderBottomLeftRadius: 'var(--round)',
     borderBottomRightRadius: 'var(--round)',
     boxShadow: '0px 13px 10px 0px rgba(0,0,0,0.3)',
+    marginLeft: '40%',
 };
 class EarthbarAppPanel extends React.Component {
     render() {
         log_1.logEarthbarPanel('🎨 render app panel');
         return React.createElement("div", { className: 'stack', style: sAppPanel },
             React.createElement("div", { className: 'faint' }, "Apps"),
-            React.createElement("hr", { className: 'faint' }),
             this.props.appNames.map(appName => {
                 log_1.logEarthbarPanel(appName, this.props.activeApp);
                 let style = appName === this.props.activeApp
@@ -69110,13 +69094,13 @@ const log_1 = require("./log");
 let sUserPanel = {
     padding: 'var(--s0)',
     // change colors
-    '--cPaper': 'var(--cUser)',
-    '--cInk': 'var(--cWhite)',
+    '--cPaper': 'var(--cUserPaper)',
+    '--cInk': 'var(--cUserInk)',
     // apply color variables
     background: 'var(--cPaper)',
     color: 'var(--cInk)',
-    borderTopLeftRadius: 'var(--round)',
-    borderTopRightRadius: 0,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 'var(--round)',
     borderBottomLeftRadius: 'var(--round)',
     borderBottomRightRadius: 'var(--round)',
     boxShadow: '0px 13px 10px 0px rgba(0,0,0,0.3)',
@@ -69247,7 +69231,7 @@ class EarthbarUserPanel extends React.Component {
         else {
             // user is logged in
             return React.createElement("div", { className: 'stack', style: sUserPanel },
-                React.createElement("div", { className: 'faint' }, "Display name in this workspace"),
+                React.createElement("div", { className: 'faint' }, "Your display name in this workspace"),
                 React.createElement("form", { className: 'indent flexRow', onSubmit: (e) => { e.preventDefault(); this.handleSaveDisplayName(); } },
                     React.createElement("input", { type: 'text', className: 'flexGrow1 monospace', value: this.state.displayNameInput, placeholder: util_1.cutAtPeriod(store.currentUser.authorKeypair.address).slice(1), onChange: (e) => this.setState({ displayNameInput: e.target.value }) }),
                     React.createElement("button", { type: 'submit', className: 'button flexItem', style: { marginLeft: 'var(--s-1)' }, disabled: store.currentWorkspace === null }, "Set")),
@@ -69311,12 +69295,12 @@ const log_1 = require("./log");
 let sWorkspacePanel = {
     padding: 'var(--s0)',
     // change colors
-    '--cPaper': 'var(--cWorkspace)',
-    '--cInk': 'var(--cWhite)',
+    '--cPaper': 'var(--cWorkspacePaper)',
+    '--cInk': 'var(--cWorkspaceInk)',
     // apply color variables
     background: 'var(--cPaper)',
     color: 'var(--cInk)',
-    borderTopLeftRadius: 0,
+    borderTopLeftRadius: 'var(--round)',
     borderTopRightRadius: 'var(--round)',
     borderBottomLeftRadius: 'var(--round)',
     borderBottomRightRadius: 'var(--round)',

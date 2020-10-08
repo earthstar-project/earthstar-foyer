@@ -20,24 +20,40 @@
     --test-border-width: 0px;
 
     /* palette */
-    --cWorkspace: #760a9d;
-    --cUser: #29367a;
-    --cApp: #0a5323;
+
     --cWhite: #fff;
+    --cBlack: #222;
+
+    --cPurpleDark: #760a9d;
+    --cBlueDark: #29367a;
+    --cGreenDark: #0a5323;
+
+    --cPurpleLight: #e2b1f7;
+    --cBlueLight: #adbaff;
+    --cGreenLight: #95e8a6;
+
     /*--cGray: #dcded0;*/
     /*--cGray: #eee;*/
     /*--cGray: #b3b3ca;*/
     --cEggplant: #8e8999;
-    --cBlack: #222;
 
     /* color roles */
-    --cPaper: var(--cWhite);
+    --cPaper: var(--cWhite);  /* default colors */
     --cInk: var(--cBlack);
 
-    --cEarthbarPaper: var(--cBlack);
-    --cEarthbarInk: var(--cWhite);
+    --cEarthbarPaper: var(--cWhite);  /* the space behind the tabs */
+    --cEarthbarInk: var(--cBlack);
 
-    /* default colors */
+    --cWorkspacePaper: var(--cPurpleDark);  /* the tabs and panels */
+    --cWorkspaceInk: var(--cWhite);
+
+    --cAppPaper: var(--cGreenDark);
+    --cAppInk: var(--cWhite);
+
+    --cUserPaper: var(--cBlueDark);
+    --cUserInk: var(--cWhite);
+
+    /* apply default colors */
     background: var(--cPaper);
     color: var(--cInk);
 
@@ -47,7 +63,7 @@
 }
 
 .centeredReadableWidth {
-    max-width: 50ch;  /* 70ch */
+    max-width: 65ch;
     box-sizing: content-box;
     margin-left: auto;
     margin-right: auto;
@@ -215,4 +231,25 @@ textarea {
     white-space: nowrap;
     /*text-overflow: ellipsis;*/
     overflow: hidden;
+}
+
+.earthbarPanel {
+    position: absolute;
+    z-index: 99;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    margin: var(--s0);
+    margin-top: 0px;
+}
+
+/* wall behind a panel that hides the app */
+.earthbarPanelBackdrop {
+    position: absolute;
+    z-index: 98;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* opacity: 0.8; */
 }
