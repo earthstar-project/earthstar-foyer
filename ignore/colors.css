@@ -1,0 +1,62 @@
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    background: #aaa;
+    font-family: sans-serif;
+    line-height: 1.22;
+}
+body {
+    padding: 20px;
+    margin: 0px;
+}
+
+.rounded {
+    border-radius: 10px;
+    overflow: hidden;
+}
+.inlineBlock {
+    display: inline-block;
+}
+.group {
+    /*border-radius: 10px;*/
+    /*border: 10px solid black;*/
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: middle;
+}
+.columnBlock {
+    display: inline-block;
+    vertical-align: top;
+    margin-right: 20px;
+}
+.right {
+    text-align: right;
+}
+
+.indent {
+    padding-left: 20px;
+}
+
+.colorInputWrapper {
+    display: inline-block;
+    padding: -10px;
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+    vertical-align: middle;
+    border-radius: 10px;
+}
+input[type=color] {
+    background-color: transparent;
+    border: none;
+    position: relative;
+    top: -5px;
+    left: -5px;
+    width: 50px;
+    height: 50px;
+    padding: 0px;
+    vertical-align: middle;
+    overflow: hidden;
+}

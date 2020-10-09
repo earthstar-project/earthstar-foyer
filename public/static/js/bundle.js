@@ -68455,7 +68455,7 @@ class FoyerComposer extends React.PureComponent {
 }
 exports.FoyerComposer = FoyerComposer;
 
-},{"../log":275,"../util":276,"earthstar":100,"react":221}],268:[function(require,module,exports){
+},{"../log":275,"../util":277,"earthstar":100,"react":221}],268:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -68479,22 +68479,60 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HelloApp = void 0;
 const React = __importStar(require("react"));
+const react_1 = require("react");
 const log_1 = require("../log");
-class HelloApp extends React.PureComponent {
-    constructor(props) {
-        super(props);
-    }
-    render() {
-        log_1.logHelloApp('🎨 render.  changeKey:', this.props.changeKey);
-        return React.createElement("div", { style: { background: '#ccc', minHeight: '100vh' } },
-            React.createElement("div", { className: 'stack centeredReadableWidth', style: { padding: 'var(--s0)' } },
+const theme_1 = require("../theme");
+let basicPalette = {
+    gr6: "#fffce7",
+    gr0: "#220d1e",
+    ac3: "#29857e",
+};
+let fullPalette = theme_1.makeFullPalette(basicPalette);
+let lightTheme = theme_1.makeTheme(fullPalette);
+let darkTheme = theme_1.makeTheme(theme_1.invertPalette(fullPalette));
+let theme = lightTheme;
+let makeStyles = (theme) => {
+    let sPage = {
+        background: theme.page,
+        color: theme.text,
+    };
+    let sCard = {
+        background: theme.card,
+        color: theme.text,
+        padding: 'var(--s0)',
+        borderRadius: 'var(--slightlyRound)',
+        boxShadow: '5px 15px 20px -5px rgba(0,0,0,0.17)',
+    };
+    let sLoudButton = {
+        background: theme.loudButtonBg,
+        color: theme.loudButtonText,
+        borderRadius: 10,
+        padding: theme.loudButtonBorder === 'none' ? '8px 13px' : '10px 15px',
+        margin: '2px 5px',
+        fontWeight: 'bold',
+        display: 'inline-block',
+        border: theme.loudButtonBorder === 'none' ? 'none' : '2px solid ' + theme.loudButtonBorder,
+    };
+    return { sPage, sCard, sLoudButton };
+};
+exports.HelloApp = ({ changeKey, kit }) => {
+    let [darkMode, setDarkMode] = react_1.useState(false);
+    let theme = darkMode ? darkTheme : lightTheme;
+    let styles = makeStyles(theme);
+    log_1.logHelloApp('🎨 render.  changeKey:', changeKey);
+    return React.createElement("div", { style: Object.assign(Object.assign({}, styles.sPage), { padding: 'var(--s0)', minHeight: '100vh' }) },
+        React.createElement("div", { className: 'stack centeredReadableWidth' },
+            React.createElement("div", { style: styles.sCard },
                 React.createElement("h3", null, "Hello world"),
-                "This is an example app."));
-    }
-}
-exports.HelloApp = HelloApp;
+                React.createElement("p", null, "This is an example app.")),
+            React.createElement("div", { style: styles.sCard },
+                React.createElement("h3", null, "Themes"),
+                React.createElement("p", null, "You can change the color theme!"),
+                React.createElement("p", { className: 'right' },
+                    React.createElement("button", { type: "button", style: styles.sLoudButton, onClick: () => setDarkMode(!darkMode) }, "Toggle dark mode")))));
+};
 
-},{"../log":275,"react":221}],269:[function(require,module,exports){
+},{"../log":275,"../theme":276,"react":221}],269:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -68664,7 +68702,7 @@ class Earthbar extends React.Component {
 }
 exports.Earthbar = Earthbar;
 
-},{"./earthbarAppPanel":270,"./earthbarStore":271,"./earthbarUserPanel":272,"./earthbarWorkspacePanel":273,"./log":275,"./util":276,"react":221}],270:[function(require,module,exports){
+},{"./earthbarAppPanel":270,"./earthbarStore":271,"./earthbarUserPanel":272,"./earthbarWorkspacePanel":273,"./log":275,"./util":277,"react":221}],270:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69063,7 +69101,7 @@ class EarthbarStore {
 }
 exports.EarthbarStore = EarthbarStore;
 
-},{"./kit":274,"./log":275,"./util":276,"earthstar":100,"fast-equals":132}],272:[function(require,module,exports){
+},{"./kit":274,"./log":275,"./util":277,"earthstar":100,"fast-equals":132}],272:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69264,7 +69302,7 @@ class EarthbarUserPanel extends React.Component {
 }
 exports.EarthbarUserPanel = EarthbarUserPanel;
 
-},{"./log":275,"./util":276,"earthstar":100,"react":221}],273:[function(require,module,exports){
+},{"./log":275,"./util":277,"earthstar":100,"react":221}],273:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69433,7 +69471,7 @@ class EarthbarWorkspacePanel extends React.Component {
 }
 exports.EarthbarWorkspacePanel = EarthbarWorkspacePanel;
 
-},{"./log":275,"./util":276,"earthstar":100,"react":221}],274:[function(require,module,exports){
+},{"./log":275,"./util":277,"earthstar":100,"react":221}],274:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Kit = void 0;
@@ -69500,6 +69538,136 @@ exports.logFoyerApp = makeLogger(3, 'foyer app', 'color: black; background: oran
 exports.logHelloApp = makeLogger(3, 'hello app', 'color: black; background: yellow');
 
 },{}],276:[function(require,module,exports){
+"use strict";
+//================================================================================
+// TYPES
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.contrastRatio = exports.luminance = exports.cLerpStr = exports.cLerp = exports.cFromHexString = exports.cToHexString = exports.colorObjToHexObj = exports.makeTheme = exports.invertPalette = exports.makeFullPalette = void 0;
+exports.makeFullPalette = (p) => ({
+    gr6: p.gr6,
+    gr5: exports.cLerpStr(p.gr0, p.gr6, 0.79),
+    gr4: exports.cLerpStr(p.gr0, p.gr6, 0.60),
+    gr3: exports.cLerpStr(p.gr0, p.gr6, 0.44),
+    gr2: exports.cLerpStr(p.gr0, p.gr6, 0.30),
+    gr1: exports.cLerpStr(p.gr0, p.gr6, 0.16),
+    gr0: p.gr0,
+    ac4: exports.cLerpStr(p.ac3, p.gr6, 0.31),
+    ac3: p.ac3,
+    ac2: exports.cLerpStr(p.ac3, p.gr0, 0.31),
+});
+exports.invertPalette = (p) => ({
+    gr6: p.gr0,
+    gr5: p.gr1,
+    gr4: p.gr2,
+    gr3: p.gr3,
+    gr2: p.gr4,
+    gr1: p.gr5,
+    gr0: p.gr6,
+    ac4: p.ac2,
+    ac3: p.ac3,
+    ac2: p.ac4,
+});
+exports.makeTheme = (p) => ({
+    //                 0123456
+    card: p.gr6,
+    page: p.gr5,
+    link: p.ac3,
+    faintText: p.gr3,
+    text: p.gr0,
+    //                 -------
+    quietButtonBg: p.gr3,
+    quietButtonBorder: 'none',
+    quietButtonText: p.gr6,
+    //                 -------
+    loudButtonBg: p.ac2,
+    loudButtonBorder: 'none',
+    loudButtonText: p.gr6,
+});
+/*
+let theme2 = (p: FullPalette): Theme => ({
+    //                 0123456
+    card:                    p.gr6,
+    page:                   p.gr5,
+    link:                 p.ac3,
+    faintText:            p.gr3,
+    text:               p.gr1,
+    //                 -------
+    quietButtonBg:           p.gr6,
+    quietButtonBorder:      p.gr5,
+    quietButtonText:     p.gr2,
+    //                 -------
+    loudButtonBg:          p.ac4,
+    loudButtonBorder:  'none',
+    loudButtonText:    p.gr0,
+    //                 0123456
+});
+*/
+//================================================================================
+// HELPERS
+let range = (n) => [...Array(n).keys()];
+exports.colorObjToHexObj = (co) => {
+    let result = {};
+    for (let [k, v] of Object.entries(co)) {
+        result[k] = v === null ? 'none' : exports.cToHexString(v);
+    }
+    return result;
+};
+//================================================================================
+// STRINGS
+//let to255 = (n: number): number =>
+//    Math.round(n * 255);
+//
+//export let cToRgbString = (c: Color): string =>
+//    `rgb(${to255(c.r)}, ${to255(c.g)}, ${to255(c.b)})`;
+exports.cToHexString = (c) => {
+    let rh = Math.round(c.r * 255).toString(16).padStart(2, '0');
+    let gh = Math.round(c.g * 255).toString(16).padStart(2, '0');
+    let bh = Math.round(c.b * 255).toString(16).padStart(2, '0');
+    return '#' + rh + gh + bh;
+};
+exports.cFromHexString = (s) => {
+    if (s === 'none' || !s.startsWith('#') || s.length !== 7) {
+        return null;
+    }
+    return {
+        r: parseInt(s.slice(1, 3), 16) / 255,
+        g: parseInt(s.slice(3, 5), 16) / 255,
+        b: parseInt(s.slice(5, 7), 16) / 255,
+    };
+};
+//================================================================================
+// COLOR MATH
+let lerp = (a, b, t) => a + (b - a) * t;
+exports.cLerp = (c1, c2, t) => ({
+    r: lerp(c1.r, c2.r, t),
+    g: lerp(c1.g, c2.g, t),
+    b: lerp(c1.b, c2.b, t),
+});
+exports.cLerpStr = (c1s, c2s, t) => {
+    let c1 = exports.cFromHexString(c1s);
+    let c2 = exports.cFromHexString(c2s);
+    if (c1 && c2) {
+        return exports.cToHexString(exports.cLerp(c1, c2, t));
+    }
+    else {
+        return 'none';
+    }
+};
+exports.luminance = (c) => {
+    // https://www.w3.org/TR/WCAG/#dfn-relative-luminance
+    let r = c.r < 0.03928 ? c.r / 12.92 : Math.pow((c.r + 0.055) / 1.055, 2.4);
+    let g = c.g < 0.03928 ? c.g / 12.92 : Math.pow((c.g + 0.055) / 1.055, 2.4);
+    let b = c.b < 0.03928 ? c.b / 12.92 : Math.pow((c.b + 0.055) / 1.055, 2.4);
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+exports.contrastRatio = (c1, c2) => {
+    // https://www.w3.org/TR/WCAG/#dfn-contrast-ratio
+    let l1 = exports.luminance(c1);
+    let l2 = exports.luminance(c2);
+    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+};
+
+},{}],277:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ellipsifyAddress = exports.cutAtPeriod = exports.sortByField = exports.sortFnByField = void 0;
