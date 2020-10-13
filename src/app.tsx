@@ -4,6 +4,7 @@ import * as ReactDOM from 'react-dom';
 import { Earthbar } from './earthbar';
 import { FoyerApp } from './apps/foyerApp';
 import { HelloApp } from './apps/helloApp';
+import { DebugApp } from './apps/debugApp';
 
 //================================================================================
 // MAIN
@@ -15,6 +16,7 @@ import { HelloApp } from './apps/helloApp';
 let apps = {
     Foyer: FoyerApp,
     Hello: HelloApp,
+    Debug: DebugApp,
 }
 
 ReactDOM.render(

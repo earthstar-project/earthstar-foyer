@@ -192,7 +192,7 @@ textarea {
     padding-left: var(--s0);
     padding-right: var(--s0);
 }
-.button:disabled {
+button:disabled {
     opacity: 0.5;
 }
 

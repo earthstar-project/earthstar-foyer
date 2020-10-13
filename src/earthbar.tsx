@@ -68,6 +68,14 @@ export class Earthbar extends React.Component<EbProps, EbState> {
             activeApp: appName,
         });
     }
+    clickSync() {
+        let kit = this.state.store.kit;
+        if (kit === null) { return; }
+        logEarthbar('starting sync');
+        for (let syncer of Object.values(kit.syncers)) {
+            syncer.syncOnce();
+        }
+    }
     render() {
         let store = this.state.store;
         let kit = this.state.store.kit;
@@ -152,14 +160,20 @@ export class Earthbar extends React.Component<EbProps, EbState> {
 
         let canSync = false;
         if (kit !== null) {
-            canSync = kit.syncer.state.pubs.length >= 1 && kit.syncer.state.syncState !== 'syncing';
+            // TODO: syncers
+            for (let syncer of Object.values(kit.syncers)) {
+                if (syncer.state.isBulkSyncing === false) {
+                    canSync = true;
+                }
+            }
+            //canSync = kit.syncer.state.pubs.length >= 1 && kit.syncer.state.syncState !== 'syncing';
         }
 
         // get appropriate app component
         let App = this.props.apps[this.state.activeApp];
 
         let changeKeyForApp =
-            //`store.onChange:${store.onChange.changeKey}__` +
+            `store.onChange:${store.onChange.changeKey}__` +
             `storage.onWrite:${kit?.storage.onWrite.changeKey}__`;
             //`syncer.onChange:${kit?.syncer.onChange.changeKey}`;
 
@@ -180,7 +194,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                     <button className='flexItem button'
                         style={sSyncButton}
                         disabled={!canSync}
-                        onClick={() => store.kit?.syncer.sync()}
+                        onClick={() => this.clickSync()}
                         >
                         Sync
                     </button>

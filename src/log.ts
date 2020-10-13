@@ -13,3 +13,4 @@ export let logEarthbar      = makeLogger(2, 'earthbar view', 'color: black; back
 export let logEarthbarPanel = makeLogger(3, 'earthbar panel', 'color: black; background: #08f');
 export let logFoyerApp      = makeLogger(3, 'foyer app', 'color: black; background: orange');
 export let logHelloApp      = makeLogger(3, 'hello app', 'color: black; background: yellow');
+export let logDebugApp      = makeLogger(3, 'debug app', 'color: black; background: #af8');

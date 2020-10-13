@@ -12,6 +12,8 @@ import {
     isErr,
     ValidationError,
     WriteEvent,
+    SyncerState,
+    OnePubOneWorkspaceSyncer,
 } from 'earthstar';
 
 import {
@@ -41,6 +43,7 @@ export type EarthbarEvent = {
 }
 export type SyncEvent = {
     kind: 'SYNC_EVENT',
+    state: SyncerState,
 }
 export type AnyEarthbarEvent =
     SyncEvent |
@@ -58,7 +61,7 @@ export class EarthbarStore {
 
     // non-JSON stuff
     kit: Kit | null = null;
-    unsubSyncer: Thunk | null = null;
+    unsubSyncers: Record<string, Thunk> = {};
     unsubStorage: Thunk | null = null;
 
     // emit change events when we need to re-render the earthbar:
@@ -157,14 +160,18 @@ export class EarthbarStore {
         logEarthbarStore('rebuilding kit');
 
         // unsub from previous kit
-        if (this.unsubSyncer) { this.unsubSyncer(); }
-        this.unsubSyncer = null;
+        Object.values(this.unsubSyncers).map(unsub => unsub());
+        this.unsubSyncers = {};
+
         if (this.unsubStorage) { this.unsubStorage(); }
         this.unsubStorage = null;
 
         // close previous storage
         if (this.kit !== null) {
             this.kit.storage.close();
+            for (let syncer of Object.values(this.kit.syncers)) {
+                syncer.close();
+            }
         }
 
         // build new kit
@@ -182,12 +189,16 @@ export class EarthbarStore {
             if (this.currentUser !== null) {
                 this.currentUser.displayName = this.__readDisplayNameFromIStorage();
             }
+
             // subscribe to kit events
-            this.unsubSyncer = this.kit.syncer.onChange.subscribe(() => {
-                logEarthbarStore('>>>> SYNC_EVENT');
-                // pass events along to subscribers of the earthbarStore
-                this.onChange.send({ kind: 'SYNC_EVENT' });
-            });
+            this.unsubSyncers = {};
+            for (let syncer of Object.values(this.kit.syncers)) {
+                this.unsubSyncers[syncer.domain] = syncer.onStateChange.subscribe((state: SyncerState) => {
+                    logEarthbarStore('>>>> SYNC_EVENT');
+                    // pass events along to subscribers of the earthbarStore
+                    this.onChange.send({ kind: 'SYNC_EVENT', state: state });
+                });
+            }
             this.unsubStorage = this.kit.storage.onWrite.subscribe((e : WriteEvent) => {
                 logEarthbarStore('>>>> ' + e.kind);
                 // check if we need to refresh currentUser.displayName
@@ -288,9 +299,23 @@ export class EarthbarStore {
             // pub already exists
             return;
         }
+
         this.currentWorkspace.pubs.push(pub);
         //this.currentWorkspace.pubs.sort();
-        this.kit?.syncer.addPub(pub);
+
+        if (this.kit) {
+            if (this.kit.syncers[pub] === undefined) {
+                logEarthbarStore('making new syncer for ' + pub);
+                let syncer = new OnePubOneWorkspaceSyncer(this.kit.storage, pub);
+                this.kit.syncers[syncer.domain] = syncer;
+                this.unsubSyncers[syncer.domain] = syncer.onStateChange.subscribe((state: SyncerState) => {
+                    logEarthbarStore('>>>> SYNC_EVENT');
+                    // pass events along to subscribers of the earthbarStore
+                    this.onChange.send({ kind: 'SYNC_EVENT', state: state });
+                });
+            }
+        }
+
         this._bump();
         this._saveToLocalStorage();
     }
@@ -302,7 +327,16 @@ export class EarthbarStore {
             return;
         }
         this.currentWorkspace.pubs = this.currentWorkspace.pubs.filter(p => p !== pub);
-        this.kit?.syncer.removePub(pub);
+
+        // unsub
+        if (this.kit) {
+            let syncer = this.kit.syncers[pub]
+            if (syncer !== undefined) {
+                syncer.close();
+                delete this.kit.syncers[pub];
+            }
+        }
+
         this._bump();
         this._saveToLocalStorage();
     }

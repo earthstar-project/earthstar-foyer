@@ -4,6 +4,7 @@ import {
     ValidatorEs4,
     isErr,
     notErr,
+    OnePubOneWorkspaceSyncer,
 } from 'earthstar';
 
 import {
@@ -135,26 +136,24 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
                             but instead let's get it from the Kit we built, from the Syncer,
                             because there we can also get current syncing status.
                         */}
-                        {(store.kit === null ? [] : store.kit.syncer.state.pubs)
-                            .map(pub => {
-                                let icon = '';
-                                if (pub.syncState === 'idle'   ) { icon = '📡'; }
-                                if (pub.syncState === 'syncing') { icon = '⏳'; }
-                                if (pub.syncState === 'success') { icon = '✅'; }
-                                if (pub.syncState === 'failure') { icon = '❗️'; }
-                                return <div key={pub.domain} className='flexRow selectable'>
+                        {store.kit === null ? [] : Object.entries(store.kit.syncers)
+                            .map(pair => {
+                                let [domain, syncer] = pair;
+                                let icon = '📡';
+                                if (syncer.state.isBulkSyncing) { icon = '⏳'; }
+                                return <div key={domain} className='flexRow selectable'>
                                     <div className='flexItem flexItemVerticalCenter unselectable unclickable'>
                                         {icon}
                                     </div>
                                     <div className='flexItem flexGrow1 wrappyText'>
-                                        <a href={pub.domain} target='_blank'
+                                        <a href={domain} target='_blank'
                                             style={{color: 'var(--cText)'}}
                                             >
-                                            {pub.domain}
+                                            {domain}
                                         </a>
                                     </div>
                                     <button className='flexItem linkButton unselectable'
-                                        onClick={() => store.removePub(pub.domain)}
+                                        onClick={() => store.removePub(domain)}
                                         >
                                         &#x2715;
                                     </button>
@@ -174,7 +173,7 @@ export class EarthbarWorkspacePanel extends React.Component<EbPanelProps, EbWork
                                 Add
                             </button>
                         </form>
-                        {(store.kit === null || store.kit.syncer.state.pubs.length === 0)
+                        {store.kit === null || Object.keys(store.kit.syncers).length === 0
                           ? <div className='indent faint'>
                                 Add pub server(s) if you want to sync with other people.
                                 Otherwise your data will only be saved in this browser.

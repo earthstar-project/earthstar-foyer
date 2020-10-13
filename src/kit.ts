@@ -8,6 +8,7 @@ import {
     Syncer,
     WorkspaceAddress,
     StorageMemory,
+    OnePubOneWorkspaceSyncer,
 } from 'earthstar';
 
 import {
@@ -21,20 +22,21 @@ export class Kit {
     storage: IStorage;
     workspaceAddress: WorkspaceAddress;
     authorKeypair: AuthorKeypair | null;
-    syncer: Syncer;
     layerAbout: LayerAbout;
     layerWiki: LayerWiki;
+    syncers: Record<string, OnePubOneWorkspaceSyncer>;
     constructor(storage: IStorage, authorKeypair: AuthorKeypair | null, pubs: string[]) {
         this.storage = storage;
         this.workspaceAddress = storage.workspace;
         this.authorKeypair = authorKeypair;
-        this.syncer = new Syncer(storage);
+
+        this.syncers = {}
         for (let pub of pubs) {
-            this.syncer.addPub(pub);
+            this.syncers[pub] = new OnePubOneWorkspaceSyncer(this.storage, pub);
         }
+
         this.layerAbout = new LayerAbout(storage);
         this.layerWiki = new LayerWiki(storage);
-
 
         // HACK to persist the memory storage to localStorage
         logKit('loading workspace data from localStorage...');
