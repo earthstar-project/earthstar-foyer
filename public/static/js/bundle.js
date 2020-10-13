@@ -19027,7 +19027,19 @@ class StorageMemory {
         if (validator === undefined) {
             return new types_1.ValidationError(`set: unrecognized format ${docToSet.format}`);
         }
-        docToSet.timestamp = docToSet.timestamp || 0;
+        let shouldBumpTimestamp = false;
+        if (docToSet.timestamp === 0 || docToSet.timestamp === undefined) {
+            shouldBumpTimestamp = true;
+            docToSet.timestamp = now;
+        }
+        else {
+            // A manual timestamp was provided.  Don't bump it.
+            // Make sure the timestamp (and deleteAfter timestamp) is in the valid range
+            let err = validator._checkTimestampIsOk(docToSet.timestamp, docToSet.deleteAfter || null, now);
+            if (types_1.isErr(err)) {
+                return err;
+            }
+        }
         let doc = {
             format: docToSet.format,
             workspace: this.workspace,
@@ -19035,7 +19047,7 @@ class StorageMemory {
             contentHash: crypto_1.sha256base32(docToSet.content),
             content: docToSet.content,
             author: keypair.address,
-            timestamp: docToSet.timestamp || now,
+            timestamp: docToSet.timestamp,
             deleteAfter: docToSet.deleteAfter || null,
             signature: '',
         };
@@ -19043,8 +19055,18 @@ class StorageMemory {
         // make sure our timestamp is greater
         // even if this puts us slightly into the future.
         // (We know about the existing doc so let's assume we want to supercede it.)
-        let existingDocTimestamp = ((_a = this.getDocument(doc.path, now)) === null || _a === void 0 ? void 0 : _a.timestamp) || 0;
-        doc.timestamp = Math.max(doc.timestamp, existingDocTimestamp + 1);
+        // We only do this when the user did not supply a specific timestamp.
+        if (shouldBumpTimestamp) {
+            // If it's an ephemeral document, remember the length of time the user wanted it to live,
+            // so we can adjust the expiration timestamp too
+            let lifespan = doc.deleteAfter === null ? null : (doc.deleteAfter - doc.timestamp);
+            let existingDocTimestamp = ((_a = this.getDocument(doc.path, now)) === null || _a === void 0 ? void 0 : _a.timestamp) || 0;
+            doc.timestamp = Math.max(doc.timestamp, existingDocTimestamp + 1);
+            if (lifespan !== null) {
+                // Make the doc live the same duration it was originally supposed to live
+                doc.deleteAfter = doc.timestamp + lifespan;
+            }
+        }
         let signedDoc = validator.signDocument(keypair, doc);
         if (types_1.isErr(signedDoc)) {
             return signedDoc;
