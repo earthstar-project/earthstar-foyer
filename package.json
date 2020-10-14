@@ -35,7 +35,7 @@
     "uglifyify": "^5.0.2"
   },
   "dependencies": {
-    "earthstar": "^5.5.0",
+    "earthstar": "^5.6.0",
     "express": "^4.17.1",
     "fast-equals": "^2.0.0",
     "lodash.debounce": "^4.0.8",
