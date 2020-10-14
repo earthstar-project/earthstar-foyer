@@ -76,6 +76,32 @@ export class Earthbar extends React.Component<EbProps, EbState> {
             syncer.syncOnce();
         }
     }
+    isLive() {
+        let kit = this.state.store.kit;
+        if (kit === null) { return; }
+        let live = false;
+        for (let syncer of Object.values(kit.syncers)) {
+            if (syncer.state.isPullStreaming || syncer.state.isPushStreaming) {
+                live = true;
+            }
+        }
+        return live;
+    }
+    toggleLive() {
+        let kit = this.state.store.kit;
+        if (kit === null) { return; }
+        logEarthbar('toggling live sync')
+        let isLive = this.isLive();
+        for (let syncer of Object.values(kit.syncers)) {
+            if (isLive) {
+                syncer.stopPullStream();
+                syncer.stopPushStream();
+            } else {
+                syncer.startPullStream();
+                syncer.startPushStream();
+            }
+        }
+    }
     render() {
         let store = this.state.store;
         let kit = this.state.store.kit;
@@ -117,7 +143,14 @@ export class Earthbar extends React.Component<EbProps, EbState> {
         let sSyncButton : any = {
             background: 'var(--cWorkspaceInk)',
             color: 'var(--cWorkspacePaper)',
-            //border: '2px solid var(--cWorkspacePaper)',
+            border: '2px solid var(--cWorkspacePaper)',
+            marginTop: 'var(--s-2)',
+            marginBottom: 'var(--s-2)',
+        };
+        let sLiveButton : any = {
+            background: 'var(--cWorkspaceInk)',
+            color: 'var(--cWorkspacePaper)',
+            border: '2px solid var(--cWorkspacePaper)',
             marginTop: 'var(--s-2)',
             marginBottom: 'var(--s-2)',
         };
@@ -197,6 +230,12 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                         onClick={() => this.clickSync()}
                         >
                         Sync
+                    </button>
+                    <button className='flexItem button'
+                        style={sLiveButton}
+                        onClick={() => this.toggleLive()}
+                        >
+                        {this.isLive() ? '✅' : '🔲'} Live
                     </button>
                     <div className='flexItem flexGrow1' style={{margin: 0}}/>
                     <button className='flexItem earthbarTab' style={sAppTab}

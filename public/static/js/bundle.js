@@ -60412,6 +60412,37 @@ class Earthbar extends React.Component {
             syncer.syncOnce();
         }
     }
+    isLive() {
+        let kit = this.state.store.kit;
+        if (kit === null) {
+            return;
+        }
+        let live = false;
+        for (let syncer of Object.values(kit.syncers)) {
+            if (syncer.state.isPullStreaming || syncer.state.isPushStreaming) {
+                live = true;
+            }
+        }
+        return live;
+    }
+    toggleLive() {
+        let kit = this.state.store.kit;
+        if (kit === null) {
+            return;
+        }
+        log_1.logEarthbar('toggling live sync');
+        let isLive = this.isLive();
+        for (let syncer of Object.values(kit.syncers)) {
+            if (isLive) {
+                syncer.stopPullStream();
+                syncer.stopPushStream();
+            }
+            else {
+                syncer.startPullStream();
+                syncer.startPushStream();
+            }
+        }
+    }
     render() {
         let store = this.state.store;
         let kit = this.state.store.kit;
@@ -60446,7 +60477,14 @@ class Earthbar extends React.Component {
         let sSyncButton = {
             background: 'var(--cWorkspaceInk)',
             color: 'var(--cWorkspacePaper)',
-            //border: '2px solid var(--cWorkspacePaper)',
+            border: '2px solid var(--cWorkspacePaper)',
+            marginTop: 'var(--s-2)',
+            marginBottom: 'var(--s-2)',
+        };
+        let sLiveButton = {
+            background: 'var(--cWorkspaceInk)',
+            color: 'var(--cWorkspacePaper)',
+            border: '2px solid var(--cWorkspacePaper)',
             marginTop: 'var(--s-2)',
             marginBottom: 'var(--s-2)',
         };
@@ -60501,6 +60539,9 @@ class Earthbar extends React.Component {
                     React.createElement("button", { className: 'flexItem earthbarTab', style: sUserTab, onClick: () => onClickTab(EbTab.User) }, userLabel),
                     React.createElement("button", { className: 'flexItem earthbarTab', style: sWorkspaceTab, onClick: () => onClickTab(EbTab.Workspace) }, workspaceLabel),
                     React.createElement("button", { className: 'flexItem button', style: sSyncButton, disabled: !canSync, onClick: () => this.clickSync() }, "Sync"),
+                    React.createElement("button", { className: 'flexItem button', style: sLiveButton, onClick: () => this.toggleLive() },
+                        this.isLive() ? '✅' : '🔲',
+                        " Live"),
                     React.createElement("div", { className: 'flexItem flexGrow1', style: { margin: 0 } }),
                     React.createElement("button", { className: 'flexItem earthbarTab', style: sAppTab, onClick: () => onClickTab(EbTab.App) }, appLabel))),
             React.createElement("div", { style: { position: 'relative', minHeight: '100vh' } },
