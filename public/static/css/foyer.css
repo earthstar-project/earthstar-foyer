@@ -17,7 +17,6 @@
     --s5: calc(var(--s4) * var(--ratio));
     --round: var(--s0);
     --slightlyRound: var(--s-2);
-    --test-border-width: 0px;
 
     /* palette */
 
@@ -79,7 +78,6 @@
 /* === LAYOUT: FLEX ROW ===================================================== */
 
 .flexRow {
-    border: var(--test-border-width) dashed #880;
     display: flex;
 }
 .flexRowWrap {
@@ -91,7 +89,6 @@
 }
 .flexItem {
     margin-left: var(--s-1);
-    border: var(--test-border-width) solid #880;
     display: block;
 }
 .flexItemVerticalCenter { align-self: center; }
@@ -231,6 +228,7 @@ button:disabled {
     white-space: nowrap;
     /*text-overflow: ellipsis;*/
     overflow: hidden;
+    border: none;
 }
 
 .earthbarPanel {

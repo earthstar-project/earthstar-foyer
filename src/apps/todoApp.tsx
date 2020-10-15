@@ -118,9 +118,10 @@ test(TodoFieldName.isDone);
 //================================================================================
 
 let { lightTheme, darkTheme } = makeLightAndDarkThemes({
-    gr6: '#fffce7',
-    gr0: '#220d1e',
-    ac3: '#29857e',
+    // white on dark green with frog colored buttons
+    gr6: '#ffffff',
+    gr0: '#0c2122',
+    ac3: '#2c960c',
 });
 
 export interface TodoAppProps {

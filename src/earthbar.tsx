@@ -38,6 +38,12 @@ export interface EbState {
     activeApp: string,
 }
 
+enum SyncSwitchState {
+    Off = 'OFF',
+    Bulk = 'BULK',
+    Live = 'LIVE',
+}
+
 export class Earthbar extends React.Component<EbProps, EbState> {
     unsubFromStore: Thunk | null = null;
     constructor(props: EbProps) {
@@ -67,6 +73,35 @@ export class Earthbar extends React.Component<EbProps, EbState> {
             activeTab: EbTab.AllClosed,
             activeApp: appName,
         });
+    }
+    getSyncSwitch(): SyncSwitchState {
+        let kit = this.state.store.kit;
+        if (kit === null) { return SyncSwitchState.Off; }
+        let live = false;
+        let bulk = false;
+        for (let syncer of Object.values(kit.syncers)) {
+            if (syncer.state.isPullStreaming || syncer.state.isPushStreaming) {
+                live = true;
+            }
+            if (syncer.state.isBulkSyncing) { bulk = true; }
+        }
+        if (bulk) { return SyncSwitchState.Bulk; }  // bulk wins, even if live is also happening
+        if (live) { return SyncSwitchState.Live; }
+        return SyncSwitchState.Off;
+    }
+    setSyncSwitch(on: boolean) {
+        let kit = this.state.store.kit;
+        if (kit === null) { return; }
+        logEarthbar('setting sync switch', on)
+        for (let syncer of Object.values(kit.syncers)) {
+            if (on) {
+                syncer.syncOnceAndContinueLive();
+            } else {
+                syncer.stopPullStream();
+                syncer.stopPushStream();
+                // can't cancel a bulk sync, just have to wait for it to finish
+            }
+        }
     }
     clickSync() {
         let kit = this.state.store.kit;
@@ -140,6 +175,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                 marginBottom: 'var(--s-2)',
                 //borderRadius: 'var(--round)',
             };
+        /*
         let sSyncButton : any = {
             background: 'var(--cWorkspaceInk)',
             color: 'var(--cWorkspacePaper)',
@@ -154,6 +190,24 @@ export class Earthbar extends React.Component<EbProps, EbState> {
             marginTop: 'var(--s-2)',
             marginBottom: 'var(--s-2)',
         };
+        */
+        let syncSwitchState = this.getSyncSwitch();
+        let syncSwitchText = {
+            [SyncSwitchState.Off]: 'Sync: off',
+            [SyncSwitchState.Bulk]: 'Syncing...',
+            [SyncSwitchState.Live]: 'Sync: live',
+        }[syncSwitchState];
+        let sSyncSwitch : React.CSSProperties = {
+            background: 'var(--cWorkspaceInk)',
+            color: 'var(--cWorkspacePaper)',
+            border: '2px solid var(--cWorkspacePaper)',
+            paddingLeft: 'var(--s-2)',
+            paddingRight: 'var(--s-2)',
+            marginTop: 'var(--s-2)',
+            marginBottom: 'var(--s-2)',
+            width: '11ch',  // keep it from changing size when the label changes
+            minWidth: '11ch',
+        }
 
         // tab click actions
         let onClickTab = (tab: EbTab) => {
@@ -191,6 +245,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
             userLabel = cutAtPeriod(store.currentUser.authorKeypair.address);
         }
 
+        /*
         let canSync = false;
         if (kit !== null) {
             // TODO: syncers
@@ -201,6 +256,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
             }
             //canSync = kit.syncer.state.pubs.length >= 1 && kit.syncer.state.syncState !== 'syncing';
         }
+        */
 
         // get appropriate app component
         let App = this.props.apps[this.state.activeApp];
@@ -224,6 +280,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                         >
                         {workspaceLabel}
                     </button>
+                    {/*
                     <button className='flexItem button'
                         style={sSyncButton}
                         disabled={!canSync}
@@ -236,6 +293,14 @@ export class Earthbar extends React.Component<EbProps, EbState> {
                         onClick={() => this.toggleLive()}
                         >
                         {this.isLive() ? '✅' : '🔲'} Live
+                    </button>
+                    */}
+                    <button className='flexItem button'
+                        style={sSyncSwitch}
+                        disabled={syncSwitchState === SyncSwitchState.Bulk}
+                        onClick={() => this.setSyncSwitch(syncSwitchState === SyncSwitchState.Off)}
+                        >
+                        {syncSwitchText}
                     </button>
                     <div className='flexItem flexGrow1' style={{margin: 0}}/>
                     <button className='flexItem earthbarTab' style={sAppTab}

@@ -14,12 +14,13 @@ import { TodoApp } from './apps/todoApp';
 // It's responsible for setting up Earthstar classes and rendering the "app".
 // The "app" in this case is LobbyApp.
 
+// DisplayText: Component
 // first app listed here is the default
 let apps = {
-    Todo: TodoApp,
-    Foyer: FoyerApp,
-    Debug: DebugApp,
-    Hello: HelloApp,
+    "Todos": TodoApp,
+    "Foyer": FoyerApp,
+    "Debug View": DebugApp,
+    "Hello World": HelloApp,
 }
 
 ReactDOM.render(

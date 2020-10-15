@@ -14,9 +14,10 @@ import {
 } from '../themeStyle';
 
 let { lightTheme, darkTheme } = makeLightAndDarkThemes({
-    gr6: "#fffce7",
-    gr0: "#220d1e",
-    ac3: "#29857e",
+    // twilight lavender with purple button
+    gr6: "#dee5ff",
+    gr0: "#0e1222",
+    ac3: "#b937b2",
 });
 
 export interface HelloProps {

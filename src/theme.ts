@@ -96,7 +96,7 @@ export let makeTheme = (p: FullPalette): Theme => ({
     loudButtonText:          p.gr6,
     //                 -------
     textInputBg:       'none',
-    textInputBorder:      p.gr3,
+    textInputBorder:       p.gr4,
     textInputText:     p.gr0,
     //                 0123456
 });

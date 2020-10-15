@@ -14,6 +14,7 @@ import {
 } from '../themeStyle';
 
 let { lightTheme, darkTheme } = makeLightAndDarkThemes({
+    // yellow and purple with green button
     gr6: "#fffce7",
     gr0: "#220d1e",
     ac3: "#29857e",
