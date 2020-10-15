@@ -69141,27 +69141,49 @@ exports.TodoApp = ({ changeKey, kit }) => {
                 React.createElement("button", { type: "button", style: styles.sQuietButton, onClick: () => setDarkMode(!darkMode) }, "Toggle dark mode"))));
 };
 exports.SingleTodoView = ({ kit, todo, styles }) => {
-    let [editedText, setEditedText] = react_1.useState(todo.text);
-    let hasChanged = editedText !== todo.text;
+    // todo.text is the current value from Storage, which may have changed from a sync.
+    let [originalText, setOriginalText] = react_1.useState(todo.text); // old value (from first render)
+    let [editedText, setEditedText] = react_1.useState(todo.text); // value in <input>, possibly edited by user and not saved yet
+    if (originalText !== todo.text) {
+        // A change arrived from the outside world, by sync
+        if (editedText === originalText) {
+            // User has not edited the field.
+            // Accept the new value from the sync.
+            setOriginalText(todo.text);
+            setEditedText(todo.text);
+        }
+        else {
+            // User has edited the field but not saved it yet,
+            // and we also have a change arriving by sync.
+            // Ideally we would show a warning message like
+            //     "Someone else changed this to 'foo' while you were
+            //      editing it.  [accept][save mine]"
+            // Instead, for simplicity let's just discard the edits in progress
+            // and accept the value from the sync.
+            setOriginalText(todo.text);
+            setEditedText(todo.text);
+        }
+    }
+    // Should we render the field with a highlight?
+    let userInputNeedsSaving = editedText !== todo.text;
+    let saveText = (text) => {
+        if (kit.authorKeypair === null) {
+            return;
+        }
+        saveTodo(kit.storage, kit.authorKeypair, Object.assign(Object.assign({}, todo), { text: text }));
+        setEditedText(text);
+    };
+    let toggleTodo = () => {
+        if (kit.authorKeypair === null) {
+            return;
+        }
+        saveTodo(kit.storage, kit.authorKeypair, Object.assign(Object.assign({}, todo), { isDone: !todo.isDone }));
+    };
     log_1.logTodoApp('🎨     render ' + todo.id);
     return React.createElement("li", { style: { listStyle: 'none' } },
-        React.createElement("form", { className: 'flexRow', onSubmit: (e) => {
-                log_1.logTodoApp('form onSubmit...', editedText);
-                e.preventDefault();
-                // save the todo
-                if (kit.authorKeypair === null) {
-                    return;
-                }
-                saveTodo(kit.storage, kit.authorKeypair, Object.assign(Object.assign({}, todo), { text: editedText }));
-            } },
-            React.createElement("input", { type: 'checkbox', className: 'flexItem', checked: todo === null || todo === void 0 ? void 0 : todo.isDone, onChange: (e) => {
-                    // toggle the todo
-                    if (kit.authorKeypair === null) {
-                        return;
-                    }
-                    saveTodo(kit.storage, kit.authorKeypair, Object.assign(Object.assign({}, todo), { isDone: !todo.isDone }));
-                } }),
-            React.createElement("input", { type: 'text', className: 'flexItem flexGrow1', style: Object.assign(Object.assign({}, styles.sTextInput), { border: 'none', paddingLeft: 0, fontWeight: hasChanged ? 'bold' : 'normal' }), value: editedText, onChange: (e) => setEditedText(e.target.value) })));
+        React.createElement("form", { className: 'flexRow', onSubmit: (e) => { e.preventDefault(); saveText(editedText); } },
+            React.createElement("input", { type: 'checkbox', className: 'flexItem', checked: todo.isDone, onChange: (e) => toggleTodo() }),
+            React.createElement("input", { type: 'text', className: 'flexItem flexGrow1', style: Object.assign(Object.assign({}, styles.sTextInput), { border: 'none', paddingLeft: 0, fontWeight: userInputNeedsSaving ? 'bold' : 'normal' }), value: editedText, onChange: (e) => setEditedText(e.target.value), onBlur: (e) => saveText(e.target.value) })));
 };
 
 },{"../log":278,"../theme":279,"../themeStyle":280,"earthstar":100,"react":222}],272:[function(require,module,exports){

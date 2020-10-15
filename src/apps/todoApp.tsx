@@ -210,43 +210,70 @@ export interface SingleTodoProps {
     styles: Styles;
 }
 export let SingleTodoView = ({ kit, todo, styles }: SingleTodoProps) => {
-    let [editedText, setEditedText] = useState(todo.text);
-    let hasChanged = editedText !== todo.text;
+    // todo.text is the current value from Storage, which may have changed from a sync.
+    let [originalText, setOriginalText] = useState(todo.text);  // old value (from first render)
+    let [editedText, setEditedText] = useState(todo.text);  // value in <input>, possibly edited by user and not saved yet
+
+    if (originalText !== todo.text) {
+        // A change arrived from the outside world, by sync
+        if (editedText === originalText) {
+            // User has not edited the field.
+            // Accept the new value from the sync.
+            setOriginalText(todo.text);
+            setEditedText(todo.text);
+        } else {
+            // User has edited the field but not saved it yet,
+            // and we also have a change arriving by sync.
+            // Ideally we would show a warning message like
+            //     "Someone else changed this to 'foo' while you were
+            //      editing it.  [accept][save mine]"
+            // Instead, for simplicity let's just discard the edits in progress
+            // and accept the value from the sync.
+            setOriginalText(todo.text);
+            setEditedText(todo.text);
+        }
+    }
+
+    // Should we render the field with a highlight?
+    let userInputNeedsSaving = editedText !== todo.text;
+
+    let saveText = (text: string) => {
+        if (kit.authorKeypair === null) { return; }
+        saveTodo(kit.storage, kit.authorKeypair, {
+            ...todo,
+            text: text,
+        });
+        setEditedText(text);
+    }
+
+    let toggleTodo = () => {
+        if (kit.authorKeypair === null) { return; }
+        saveTodo(kit.storage, kit.authorKeypair, {
+            ...todo,
+            isDone: !todo.isDone,
+        });
+    }
+
     logTodoApp('🎨     render ' + todo.id);
     return <li style={{ listStyle: 'none' }}>
         <form
             className='flexRow'
-            onSubmit={(e) => {
-                logTodoApp('form onSubmit...', editedText);
-                e.preventDefault();
-                // save the todo
-                if (kit.authorKeypair === null) { return; }
-                saveTodo(kit.storage, kit.authorKeypair, {
-                    ...todo,
-                    text: editedText,
-                });
-            }}
+            onSubmit={(e) => { e.preventDefault(); saveText(editedText); }}
             >
             <input type='checkbox' className='flexItem'
-                checked={todo?.isDone}
-                onChange={(e) => {
-                    // toggle the todo
-                    if (kit.authorKeypair === null) { return; }
-                    saveTodo(kit.storage, kit.authorKeypair, {
-                        ...todo,
-                        isDone: !todo.isDone,
-                    });
-                }}
+                checked={todo.isDone}
+                onChange={ (e) => toggleTodo() }
                 />
             <input type='text' className='flexItem flexGrow1'
                 style={{
                     ...styles.sTextInput,
                     border: 'none',
                     paddingLeft: 0,
-                    fontWeight: hasChanged ? 'bold' : 'normal',
+                    fontWeight: userInputNeedsSaving ? 'bold' : 'normal',
                 }}
                 value={editedText}
                 onChange={(e) => setEditedText(e.target.value)}
+                onBlur={(e) => saveText(e.target.value)}
                 />
         </form>
     </li>;
