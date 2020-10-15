@@ -69137,6 +69137,7 @@ exports.TodoApp = ({ changeKey, kit }) => {
                         } },
                         React.createElement("input", { type: 'text', className: 'flexItem flexGrow1', style: styles.sTextInput, value: newText, onChange: (e) => setNewText(e.target.value) }),
                         React.createElement("button", { type: 'submit', className: 'flexItem', style: styles.sLoudButton }, "Add"))),
+            React.createElement("p", { style: { color: theme.faintText } }, "To delete an item, give it an empty description."),
             React.createElement("p", { className: 'right' },
                 React.createElement("button", { type: "button", style: styles.sQuietButton, onClick: () => setDarkMode(!darkMode) }, "Toggle dark mode"))));
 };

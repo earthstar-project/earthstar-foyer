@@ -193,6 +193,9 @@ export let TodoApp = ({ changeKey, kit }: TodoAppProps) => {
                     </form>
                 }
             </div>
+            <p style={{ color: theme.faintText }}>
+                To delete an item, give it an empty description.
+            </p>
             <p className='right'>
                 <button type="button" style={styles.sQuietButton}
                     onClick={() => setDarkMode(!darkMode)}
