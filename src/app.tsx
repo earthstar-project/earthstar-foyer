@@ -14,6 +14,7 @@ import { TodoApp } from './apps/todoApp';
 // It's responsible for setting up Earthstar classes and rendering the "app".
 // The "app" in this case is LobbyApp.
 
+// first app listed here is the default
 let apps = {
     Todo: TodoApp,
     Foyer: FoyerApp,

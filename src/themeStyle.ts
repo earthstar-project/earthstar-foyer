@@ -2,7 +2,15 @@ import {
     Theme,
 } from './theme';
 
-export let makeStyles = (theme: Theme) => {
+export interface Styles {
+    sPage: React.CSSProperties,
+    sCard: React.CSSProperties,
+    sLoudButton: React.CSSProperties,
+    sQuietButton: React.CSSProperties,
+    sTextInput: React.CSSProperties,
+}
+
+export let makeStyles = (theme: Theme): Styles => {
     let sPage: React.CSSProperties = {
         background: theme.page,
         color: theme.text,
@@ -31,5 +39,13 @@ export let makeStyles = (theme: Theme) => {
         padding: theme.quietButtonBorder === 'none' ? '8px 13px' : '10px 15px',
         border: theme.quietButtonBorder === 'none' ? 'none' : '2px solid ' + theme.quietButtonBorder,
     }
-    return {sPage, sCard, sLoudButton, sQuietButton};
+    let sTextInput: React.CSSProperties = {
+        border: theme.textInputBorder === 'none' ? 'none' : '2px solid ' + theme.textInputBorder,
+        background: theme.textInputBg,
+        color: theme.textInputText,
+
+        // same padding as button
+        padding: theme.textInputBorder === 'none' ? '8px 13px' : '10px 15px',
+    }
+    return {sPage, sCard, sLoudButton, sQuietButton, sTextInput};
 }

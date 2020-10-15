@@ -10,6 +10,7 @@ import {
     makeLightAndDarkThemes, makeFullPalette
 } from '../theme';
 import {
+    Styles,
     makeStyles
 } from '../themeStyle';
 import { IStorage, isErr, AuthorKeypair, ValidationError } from 'earthstar';
@@ -45,7 +46,7 @@ interface Todo {
 }
 enum TodoFieldName {
     text = 'text.txt',  // required.  set to '' to delete the todo.
-    isDone = 'isDone.json',  // optional, only content === "true" counts as done
+    isDone = 'isDone.json',  // optional, only content === 'true' counts as done
 }
 let makeTodoId = () =>
     `${Date.now() * 1000}-${randInt(1000000, 9999999)}`;
@@ -70,7 +71,7 @@ let listTodoIds = (storage: IStorage): string[] =>
         storage
             .paths({ pathPrefix: '/todo/' })
             .map(path => {
-                // only keep parsable paths which end in "/text.txt"
+                // only keep parsable paths which end in '/text.txt'
                 let parsed = parseTodoPath(path)
                 if (parsed === null) { return ''; }
                 if (parsed.fieldName !== TodoFieldName.text) { return ''; }
@@ -117,16 +118,16 @@ test(TodoFieldName.isDone);
 //================================================================================
 
 let { lightTheme, darkTheme } = makeLightAndDarkThemes({
-    gr6: "#fffce7",
-    gr0: "#220d1e",
-    ac3: "#29857e",
+    gr6: '#fffce7',
+    gr0: '#220d1e',
+    ac3: '#29857e',
 });
 
 export interface TodoAppProps {
     // This prop changes whenever something in the earthstar kit has changed,
     // helping trigger a re-render.
     changeKey: string;
-    // A "Kit" is a collection of Earthstar-related classes (storage, syncer, etc).
+    // A 'Kit' is a collection of Earthstar-related classes (storage, syncer, etc).
     // See kit.ts
     kit: Kit | null;
 }
@@ -156,20 +157,12 @@ export let TodoApp = ({ changeKey, kit }: TodoAppProps) => {
                 <h3>Todos</h3>
                 <ul>
                     {todos.map(todo =>
-                        <li key={todo.id}>
-                            <input type="checkbox"
-                                checked={todo?.isDone}
-                                onChange={(e) => {
-                                    // toggle the todo
-                                    if (kit.authorKeypair === null) { return; }
-                                    saveTodo(kit.storage, kit.authorKeypair, {
-                                        ...todo,
-                                        isDone: !todo.isDone,
-                                    });
-                                }}
-                                />
-                            {' ' + todo.text}
-                        </li>
+                        <SingleTodoView
+                            key={todo.id}
+                            kit={kit}
+                            todo={todo}
+                            styles={styles}
+                            />
                     )}
                 </ul>
                 {kit.authorKeypair === null
@@ -186,12 +179,13 @@ export let TodoApp = ({ changeKey, kit }: TodoAppProps) => {
                             });
                         }}
                         >
-                        <input type="text"
+                        <input type='text'
                             className='flexItem flexGrow1'
+                            style={styles.sTextInput}
                             value={newText}
                             onChange={(e) => setNewText(e.target.value)}
                             />
-                        <button type="submit"
+                        <button type='submit'
                             className='flexItem'
                             style={styles.sLoudButton}>
                             Add
@@ -199,6 +193,61 @@ export let TodoApp = ({ changeKey, kit }: TodoAppProps) => {
                     </form>
                 }
             </div>
+            <p className='right'>
+                <button type="button" style={styles.sQuietButton}
+                    onClick={() => setDarkMode(!darkMode)}
+                    >
+                    Toggle dark mode
+                </button>
+            </p>
         </div>
     </div>;
 }
+
+export interface SingleTodoProps {
+    kit: Kit;
+    todo: Todo;
+    styles: Styles;
+}
+export let SingleTodoView = ({ kit, todo, styles }: SingleTodoProps) => {
+    let [editedText, setEditedText] = useState(todo.text);
+    let hasChanged = editedText !== todo.text;
+    logTodoApp('🎨     render ' + todo.id);
+    return <li style={{ listStyle: 'none' }}>
+        <form
+            className='flexRow'
+            onSubmit={(e) => {
+                logTodoApp('form onSubmit...', editedText);
+                e.preventDefault();
+                // save the todo
+                if (kit.authorKeypair === null) { return; }
+                saveTodo(kit.storage, kit.authorKeypair, {
+                    ...todo,
+                    text: editedText,
+                });
+            }}
+            >
+            <input type='checkbox' className='flexItem'
+                checked={todo?.isDone}
+                onChange={(e) => {
+                    // toggle the todo
+                    if (kit.authorKeypair === null) { return; }
+                    saveTodo(kit.storage, kit.authorKeypair, {
+                        ...todo,
+                        isDone: !todo.isDone,
+                    });
+                }}
+                />
+            <input type='text' className='flexItem flexGrow1'
+                style={{
+                    ...styles.sTextInput,
+                    border: 'none',
+                    paddingLeft: 0,
+                    fontWeight: hasChanged ? 'bold' : 'normal',
+                }}
+                value={editedText}
+                onChange={(e) => setEditedText(e.target.value)}
+                />
+        </form>
+    </li>;
+};

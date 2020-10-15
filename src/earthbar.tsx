@@ -207,7 +207,7 @@ export class Earthbar extends React.Component<EbProps, EbState> {
 
         let changeKeyForApp =
             `store.onChange:${store.onChange.changeKey}__` +
-            `storage.onWrite:${kit?.storage.onWrite.changeKey}__`;
+            `storage.onWrite:${kit?.storage.onWrite.changeKey}`;
             //`syncer.onChange:${kit?.syncer.onChange.changeKey}`;
 
         return <>

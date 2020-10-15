@@ -68656,6 +68656,7 @@ const todoApp_1 = require("./apps/todoApp");
 // The "Earthbar" is the workspace and user switcher panel across the top.
 // It's responsible for setting up Earthstar classes and rendering the "app".
 // The "app" in this case is LobbyApp.
+// first app listed here is the default
 let apps = {
     Todo: todoApp_1.TodoApp,
     Foyer: foyerApp_1.FoyerApp,
@@ -68985,7 +68986,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TodoApp = void 0;
+exports.SingleTodoView = exports.TodoApp = void 0;
 const React = __importStar(require("react"));
 const react_1 = require("react");
 const log_1 = require("../log");
@@ -69041,7 +69042,7 @@ let listTodoIds = (storage) =>
 sortedAndUnique(storage
     .paths({ pathPrefix: '/todo/' })
     .map(path => {
-    // only keep parsable paths which end in "/text.txt"
+    // only keep parsable paths which end in '/text.txt'
     let parsed = parseTodoPath(path);
     if (parsed === null) {
         return '';
@@ -69092,9 +69093,9 @@ test(TodoFieldName.text);
 test(TodoFieldName.isDone);
 //================================================================================
 let { lightTheme, darkTheme } = theme_1.makeLightAndDarkThemes({
-    gr6: "#fffce7",
-    gr0: "#220d1e",
-    ac3: "#29857e",
+    gr6: '#fffce7',
+    gr0: '#220d1e',
+    ac3: '#29857e',
 });
 exports.TodoApp = ({ changeKey, kit }) => {
     log_1.logTodoApp('🎨 render.  changeKey:', changeKey);
@@ -69119,21 +69120,7 @@ exports.TodoApp = ({ changeKey, kit }) => {
         React.createElement("div", { className: 'stack centeredReadableWidth' },
             React.createElement("div", { style: styles.sCard },
                 React.createElement("h3", null, "Todos"),
-                React.createElement("ul", null, todos.map(todo => React.createElement("li", { key: todo.id },
-                    React.createElement("input", { type: "checkbox", checked: todo === null || todo === void 0 ? void 0 : todo.isDone, onChange: (e) => {
-                            // toggle the todo
-                            if (kit.authorKeypair === null) {
-                                return;
-                            }
-                            saveTodo(kit.storage, kit.authorKeypair, Object.assign(Object.assign({}, todo), { isDone: !todo.isDone }));
-                        } }),
-                    ' ' + todo.text,
-                    React.createElement("input", { type: "text", value: todo.text, onChange: (e) => {
-                            if (kit.authorKeypair === null) {
-                                return;
-                            }
-                            saveTodo(kit.storage, kit.authorKeypair, Object.assign(Object.assign({}, todo), { text: e.target.value }));
-                        } })))),
+                React.createElement("ul", null, todos.map(todo => React.createElement(exports.SingleTodoView, { key: todo.id, kit: kit, todo: todo, styles: styles }))),
                 kit.authorKeypair === null
                     ? React.createElement("div", null, "Log in to add your own todos.")
                     : React.createElement("form", { className: 'flexRow', onSubmit: (e) => {
@@ -69148,8 +69135,33 @@ exports.TodoApp = ({ changeKey, kit }) => {
                                 isDone: false,
                             });
                         } },
-                        React.createElement("input", { type: "text", className: 'flexItem flexGrow1', value: newText, onChange: (e) => setNewText(e.target.value) }),
-                        React.createElement("button", { type: "submit", className: 'flexItem', style: styles.sLoudButton }, "Add")))));
+                        React.createElement("input", { type: 'text', className: 'flexItem flexGrow1', style: styles.sTextInput, value: newText, onChange: (e) => setNewText(e.target.value) }),
+                        React.createElement("button", { type: 'submit', className: 'flexItem', style: styles.sLoudButton }, "Add"))),
+            React.createElement("p", { className: 'right' },
+                React.createElement("button", { type: "button", style: styles.sQuietButton, onClick: () => setDarkMode(!darkMode) }, "Toggle dark mode"))));
+};
+exports.SingleTodoView = ({ kit, todo, styles }) => {
+    let [editedText, setEditedText] = react_1.useState(todo.text);
+    let hasChanged = editedText !== todo.text;
+    log_1.logTodoApp('🎨     render ' + todo.id);
+    return React.createElement("li", { style: { listStyle: 'none' } },
+        React.createElement("form", { className: 'flexRow', onSubmit: (e) => {
+                log_1.logTodoApp('form onSubmit...', editedText);
+                e.preventDefault();
+                // save the todo
+                if (kit.authorKeypair === null) {
+                    return;
+                }
+                saveTodo(kit.storage, kit.authorKeypair, Object.assign(Object.assign({}, todo), { text: editedText }));
+            } },
+            React.createElement("input", { type: 'checkbox', className: 'flexItem', checked: todo === null || todo === void 0 ? void 0 : todo.isDone, onChange: (e) => {
+                    // toggle the todo
+                    if (kit.authorKeypair === null) {
+                        return;
+                    }
+                    saveTodo(kit.storage, kit.authorKeypair, Object.assign(Object.assign({}, todo), { isDone: !todo.isDone }));
+                } }),
+            React.createElement("input", { type: 'text', className: 'flexItem flexGrow1', style: Object.assign(Object.assign({}, styles.sTextInput), { border: 'none', paddingLeft: 0, fontWeight: hasChanged ? 'bold' : 'normal' }), value: editedText, onChange: (e) => setEditedText(e.target.value) })));
 };
 
 },{"../log":278,"../theme":279,"../themeStyle":280,"earthstar":100,"react":222}],272:[function(require,module,exports){
@@ -69350,7 +69362,7 @@ class Earthbar extends React.Component {
         // get appropriate app component
         let App = this.props.apps[this.state.activeApp];
         let changeKeyForApp = `store.onChange:${store.onChange.changeKey}__` +
-            `storage.onWrite:${kit === null || kit === void 0 ? void 0 : kit.storage.onWrite.changeKey}__`;
+            `storage.onWrite:${kit === null || kit === void 0 ? void 0 : kit.storage.onWrite.changeKey}`;
         //`syncer.onChange:${kit?.syncer.onChange.changeKey}`;
         return React.createElement(React.Fragment, null,
             React.createElement("div", { className: 'earthbarColors earthbarTabRow' },
@@ -70272,6 +70284,10 @@ exports.makeTheme = (p) => ({
     loudButtonBg: p.ac2,
     loudButtonBorder: 'none',
     loudButtonText: p.gr6,
+    //                 -------
+    textInputBg: 'none',
+    textInputBorder: p.gr3,
+    textInputText: p.gr0,
 });
 exports.makeLightAndDarkThemes = (p) => {
     // expand basic palette into full palette if needed
@@ -70398,7 +70414,14 @@ exports.makeStyles = (theme) => {
         border: theme.loudButtonBorder === 'none' ? 'none' : '2px solid ' + theme.loudButtonBorder,
     };
     let sQuietButton = Object.assign(Object.assign({}, sLoudButton), { background: theme.quietButtonBg, color: theme.quietButtonText, padding: theme.quietButtonBorder === 'none' ? '8px 13px' : '10px 15px', border: theme.quietButtonBorder === 'none' ? 'none' : '2px solid ' + theme.quietButtonBorder });
-    return { sPage, sCard, sLoudButton, sQuietButton };
+    let sTextInput = {
+        border: theme.textInputBorder === 'none' ? 'none' : '2px solid ' + theme.textInputBorder,
+        background: theme.textInputBg,
+        color: theme.textInputText,
+        // same padding as button
+        padding: theme.textInputBorder === 'none' ? '8px 13px' : '10px 15px',
+    };
+    return { sPage, sCard, sLoudButton, sQuietButton, sTextInput };
 };
 
 },{}],281:[function(require,module,exports){

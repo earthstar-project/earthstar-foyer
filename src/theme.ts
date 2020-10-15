@@ -9,7 +9,7 @@ export type ColorRGB = {
     b: number,
 }
 
-export type ColorHexString = string;  // '#ff9900'
+export type ColorHexString = string;  // '#ff9900' or can also be 'none'
 
 export interface BasicPalette {
     gr6: ColorHexString,  // white
@@ -71,8 +71,12 @@ export interface Theme {
     quietButtonText: ColorHexString,
 
     loudButtonBg: ColorHexString,
-    loudButtonBorder: ColorHexString,
+    loudButtonBorder: ColorHexString,  // or 'none'
     loudButtonText: ColorHexString,
+
+    textInputBg: ColorHexString,
+    textInputText: ColorHexString,
+    textInputBorder: ColorHexString,  // or 'none'
 }
 
 export let makeTheme = (p: FullPalette): Theme => ({
@@ -90,6 +94,10 @@ export let makeTheme = (p: FullPalette): Theme => ({
     loudButtonBg:        p.ac2,
     loudButtonBorder:  'none',
     loudButtonText:          p.gr6,
+    //                 -------
+    textInputBg:       'none',
+    textInputBorder:      p.gr3,
+    textInputText:     p.gr0,
     //                 0123456
 });
 
