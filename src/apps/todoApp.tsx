@@ -261,9 +261,11 @@ export let SingleTodoView = ({ kit, todo, styles }: SingleTodoProps) => {
     return <li style={{ listStyle: 'none' }}>
         <form
             className='flexRow'
+            style={{ alignItems: 'center' }}
             onSubmit={(e) => { e.preventDefault(); saveText(editedText); }}
             >
             <input type='checkbox' className='flexItem'
+                style={{ transform: 'scale(2)' }}
                 checked={todo.isDone}
                 onChange={ (e) => toggleTodo() }
                 />

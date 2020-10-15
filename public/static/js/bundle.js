@@ -69182,8 +69182,8 @@ exports.SingleTodoView = ({ kit, todo, styles }) => {
     };
     log_1.logTodoApp('🎨     render ' + todo.id);
     return React.createElement("li", { style: { listStyle: 'none' } },
-        React.createElement("form", { className: 'flexRow', onSubmit: (e) => { e.preventDefault(); saveText(editedText); } },
-            React.createElement("input", { type: 'checkbox', className: 'flexItem', checked: todo.isDone, onChange: (e) => toggleTodo() }),
+        React.createElement("form", { className: 'flexRow', style: { alignItems: 'center' }, onSubmit: (e) => { e.preventDefault(); saveText(editedText); } },
+            React.createElement("input", { type: 'checkbox', className: 'flexItem', style: { transform: 'scale(2)' }, checked: todo.isDone, onChange: (e) => toggleTodo() }),
             React.createElement("input", { type: 'text', className: 'flexItem flexGrow1', style: Object.assign(Object.assign({}, styles.sTextInput), { border: 'none', paddingLeft: 0, fontWeight: userInputNeedsSaving ? 'bold' : 'normal' }), value: editedText, onChange: (e) => setEditedText(e.target.value), onBlur: (e) => saveText(e.target.value) })));
 };
 
