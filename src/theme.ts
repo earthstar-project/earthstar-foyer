@@ -93,6 +93,17 @@ export let makeTheme = (p: FullPalette): Theme => ({
     //                 0123456
 });
 
+export let makeLightAndDarkThemes = (p: BasicPalette | FullPalette) => {
+    // expand basic palette into full palette if needed
+    let fp : FullPalette;
+    if ((p as FullPalette).gr3) { fp = p as FullPalette; }
+    else { fp = makeFullPalette(p); }
+    return {
+        lightTheme: makeTheme(fp),
+        darkTheme: makeTheme(invertPalette(fp)),
+    }
+};
+
 /*
 let theme2 = (p: FullPalette): Theme => ({
     //                 0123456

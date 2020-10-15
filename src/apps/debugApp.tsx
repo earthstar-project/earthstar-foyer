@@ -6,57 +6,18 @@ import { Kit } from '../kit';
 import {
     logDebugApp,
 } from '../log';
-
 import {
-    BasicPalette,
-    invertPalette,
-    makeFullPalette,
-    makeTheme,
-    Theme,
+    makeLightAndDarkThemes
 } from '../theme';
-import { Syncer } from 'earthstar';
+import {
+    makeStyles
+} from '../themeStyle';
 
-let basicPalette: BasicPalette = {
+let { lightTheme, darkTheme } = makeLightAndDarkThemes({
     gr6: "#fffce7",
     gr0: "#220d1e",
     ac3: "#29857e",
-}
-let fullPalette = makeFullPalette(basicPalette);
-let lightTheme = makeTheme(fullPalette);
-let darkTheme = makeTheme(invertPalette(fullPalette));
-let theme = lightTheme;
-
-let makeStyles = (theme: Theme) => {
-    let sPage: React.CSSProperties = {
-        background: theme.page,
-        color: theme.text,
-    }
-    let sCard: React.CSSProperties = {
-        background: theme.card,
-        color: theme.text,
-        padding: 'var(--s0)',
-        borderRadius: 'var(--slightlyRound)',
-        boxShadow: '5px 15px 20px -5px rgba(0,0,0,0.17)',
-    }
-    let sLoudButton: React.CSSProperties = {
-        background: theme.loudButtonBg,
-        color: theme.loudButtonText,
-        borderRadius: 10,
-        padding: theme.loudButtonBorder === 'none' ? '8px 13px' : '10px 15px',
-        margin: '2px 5px',
-        fontWeight: 'bold',
-        display: 'inline-block',
-        border: theme.loudButtonBorder === 'none' ? 'none' : '2px solid ' + theme.loudButtonBorder,
-    }
-    let sQuietButton: React.CSSProperties = {
-        ...sLoudButton,
-        background: theme.quietButtonBg,
-        color: theme.quietButtonText,
-        padding: theme.quietButtonBorder === 'none' ? '8px 13px' : '10px 15px',
-        border: theme.quietButtonBorder === 'none' ? 'none' : '2px solid ' + theme.quietButtonBorder,
-    }
-    return {sPage, sCard, sLoudButton, sQuietButton};
-}
+});
 
 export interface DebugProps {
     // This prop changes whenever something in the earthstar kit has changed,

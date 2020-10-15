@@ -5,6 +5,7 @@ import { Earthbar } from './earthbar';
 import { FoyerApp } from './apps/foyerApp';
 import { HelloApp } from './apps/helloApp';
 import { DebugApp } from './apps/debugApp';
+import { TodoApp } from './apps/todoApp';
 
 //================================================================================
 // MAIN
@@ -14,9 +15,10 @@ import { DebugApp } from './apps/debugApp';
 // The "app" in this case is LobbyApp.
 
 let apps = {
+    Todo: TodoApp,
     Foyer: FoyerApp,
-    Hello: HelloApp,
     Debug: DebugApp,
+    Hello: HelloApp,
 }
 
 ReactDOM.render(

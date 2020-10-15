@@ -68650,19 +68650,21 @@ const earthbar_1 = require("./earthbar");
 const foyerApp_1 = require("./apps/foyerApp");
 const helloApp_1 = require("./apps/helloApp");
 const debugApp_1 = require("./apps/debugApp");
+const todoApp_1 = require("./apps/todoApp");
 //================================================================================
 // MAIN
 // The "Earthbar" is the workspace and user switcher panel across the top.
 // It's responsible for setting up Earthstar classes and rendering the "app".
 // The "app" in this case is LobbyApp.
 let apps = {
+    Todo: todoApp_1.TodoApp,
     Foyer: foyerApp_1.FoyerApp,
-    Hello: helloApp_1.HelloApp,
     Debug: debugApp_1.DebugApp,
+    Hello: helloApp_1.HelloApp,
 };
 ReactDOM.render(React.createElement(earthbar_1.Earthbar, { apps: apps }), document.getElementById('react-slot'));
 
-},{"./apps/debugApp":268,"./apps/foyerApp":269,"./apps/helloApp":270,"./earthbar":271,"react":222,"react-dom":219}],268:[function(require,module,exports){
+},{"./apps/debugApp":268,"./apps/foyerApp":269,"./apps/helloApp":270,"./apps/todoApp":271,"./earthbar":272,"react":222,"react-dom":219}],268:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -68689,44 +68691,16 @@ const React = __importStar(require("react"));
 const react_1 = require("react");
 const log_1 = require("../log");
 const theme_1 = require("../theme");
-let basicPalette = {
+const themeStyle_1 = require("../themeStyle");
+let { lightTheme, darkTheme } = theme_1.makeLightAndDarkThemes({
     gr6: "#fffce7",
     gr0: "#220d1e",
     ac3: "#29857e",
-};
-let fullPalette = theme_1.makeFullPalette(basicPalette);
-let lightTheme = theme_1.makeTheme(fullPalette);
-let darkTheme = theme_1.makeTheme(theme_1.invertPalette(fullPalette));
-let theme = lightTheme;
-let makeStyles = (theme) => {
-    let sPage = {
-        background: theme.page,
-        color: theme.text,
-    };
-    let sCard = {
-        background: theme.card,
-        color: theme.text,
-        padding: 'var(--s0)',
-        borderRadius: 'var(--slightlyRound)',
-        boxShadow: '5px 15px 20px -5px rgba(0,0,0,0.17)',
-    };
-    let sLoudButton = {
-        background: theme.loudButtonBg,
-        color: theme.loudButtonText,
-        borderRadius: 10,
-        padding: theme.loudButtonBorder === 'none' ? '8px 13px' : '10px 15px',
-        margin: '2px 5px',
-        fontWeight: 'bold',
-        display: 'inline-block',
-        border: theme.loudButtonBorder === 'none' ? 'none' : '2px solid ' + theme.loudButtonBorder,
-    };
-    let sQuietButton = Object.assign(Object.assign({}, sLoudButton), { background: theme.quietButtonBg, color: theme.quietButtonText, padding: theme.quietButtonBorder === 'none' ? '8px 13px' : '10px 15px', border: theme.quietButtonBorder === 'none' ? 'none' : '2px solid ' + theme.quietButtonBorder });
-    return { sPage, sCard, sLoudButton, sQuietButton };
-};
+});
 exports.DebugApp = ({ changeKey, kit }) => {
     let [darkMode, setDarkMode] = react_1.useState(false);
     let theme = darkMode ? darkTheme : lightTheme;
-    let styles = makeStyles(theme);
+    let styles = themeStyle_1.makeStyles(theme);
     log_1.logDebugApp('🎨 render.  changeKey:', changeKey);
     return React.createElement("div", { style: Object.assign(Object.assign({}, styles.sPage), { padding: 'var(--s0)', minHeight: '100vh' }) },
         React.createElement("div", { className: 'stack centeredReadableWidth' },
@@ -68768,7 +68742,7 @@ exports.DebugApp = ({ changeKey, kit }) => {
                     React.createElement("button", { type: "button", style: styles.sLoudButton, onClick: () => setDarkMode(!darkMode) }, "Toggle dark mode")))));
 };
 
-},{"../log":277,"../theme":278,"react":222}],269:[function(require,module,exports){
+},{"../log":278,"../theme":279,"../themeStyle":280,"react":222}],269:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -68939,7 +68913,7 @@ class FoyerComposer extends React.PureComponent {
 }
 exports.FoyerComposer = FoyerComposer;
 
-},{"../log":277,"../util":279,"earthstar":100,"react":222}],270:[function(require,module,exports){
+},{"../log":278,"../util":281,"earthstar":100,"react":222}],270:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -68966,43 +68940,16 @@ const React = __importStar(require("react"));
 const react_1 = require("react");
 const log_1 = require("../log");
 const theme_1 = require("../theme");
-let basicPalette = {
+const themeStyle_1 = require("../themeStyle");
+let { lightTheme, darkTheme } = theme_1.makeLightAndDarkThemes({
     gr6: "#fffce7",
     gr0: "#220d1e",
     ac3: "#29857e",
-};
-let fullPalette = theme_1.makeFullPalette(basicPalette);
-let lightTheme = theme_1.makeTheme(fullPalette);
-let darkTheme = theme_1.makeTheme(theme_1.invertPalette(fullPalette));
-let theme = lightTheme;
-let makeStyles = (theme) => {
-    let sPage = {
-        background: theme.page,
-        color: theme.text,
-    };
-    let sCard = {
-        background: theme.card,
-        color: theme.text,
-        padding: 'var(--s0)',
-        borderRadius: 'var(--slightlyRound)',
-        boxShadow: '5px 15px 20px -5px rgba(0,0,0,0.17)',
-    };
-    let sLoudButton = {
-        background: theme.loudButtonBg,
-        color: theme.loudButtonText,
-        borderRadius: 10,
-        padding: theme.loudButtonBorder === 'none' ? '8px 13px' : '10px 15px',
-        margin: '2px 5px',
-        fontWeight: 'bold',
-        display: 'inline-block',
-        border: theme.loudButtonBorder === 'none' ? 'none' : '2px solid ' + theme.loudButtonBorder,
-    };
-    return { sPage, sCard, sLoudButton };
-};
+});
 exports.HelloApp = ({ changeKey, kit }) => {
     let [darkMode, setDarkMode] = react_1.useState(false);
     let theme = darkMode ? darkTheme : lightTheme;
-    let styles = makeStyles(theme);
+    let styles = themeStyle_1.makeStyles(theme);
     log_1.logHelloApp('🎨 render.  changeKey:', changeKey);
     return React.createElement("div", { style: Object.assign(Object.assign({}, styles.sPage), { padding: 'var(--s0)', minHeight: '100vh' }) },
         React.createElement("div", { className: 'stack centeredReadableWidth' },
@@ -69016,7 +68963,196 @@ exports.HelloApp = ({ changeKey, kit }) => {
                     React.createElement("button", { type: "button", style: styles.sLoudButton, onClick: () => setDarkMode(!darkMode) }, "Toggle dark mode")))));
 };
 
-},{"../log":277,"../theme":278,"react":222}],271:[function(require,module,exports){
+},{"../log":278,"../theme":279,"../themeStyle":280,"react":222}],271:[function(require,module,exports){
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TodoApp = void 0;
+const React = __importStar(require("react"));
+const react_1 = require("react");
+const log_1 = require("../log");
+const theme_1 = require("../theme");
+const themeStyle_1 = require("../themeStyle");
+const earthstar_1 = require("earthstar");
+//================================================================================
+// GENERIC HELPERS
+let randInt = (lo, hi) => 
+// inclusive of endpoints
+Math.floor(Math.random() * ((hi + 1) - lo) + lo);
+let sortedAndUnique = (items) => {
+    // return a sorted version of the array with duplicates removed.
+    // (checks for reference equality, ===)
+    items = [...items];
+    items.sort();
+    let result = [];
+    for (let item of items) {
+        if (result.length === 0 || item !== result[result.length - 1]) {
+            result.push(item);
+        }
+    }
+    return result;
+};
+var TodoFieldName;
+(function (TodoFieldName) {
+    TodoFieldName["text"] = "text.txt";
+    TodoFieldName["isDone"] = "isDone.json";
+})(TodoFieldName || (TodoFieldName = {}));
+let makeTodoId = () => `${Date.now() * 1000}-${randInt(1000000, 9999999)}`;
+let makeTodoPath = (id, fieldName) => {
+    return `/todo/${id}/${fieldName}`;
+};
+let parseTodoPath = (path) => {
+    try {
+        let [_, todo, id, fieldName] = path.split('/');
+        if (todo !== 'todo') {
+            return null;
+        }
+        let fieldNames = Object.values(TodoFieldName);
+        if (fieldNames.indexOf(fieldName) === -1) {
+            return null;
+        }
+        return { id: id, fieldName: fieldName };
+    }
+    catch (e) {
+        return null;
+    }
+};
+let listTodoIds = (storage) => 
+// sort by path, which turns out to be oldest first
+// since we use a timestamp in the path
+sortedAndUnique(storage
+    .paths({ pathPrefix: '/todo/' })
+    .map(path => {
+    // only keep parsable paths which end in "/text.txt"
+    let parsed = parseTodoPath(path);
+    if (parsed === null) {
+        return '';
+    }
+    if (parsed.fieldName !== TodoFieldName.text) {
+        return '';
+    }
+    return parsed.id;
+})
+    .filter(id => id !== ''));
+let loadTodo = (storage, id) => {
+    let text = storage.getContent(makeTodoPath(id, TodoFieldName.text));
+    if (text === undefined || text === '') {
+        return null;
+    }
+    let isDoneStr = storage.getContent(makeTodoPath(id, TodoFieldName.isDone));
+    let isDone = (isDoneStr === 'true') ? true : false;
+    return { id, text, isDone };
+};
+let saveTodo = (storage, keypair, todo) => {
+    let err = storage.set(keypair, {
+        format: 'es.4',
+        path: makeTodoPath(todo.id, TodoFieldName.text),
+        content: todo.text,
+    });
+    if (earthstar_1.isErr(err)) {
+        console.error(err);
+    }
+    let err2 = storage.set(keypair, {
+        format: 'es.4',
+        path: makeTodoPath(todo.id, TodoFieldName.isDone),
+        content: '' + todo.isDone,
+    });
+    if (earthstar_1.isErr(err2)) {
+        console.error(err2);
+    }
+};
+let test = (fieldName) => {
+    let id = makeTodoId();
+    let path = makeTodoPath(id, fieldName);
+    let parsed = parseTodoPath(path);
+    console.log();
+    console.log(fieldName);
+    console.log(path);
+    console.log(parsed);
+};
+test(TodoFieldName.text);
+test(TodoFieldName.isDone);
+//================================================================================
+let { lightTheme, darkTheme } = theme_1.makeLightAndDarkThemes({
+    gr6: "#fffce7",
+    gr0: "#220d1e",
+    ac3: "#29857e",
+});
+exports.TodoApp = ({ changeKey, kit }) => {
+    log_1.logTodoApp('🎨 render.  changeKey:', changeKey);
+    let [darkMode, setDarkMode] = react_1.useState(false);
+    let [newText, setNewText] = react_1.useState('');
+    let theme = darkMode ? darkTheme : lightTheme;
+    let styles = themeStyle_1.makeStyles(theme);
+    if (kit === null) {
+        return React.createElement("div", null, "No workspace");
+    }
+    // load the todos
+    // we should not do this on every render...
+    let todoIds = listTodoIds(kit.storage);
+    let todos = [];
+    for (let id of todoIds) {
+        let todo = loadTodo(kit.storage, id);
+        if (todo) {
+            todos.push(todo);
+        }
+    }
+    return React.createElement("div", { style: Object.assign(Object.assign({}, styles.sPage), { padding: 'var(--s0)', minHeight: '100vh' }) },
+        React.createElement("div", { className: 'stack centeredReadableWidth' },
+            React.createElement("div", { style: styles.sCard },
+                React.createElement("h3", null, "Todos"),
+                React.createElement("ul", null, todos.map(todo => React.createElement("li", { key: todo.id },
+                    React.createElement("input", { type: "checkbox", checked: todo === null || todo === void 0 ? void 0 : todo.isDone, onChange: (e) => {
+                            // toggle the todo
+                            if (kit.authorKeypair === null) {
+                                return;
+                            }
+                            saveTodo(kit.storage, kit.authorKeypair, Object.assign(Object.assign({}, todo), { isDone: !todo.isDone }));
+                        } }),
+                    ' ' + todo.text,
+                    React.createElement("input", { type: "text", value: todo.text, onChange: (e) => {
+                            if (kit.authorKeypair === null) {
+                                return;
+                            }
+                            saveTodo(kit.storage, kit.authorKeypair, Object.assign(Object.assign({}, todo), { text: e.target.value }));
+                        } })))),
+                kit.authorKeypair === null
+                    ? React.createElement("div", null, "Log in to add your own todos.")
+                    : React.createElement("form", { className: 'flexRow', onSubmit: (e) => {
+                            e.preventDefault();
+                            setNewText('');
+                            if (kit.authorKeypair === null) {
+                                return;
+                            }
+                            saveTodo(kit.storage, kit.authorKeypair, {
+                                id: makeTodoId(),
+                                text: newText,
+                                isDone: false,
+                            });
+                        } },
+                        React.createElement("input", { type: "text", className: 'flexItem flexGrow1', value: newText, onChange: (e) => setNewText(e.target.value) }),
+                        React.createElement("button", { type: "submit", className: 'flexItem', style: styles.sLoudButton }, "Add")))));
+};
+
+},{"../log":278,"../theme":279,"../themeStyle":280,"earthstar":100,"react":222}],272:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69242,7 +69378,7 @@ class Earthbar extends React.Component {
 }
 exports.Earthbar = Earthbar;
 
-},{"./earthbarAppPanel":272,"./earthbarStore":273,"./earthbarUserPanel":274,"./earthbarWorkspacePanel":275,"./log":277,"./util":279,"react":222}],272:[function(require,module,exports){
+},{"./earthbarAppPanel":273,"./earthbarStore":274,"./earthbarUserPanel":275,"./earthbarWorkspacePanel":276,"./log":278,"./util":281,"react":222}],273:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69299,7 +69435,7 @@ class EarthbarAppPanel extends React.Component {
 }
 exports.EarthbarAppPanel = EarthbarAppPanel;
 
-},{"./log":277,"react":222}],273:[function(require,module,exports){
+},{"./log":278,"react":222}],274:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EarthbarStore = void 0;
@@ -69661,7 +69797,7 @@ class EarthbarStore {
 }
 exports.EarthbarStore = EarthbarStore;
 
-},{"./kit":276,"./log":277,"./util":279,"earthstar":100,"fast-equals":133}],274:[function(require,module,exports){
+},{"./kit":277,"./log":278,"./util":281,"earthstar":100,"fast-equals":133}],275:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69862,7 +69998,7 @@ class EarthbarUserPanel extends React.Component {
 }
 exports.EarthbarUserPanel = EarthbarUserPanel;
 
-},{"./log":277,"./util":279,"earthstar":100,"react":222}],275:[function(require,module,exports){
+},{"./log":278,"./util":281,"earthstar":100,"react":222}],276:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -70023,7 +70159,7 @@ class EarthbarWorkspacePanel extends React.Component {
 }
 exports.EarthbarWorkspacePanel = EarthbarWorkspacePanel;
 
-},{"./log":277,"./util":279,"earthstar":100,"react":222}],276:[function(require,module,exports){
+},{"./log":278,"./util":281,"earthstar":100,"react":222}],277:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Kit = void 0;
@@ -70074,10 +70210,10 @@ class Kit {
 }
 exports.Kit = Kit;
 
-},{"./log":277,"earthstar":100,"lodash.debounce":171}],277:[function(require,module,exports){
+},{"./log":278,"earthstar":100,"lodash.debounce":171}],278:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logDebugApp = exports.logHelloApp = exports.logFoyerApp = exports.logEarthbarPanel = exports.logEarthbar = exports.logKit = exports.logEarthbarStore = void 0;
+exports.logTodoApp = exports.logDebugApp = exports.logHelloApp = exports.logFoyerApp = exports.logEarthbarPanel = exports.logEarthbar = exports.logKit = exports.logEarthbarStore = void 0;
 let smul = (s, n) => 
 // repeat a string, n times
 Array.from(Array(n)).map(x => s).join('');
@@ -70089,13 +70225,14 @@ exports.logEarthbarPanel = makeLogger(3, 'earthbar panel', 'color: black; backgr
 exports.logFoyerApp = makeLogger(3, 'foyer app', 'color: black; background: orange');
 exports.logHelloApp = makeLogger(3, 'hello app', 'color: black; background: yellow');
 exports.logDebugApp = makeLogger(3, 'debug app', 'color: black; background: #af8');
+exports.logTodoApp = makeLogger(3, 'todo app', 'color: black; background: #8fa');
 
-},{}],278:[function(require,module,exports){
+},{}],279:[function(require,module,exports){
 "use strict";
 //================================================================================
 // TYPES
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.contrastRatio = exports.luminance = exports.cLerpStr = exports.cLerp = exports.cFromHexString = exports.cToHexString = exports.colorObjToHexObj = exports.makeTheme = exports.invertPalette = exports.makeFullPalette = void 0;
+exports.contrastRatio = exports.luminance = exports.cLerpStr = exports.cLerp = exports.cFromHexString = exports.cToHexString = exports.colorObjToHexObj = exports.makeLightAndDarkThemes = exports.makeTheme = exports.invertPalette = exports.makeFullPalette = void 0;
 exports.makeFullPalette = (p) => ({
     gr6: p.gr6,
     gr5: exports.cLerpStr(p.gr0, p.gr6, 0.79),
@@ -70136,6 +70273,20 @@ exports.makeTheme = (p) => ({
     loudButtonBorder: 'none',
     loudButtonText: p.gr6,
 });
+exports.makeLightAndDarkThemes = (p) => {
+    // expand basic palette into full palette if needed
+    let fp;
+    if (p.gr3) {
+        fp = p;
+    }
+    else {
+        fp = exports.makeFullPalette(p);
+    }
+    return {
+        lightTheme: exports.makeTheme(fp),
+        darkTheme: exports.makeTheme(exports.invertPalette(fp)),
+    };
+};
 /*
 let theme2 = (p: FullPalette): Theme => ({
     //                 0123456
@@ -70220,7 +70371,37 @@ exports.contrastRatio = (c1, c2) => {
     return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
 };
 
-},{}],279:[function(require,module,exports){
+},{}],280:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.makeStyles = void 0;
+exports.makeStyles = (theme) => {
+    let sPage = {
+        background: theme.page,
+        color: theme.text,
+    };
+    let sCard = {
+        background: theme.card,
+        color: theme.text,
+        padding: 'var(--s0)',
+        borderRadius: 'var(--slightlyRound)',
+        boxShadow: '5px 15px 20px -5px rgba(0,0,0,0.17)',
+    };
+    let sLoudButton = {
+        background: theme.loudButtonBg,
+        color: theme.loudButtonText,
+        borderRadius: 10,
+        padding: theme.loudButtonBorder === 'none' ? '8px 13px' : '10px 15px',
+        margin: '2px 5px',
+        fontWeight: 'bold',
+        display: 'inline-block',
+        border: theme.loudButtonBorder === 'none' ? 'none' : '2px solid ' + theme.loudButtonBorder,
+    };
+    let sQuietButton = Object.assign(Object.assign({}, sLoudButton), { background: theme.quietButtonBg, color: theme.quietButtonText, padding: theme.quietButtonBorder === 'none' ? '8px 13px' : '10px 15px', border: theme.quietButtonBorder === 'none' ? 'none' : '2px solid ' + theme.quietButtonBorder });
+    return { sPage, sCard, sLoudButton, sQuietButton };
+};
+
+},{}],281:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ellipsifyAddress = exports.cutAtPeriod = exports.sortByField = exports.sortFnByField = void 0;
