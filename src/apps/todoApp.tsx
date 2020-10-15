@@ -103,18 +103,6 @@ let saveTodo = (storage: IStorage, keypair: AuthorKeypair, todo: Todo): void => 
     if (isErr(err2)) { console.error(err2); }
 }
 
-let test = (fieldName: TodoFieldName) => {
-    let id = makeTodoId();
-    let path = makeTodoPath(id, fieldName);
-    let parsed = parseTodoPath(path);
-    console.log();
-    console.log(fieldName);
-    console.log(path);
-    console.log(parsed);
-}
-test(TodoFieldName.text);
-test(TodoFieldName.isDone);
-
 //================================================================================
 
 let { lightTheme, darkTheme } = makeLightAndDarkThemes({
