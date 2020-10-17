@@ -88,19 +88,25 @@ let loadTodo = (storage: IStorage, id: string): Todo | null => {
     return { id, text, isDone };
 }
 
-let saveTodo = (storage: IStorage, keypair: AuthorKeypair, todo: Todo): void => {
+let setTodoText = (storage: IStorage, keypair: AuthorKeypair, id: string, text: string): void => {
     let err = storage.set(keypair, {
         format: 'es.4',
-        path: makeTodoPath(todo.id, TodoFieldName.text),
-        content: todo.text,
+        path: makeTodoPath(id, TodoFieldName.text),
+        content: text,
     });
     if (isErr(err)) { console.error(err); }
-    let err2 = storage.set(keypair, {
+}
+let setTodoIsDone = (storage: IStorage, keypair: AuthorKeypair, id: string, isDone: boolean): void => {
+    let err = storage.set(keypair, {
         format: 'es.4',
-        path: makeTodoPath(todo.id, TodoFieldName.isDone),
-        content: '' + todo.isDone,
+        path: makeTodoPath(id, TodoFieldName.isDone),
+        content: '' + isDone,
     });
-    if (isErr(err2)) { console.error(err2); }
+    if (isErr(err)) { console.error(err); }
+}
+let setTodo = (storage: IStorage, keypair: AuthorKeypair, todo: Todo): void => {
+    setTodoText(storage, keypair, todo.id, todo.text);
+    setTodoIsDone(storage, keypair, todo.id, todo.isDone);
 }
 
 //================================================================================
@@ -161,7 +167,7 @@ export let TodoApp = ({ changeKey, kit }: TodoAppProps) => {
                             e.preventDefault();
                             setNewText('');
                             if (kit.authorKeypair === null) { return; }
-                            saveTodo(kit.storage, kit.authorKeypair, {
+                            setTodo(kit.storage, kit.authorKeypair, {
                                 id: makeTodoId(),
                                 text: newText,
                                 isDone: false,
@@ -231,19 +237,13 @@ export let SingleTodoView = ({ kit, todo, styles }: SingleTodoProps) => {
 
     let saveText = (text: string) => {
         if (kit.authorKeypair === null) { return; }
-        saveTodo(kit.storage, kit.authorKeypair, {
-            ...todo,
-            text: text,
-        });
+        setTodoText(kit.storage, kit.authorKeypair, todo.id, text);
         setEditedText(text);
     }
 
     let toggleTodo = () => {
         if (kit.authorKeypair === null) { return; }
-        saveTodo(kit.storage, kit.authorKeypair, {
-            ...todo,
-            isDone: !todo.isDone,
-        });
+        setTodoIsDone(kit.storage, kit.authorKeypair, todo.id, !todo.isDone);
     }
 
     logTodoApp('🎨     render ' + todo.id);
