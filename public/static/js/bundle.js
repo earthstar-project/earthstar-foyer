@@ -68874,7 +68874,7 @@ exports.DebugApp = ({ changeKey, kit }) => {
                     React.createElement("button", { type: "button", style: styles.sLoudButton, onClick: () => setDarkMode(!darkMode) }, "Toggle dark mode")))));
 };
 
-},{"../log":279,"../theme":280,"../themeStyle":281,"react":222}],269:[function(require,module,exports){
+},{"../log":280,"../theme":281,"../themeStyle":282,"react":222}],269:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69045,7 +69045,7 @@ class FoyerComposer extends React.PureComponent {
 }
 exports.FoyerComposer = FoyerComposer;
 
-},{"../log":279,"../util":282,"earthstar":100,"react":222}],270:[function(require,module,exports){
+},{"../log":280,"../util":283,"earthstar":100,"react":222}],270:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69096,7 +69096,7 @@ exports.HelloApp = ({ changeKey, kit }) => {
                     React.createElement("button", { type: "button", style: styles.sLoudButton, onClick: () => setDarkMode(!darkMode) }, "Toggle dark mode")))));
 };
 
-},{"../log":279,"../theme":280,"../themeStyle":281,"react":222}],271:[function(require,module,exports){
+},{"../log":280,"../theme":281,"../themeStyle":282,"react":222}],271:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69124,7 +69124,7 @@ const react_1 = require("react");
 const log_1 = require("../log");
 const theme_1 = require("../theme");
 const themeStyle_1 = require("../themeStyle");
-const todoLayer_1 = require("../layers/todoLayer");
+const todoHooks_1 = require("../layers/todoHooks");
 //================================================================================
 let { lightTheme, darkTheme } = theme_1.makeLightAndDarkThemes({
     // white on dark green with frog colored buttons
@@ -69132,88 +69132,13 @@ let { lightTheme, darkTheme } = theme_1.makeLightAndDarkThemes({
     gr0: '#0c2122',
     ac3: '#2c960c',
 });
-let useForceUpdate = () => {
-    // https://stackoverflow.com/questions/53215285/how-can-i-force-component-to-re-render-with-hooks-in-react
-    let [, forceUpdate] = react_1.useReducer(x => x + 1, 0);
-    return forceUpdate;
-};
 exports.TodoApp = ({ changeKey, kit }) => {
     log_1.logTodoApp('🎨 render.  changeKey:', changeKey);
     if (kit === null) {
         return React.createElement("div", null, "No workspace");
     }
-    //------------------------------------------------------------
-    // BEGIN HOOK: [todoLayer, todos] = useTodos(storage, authorKeypair)
-    //
-    // it would be better if this was two hooks:
-    //   let todoLayer = useTodoLayer(storage, authorKeypair)
-    //   let todos = useTodos(todoLayer)
-    //
-    // ...but we need to clear todos when the todoLayer is reloaded in useMemo,
-    // otherwise we don't get a loading state in between when the todoLayer changes,
-    // and we render old todos with a different non-matching todoLayer
-    // until useEffect kicks in and sets fresh ones.
-    //
-    // maybe this would work, having a second useMemo since that seems to run
-    // right away, not delayed like useEffect:
-    //
-    //    todoLayer = useTodoLayer(storage, authorKeypair) =>
-    //        useMemo(() => { return new TodoLayer() }, [storage, authorkeypair])
-    //
-    //    todos = useTodos(todoLayer) =>
-    //        [todos, setTodos] = useState('loading')
-    //        // zero out todos right away with useMemo
-    //        useMemo(() => { setTodos('loading') }, [todoLayer])
-    //        // eventually...
-    //        useEffect(() => {
-    //            // load them...
-    //            setTodos(todoLayer.listTodos());
-    //            // and subscribe / unsubscribe...
-    //            let unsub = todoLayer.onChange.subscribe(() => {
-    //                setTodos(todoLayer.listTodos());
-    //            });
-    //            return () => { unsub(); }
-    //        }, [todoLayer]);
-    //
-    // first render will have empty todos.
-    // then useEffect will run after first render and set them.
-    let [todos, setTodos] = react_1.useState('LOADING');
-    let todoLayer = react_1.useMemo(() => {
-        log_1.logTodoApp('🛐 useMemo: making new todo layer');
-        // clear the old todos.  new ones will be loaded by useEffect.
-        setTodos('LOADING');
-        return new todoLayer_1.TodoLayer(kit.storage, kit.authorKeypair);
-    }, [kit.storage, kit.authorKeypair]);
-    // subscribe to todoLayer.onChange and look up the todos again
-    react_1.useEffect(() => {
-        // when the todoLayer changes, reload the todos...
-        log_1.logTodoApp('🛐️ useEffect: loading and setting todos');
-        // pretend this is a slow async operation, for testing
-        setTimeout(() => {
-            log_1.logTodoApp('   ...🛐️ useEffect: loading and setting todos');
-            // this can throw StorageIsClosedError or React can complain
-            // that the state was updated after the component was unmounted.
-            // we would need to check if the component is still mounted
-            // before doing this...
-            setTodos(todoLayer.listTodos());
-        }, 200);
-        // when the todoLayer changes, subscribe to it...
-        log_1.logTodoApp('🛐️ useEffect: subscribing to todo layer');
-        let unsub = todoLayer.onChange.subscribe(() => {
-            // changes from todoLayer make us reload todos
-            log_1.logTodoApp('🛐 todoLayer.onChange -- reloading and setting todos');
-            setTodos(todoLayer.listTodos());
-        });
-        // when the component is going away or the todoLayer changes,
-        // unsubscribe from the old one...
-        return () => {
-            log_1.logTodoApp('🛐️ useEffect: UN-subscribing from old todo layer');
-            unsub();
-            todoLayer.close();
-        };
-    }, [todoLayer]);
-    // END useTodos HOOK
-    //------------------------------------------------------------
+    let todoLayer = todoHooks_1.useTodoLayer(kit.storage, kit.authorKeypair);
+    let todos = todoHooks_1.useTodos(todoLayer);
     let [darkMode, setDarkMode] = react_1.useState(false);
     let [newText, setNewText] = react_1.useState('');
     let theme = darkMode ? darkTheme : lightTheme;
@@ -69245,7 +69170,9 @@ exports.TodoApp = ({ changeKey, kit }) => {
                 React.createElement("button", { type: "button", style: styles.sQuietButton, onClick: () => setDarkMode(!darkMode) }, "Toggle dark mode"))));
 };
 exports.SingleTodoView = ({ todoLayer, todo, styles }) => {
-    // todo.text is the current value from Storage, which may have changed from a sync.
+    // This is complicated because it has to handle
+    // an incoming change from sync while the user is editing the todo text.
+    // The prop's todo.text is the current value from Storage, which may have changed from a sync.
     let [originalText, setOriginalText] = react_1.useState(todo.text); // old value (from first render)
     let [editedText, setEditedText] = react_1.useState(todo.text); // value in <input>, possibly edited by user and not saved yet
     if (originalText !== todo.text) {
@@ -69280,11 +69207,11 @@ exports.SingleTodoView = ({ todoLayer, todo, styles }) => {
     log_1.logTodoApp('🎨     render todo: ' + todo.id);
     return React.createElement("li", { style: { listStyle: 'none' } },
         React.createElement("form", { className: 'flexRow', style: { alignItems: 'center' }, onSubmit: (e) => { e.preventDefault(); saveText(editedText); } },
-            React.createElement("input", { type: 'checkbox', className: 'flexItem', style: { transform: 'scale(2)' }, checked: todo.isDone, onChange: (e) => toggleTodo() }),
+            React.createElement("input", { type: 'checkbox', className: 'flexItem', style: { transform: 'scale(2)' }, checked: todo.isDone, onChange: toggleTodo }),
             React.createElement("input", { type: 'text', className: 'flexItem flexGrow1', style: Object.assign(Object.assign({}, styles.sTextInput), { border: 'none', paddingLeft: 0, fontWeight: userInputNeedsSaving ? 'bold' : 'normal' }), value: editedText, onChange: (e) => setEditedText(e.target.value), onBlur: (e) => saveText(e.target.value) })));
 };
 
-},{"../layers/todoLayer":278,"../log":279,"../theme":280,"../themeStyle":281,"react":222}],272:[function(require,module,exports){
+},{"../layers/todoHooks":278,"../log":280,"../theme":281,"../themeStyle":282,"react":222}],272:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69574,7 +69501,7 @@ class Earthbar extends React.Component {
 }
 exports.Earthbar = Earthbar;
 
-},{"./earthbarAppPanel":273,"./earthbarStore":274,"./earthbarUserPanel":275,"./earthbarWorkspacePanel":276,"./log":279,"./util":282,"react":222}],273:[function(require,module,exports){
+},{"./earthbarAppPanel":273,"./earthbarStore":274,"./earthbarUserPanel":275,"./earthbarWorkspacePanel":276,"./log":280,"./util":283,"react":222}],273:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69631,7 +69558,7 @@ class EarthbarAppPanel extends React.Component {
 }
 exports.EarthbarAppPanel = EarthbarAppPanel;
 
-},{"./log":279,"react":222}],274:[function(require,module,exports){
+},{"./log":280,"react":222}],274:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EarthbarStore = void 0;
@@ -69993,7 +69920,7 @@ class EarthbarStore {
 }
 exports.EarthbarStore = EarthbarStore;
 
-},{"./kit":277,"./log":279,"./util":282,"earthstar":100,"fast-equals":133}],275:[function(require,module,exports){
+},{"./kit":277,"./log":280,"./util":283,"earthstar":100,"fast-equals":133}],275:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -70194,7 +70121,7 @@ class EarthbarUserPanel extends React.Component {
 }
 exports.EarthbarUserPanel = EarthbarUserPanel;
 
-},{"./log":279,"./util":282,"earthstar":100,"react":222}],276:[function(require,module,exports){
+},{"./log":280,"./util":283,"earthstar":100,"react":222}],276:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -70355,7 +70282,7 @@ class EarthbarWorkspacePanel extends React.Component {
 }
 exports.EarthbarWorkspacePanel = EarthbarWorkspacePanel;
 
-},{"./log":279,"./util":282,"earthstar":100,"react":222}],277:[function(require,module,exports){
+},{"./log":280,"./util":283,"earthstar":100,"react":222}],277:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Kit = void 0;
@@ -70406,21 +70333,123 @@ class Kit {
 }
 exports.Kit = Kit;
 
-},{"./log":279,"earthstar":100,"lodash.debounce":171}],278:[function(require,module,exports){
+},{"./log":280,"earthstar":100,"lodash.debounce":171}],278:[function(require,module,exports){
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.useTodos = exports.useTodoLayer = void 0;
+const react_1 = require("react");
+const log_1 = require("../log");
+const todoLayer_1 = require("../layers/todoLayer");
+const earthstar_1 = require("earthstar");
+//================================================================================
+// from https://github.com/jmlweb/isMounted
+let useIsMounted = () => {
+    const isMounted = react_1.useRef(false);
+    react_1.useEffect(() => {
+        isMounted.current = true;
+        return () => { isMounted.current = false; };
+    }, []);
+    return isMounted;
+};
+// from https://stackoverflow.com/questions/53215285/how-can-i-force-component-to-re-render-with-hooks-in-react
+let useForceUpdate = () => {
+    let [, forceUpdate] = react_1.useReducer(x => x + 1, 0);
+    return forceUpdate;
+};
+// also consider https://github.com/rauldeheer/use-async-effect
+//================================================================================
+exports.useTodoLayer = (storage, keypair) => react_1.useMemo(() => {
+    log_1.logTodoHook('🛐 useTodoLayer: useMemo: making new TodoLayer');
+    return new todoLayer_1.TodoLayer(storage, keypair);
+}, [storage, keypair]);
+//================================================================================
+exports.useTodos = (todoLayer) => {
+    let isMounted = useIsMounted();
+    let [todos, setTodos] = react_1.useState('LOADING');
+    // when todoLayer changes...
+    react_1.useMemo(() => {
+        // zero out todos
+        // (todoLayer changes when storage or keypair changes,
+        //  so we don't want to keep showing the old stale todos we had before)
+        log_1.logTodoHook('🛐 useTodos: useMemo: todoLayer changed. setting todos to "LOADING"');
+        setTodos('LOADING');
+        // reload them
+        log_1.logTodoHook('🛐 useTodos: useMemo: starting async query...');
+        // whenever we do an async call we have to do all this nonsense...
+        todoLayer.listTodosAsync().then(todos => {
+            log_1.logTodoHook('🛐 useTodos: useMemo: ...got todos.  setting.');
+            // the component might not be mounted anymore, e.g. if we switch to a different earthstar app
+            if (isMounted.current) {
+                setTodos(todos);
+            }
+            else {
+                log_1.logTodoHook('🛐 useTodos: useMemo: ...(skipped because not mounted)');
+            }
+        }).catch(e => {
+            // the storage might be closed, e.g. if we switch to a different workspace
+            if (e instanceof earthstar_1.StorageIsClosedError) {
+                log_1.logTodoHook('🛐 useTodos: useMemo: ...(storage was closed)');
+            }
+            else {
+                throw e;
+            }
+        });
+    }, [todoLayer]);
+    // when todoLayer has a change event...
+    react_1.useEffect(() => {
+        // subscribe & load when change happens
+        log_1.logTodoHook('🛐 useTodos: useEffect: subscribing');
+        let unsub = todoLayer.onChange.subscribe(() => {
+            log_1.logTodoHook('🛐 useTodos: TodoLayer.onChange: starting async query...');
+            // all the same nonsense again
+            todoLayer.listTodosAsync().then(todos => {
+                log_1.logTodoHook('🛐 useTodos: TodoLayer.onChange: ...got todos.  setting.');
+                if (isMounted.current) {
+                    setTodos(todos);
+                }
+                else {
+                    log_1.logTodoHook('🛐 useTodos: Todolayer.onChange: ...(skipped because not mounted)');
+                }
+            }).catch(e => {
+                if (e instanceof earthstar_1.StorageIsClosedError) {
+                    log_1.logTodoHook('🛐 useTodos: TodoLayer.onChange: ...(storage was closed)');
+                }
+                else {
+                    throw e;
+                }
+            });
+        });
+        // unsubscribe
+        return () => {
+            log_1.logTodoHook('🛐 useTodos: useEffect: unsubscribing');
+            unsub();
+        };
+    }, [todoLayer]);
+    return todos;
+};
+
+},{"../layers/todoLayer":279,"../log":280,"earthstar":100,"react":222}],279:[function(require,module,exports){
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TodoLayer = void 0;
 const log_1 = require("../log");
 const earthstar_1 = require("earthstar");
-//================================================================================
-// GENERIC HELPERS
-let randInt = (lo, hi) => 
-// inclusive of endpoints
-Math.floor(Math.random() * ((hi + 1) - lo) + lo);
 const fieldNames = [
     'text.txt',
     'isDone.json'
 ];
+let randInt = (lo, hi) => 
+// inclusive of endpoints
+Math.floor(Math.random() * ((hi + 1) - lo) + lo);
 class TodoLayer {
     // if storage or keypair change, close your old TodoLayer and make a new one.
     constructor(storage, keypair) {
@@ -70494,6 +70523,14 @@ class TodoLayer {
         }
         return todos;
     }
+    // experimental function which pretends data loading is slow and async
+    // like it will be with IndexedDb
+    listTodosAsync() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield earthstar_1.sleep(200);
+            return this.listTodos();
+        });
+    }
     getTodo(id) {
         let text = this._storage.getContent(TodoLayer.makeTodoPath(id, 'text.txt'));
         if (text === undefined || text === '') {
@@ -70547,10 +70584,10 @@ class TodoLayer {
 exports.TodoLayer = TodoLayer;
 TodoLayer.layerName = 'todo'; // used as top level of earthstar path
 
-},{"../log":279,"earthstar":100}],279:[function(require,module,exports){
+},{"../log":280,"earthstar":100}],280:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logTodoLayer = exports.logTodoApp = exports.logDebugApp = exports.logHelloApp = exports.logFoyerApp = exports.logEarthbarPanel = exports.logEarthbar = exports.logKit = exports.logEarthbarStore = void 0;
+exports.logTodoLayer = exports.logTodoHook = exports.logTodoApp = exports.logDebugApp = exports.logHelloApp = exports.logFoyerApp = exports.logEarthbarPanel = exports.logEarthbar = exports.logKit = exports.logEarthbarStore = void 0;
 let smul = (s, n) => 
 // repeat a string, n times
 Array.from(Array(n)).map(x => s).join('');
@@ -70563,9 +70600,10 @@ exports.logFoyerApp = makeLogger(3, 'foyer app', 'color: black; background: oran
 exports.logHelloApp = makeLogger(3, 'hello app', 'color: black; background: yellow');
 exports.logDebugApp = makeLogger(3, 'debug app', 'color: black; background: #af8');
 exports.logTodoApp = makeLogger(3, 'todo app', 'color: black; background: #8fa');
-exports.logTodoLayer = makeLogger(0, 'todo layer', 'color: white; background: blue');
+exports.logTodoHook = makeLogger(0, 'todo hook', 'color: white; background: #80c');
+exports.logTodoLayer = makeLogger(1, 'todo layer', 'color: white; background: blue');
 
-},{}],280:[function(require,module,exports){
+},{}],281:[function(require,module,exports){
 "use strict";
 //================================================================================
 // TYPES
@@ -70713,7 +70751,7 @@ exports.contrastRatio = (c1, c2) => {
     return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
 };
 
-},{}],281:[function(require,module,exports){
+},{}],282:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.makeStyles = void 0;
@@ -70750,7 +70788,7 @@ exports.makeStyles = (theme) => {
     return { sPage, sCard, sLoudButton, sQuietButton, sTextInput };
 };
 
-},{}],282:[function(require,module,exports){
+},{}],283:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ellipsifyAddress = exports.cutAtPeriod = exports.sortByField = exports.sortFnByField = void 0;

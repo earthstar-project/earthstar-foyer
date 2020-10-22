@@ -1,5 +1,5 @@
 import {
-    logTodoApp, logTodoLayer,
+    logTodoLayer,
 } from '../log';
 import {
     AuthorKeypair,
@@ -7,15 +7,9 @@ import {
     isErr,
     WriteEvent,
     Emitter,
+    sleep,
 } from 'earthstar';
 import { Thunk } from '../types';
-
-//================================================================================
-// GENERIC HELPERS
-
-let randInt = (lo: number, hi: number): number =>
-    // inclusive of endpoints
-    Math.floor(Math.random() * ((hi+1) - lo) + lo);
 
 //================================================================================
 
@@ -32,6 +26,10 @@ const fieldNames = [
 
 // convert the above list to a discriminated union type like 'a' | 'b'
 type TodoFieldName = (typeof fieldNames)[number];
+
+let randInt = (lo: number, hi: number): number =>
+    // inclusive of endpoints
+    Math.floor(Math.random() * ((hi+1) - lo) + lo);
 
 export class TodoLayer {
     static layerName = 'todo';  // used as top level of earthstar path
@@ -108,6 +106,14 @@ export class TodoLayer {
         }
         return todos;
     }
+
+    // experimental function which pretends data loading is slow and async
+    // like it will be with IndexedDb
+    async listTodosAsync(): Promise<Todo[]> {
+        await sleep(200);
+        return this.listTodos();
+    }
+
     getTodo(id: TodoId): Todo | undefined {
         let text = this._storage.getContent(TodoLayer.makeTodoPath(id, 'text.txt'));
         if (text === undefined || text === '') { return undefined; }
