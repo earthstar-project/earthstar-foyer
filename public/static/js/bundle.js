@@ -19768,7 +19768,7 @@ array[Math.floor(exports.detRandom(s) * array.length)];
 },{"../crypto/crypto":96}],108:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.subscribeToMany = exports.Emitter = void 0;
+exports.Bus = exports.subscribeToManyEmitters = exports.Emitter = void 0;
 const tslib_1 = require("tslib");
 class Emitter {
     constructor() {
@@ -19799,28 +19799,151 @@ class Emitter {
             }
         });
     }
+    unsubscribeAll() {
+        // clear all subscriptions
+        this._callbacks = [];
+    }
 }
 exports.Emitter = Emitter;
-exports.subscribeToMany = (emitters, cb) => {
+exports.subscribeToManyEmitters = (emitters, cb) => {
     // Run the callback when any of the emitters fire.
     // Return a thunk which unsubscribes from all the emitters.
     let unsubs = emitters.map(e => e.subscribe(cb));
     let unsubAll = () => unsubs.forEach(u => u());
     return unsubAll;
 };
+class Bus {
+    constructor() {
+        /*
+        Like Emitter, but with multiple channels.
+        Each channel has a name (a string) and an allowed message type.
+    
+        When you subscribe with a callback, that callback may return a Promise.
+        Sending will block until all the callbacks' promises are resolved, e.g. the
+        callbacks are done running.
+        Remember to "await bus.send" so this blocking will work.
+        This purely works at the level of the individual send() call; the overall bus
+        instance is not generally blocked.  But it's a useful way to get backpressure
+        when sending a lot of events, e.g.
+    
+            let manyThings = [......];
+            for (let thing of manyThings) {
+                // this will slowly progress through the things,
+                // running the callbacks one at a time
+                // instead of launching them all at once
+                await bus.send('channel1', thing);
+            }
+            // at this point all the callbacks are done running
+    
+        Usage:
+    
+            interface ChannelTypes {
+                ch1: string,
+                ch2: number,
+            }
+            let bus = new Bus<ChannelTypes>();
+    
+            // subscribe some callbacks
+            let unsub1 = bus.subscribe('ch1', async (s: string) => {
+                console.log('async callback that blocks until done...');
+                await sleep(1000);
+                console.log('...done');
+            });
+            let unsub2 bus.subscribe('ch1', (s: string) => {
+                console.log('sync callbacks also work');
+                console.log(s);
+            });
+    
+            // sending will block until the callbacks are done running
+            await bus.send('ch1', 'hello');
+    
+            unsub1();
+            unsub2();
+        
+        You can also subscribe to the special '*' channel which gets every event from every channel.
+        However to use it you have to declare '*' in your channel type interface and manually set
+        what type it's expected to produce, which would be a union of the other types.
+    
+            interface ChannelTypesWithStar {
+                ch1: string,
+                ch2: number,
+                '*': string | number,
+            }
+            let bus = new Bus<ChannelTypesWithStar>();
+            bus.subscribe('*', x => { });  // x will be string | number
+    
+        You wouldn't normally do this, but if you send events to the '*' channel
+        they are only caught by the '*' callbacks.
+    
+        Callbacks are run in the same order they were subscribed, except that
+        the special '*' callbacks are run after the others.
+    
+        */
+        this._callbacksByChannel = {}; // channel --> callback[]
+        this.changeKey = 'init'; // this becomes a new random value with every call to send()
+    }
+    subscribe(channel, cb) {
+        let existingCbs = this._callbacksByChannel[channel];
+        let cbs = existingCbs || [];
+        cbs.push(cb);
+        this._callbacksByChannel[channel] = cbs;
+        return () => {
+            let cbs = this._callbacksByChannel[channel];
+            if (cbs !== undefined) {
+                cbs = cbs.filter((c) => c !== cb);
+                if (cbs.length === 0) {
+                    delete this._callbacksByChannel[channel];
+                }
+                else {
+                    this._callbacksByChannel[channel] = cbs;
+                }
+            }
+        };
+    }
+    send(channel, val) {
+        return tslib_1.__awaiter(this, void 0, void 0, function* () {
+            this.changeKey = '' + Math.random();
+            // TODO: if sending to '*', should we call every single callback?
+            // for now we only call the '*' callbacks
+            // gather the callbacks to call
+            // regular events send to their own channel's subscribers plus '*' subscribers
+            let cbs = [];
+            cbs = cbs.concat(this._callbacksByChannel[channel] || []);
+            cbs = cbs.concat(this._callbacksByChannel['*'] || []);
+            // call them
+            for (let cb of cbs) {
+                let result = cb(val);
+                if (result instanceof Promise) {
+                    yield result;
+                }
+            }
+        });
+    }
+    unsubscribeAll() {
+        // clear all subscriptions
+        this._callbacksByChannel = {};
+    }
+}
+exports.Bus = Bus;
 
 },{"tslib":261}],109:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.stringMult = exports.range = exports.isPlainObject = void 0;
+exports.sleep = exports.stringMult = exports.range = exports.isPlainObject = void 0;
+const tslib_1 = require("tslib");
 exports.isPlainObject = (obj) => Object.prototype.toString.call(obj) === '[object Object]';
 exports.range = (n) => 
 // [0, 1, ... n-1]
 [...Array(n).keys()];
 // stringMult('a!', 3) === 'a!a!a!'
 exports.stringMult = (str, n) => exports.range(n).map(x => str).join('');
+exports.sleep = (ms) => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
+    return new Promise((resolve, reject) => {
+        setTimeout(resolve, ms);
+    });
+});
 
-},{}],110:[function(require,module,exports){
+},{"tslib":261}],110:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.firstErrorThunk = exports.firstError = exports.notErr = exports.isErr = exports.ConnectionRefusedError = exports.NetworkError = exports.NotFoundError = exports.StorageIsClosedError = exports.ValidationError = exports.EarthstarError = exports.WriteResult = void 0;
@@ -68751,7 +68874,7 @@ exports.DebugApp = ({ changeKey, kit }) => {
                     React.createElement("button", { type: "button", style: styles.sLoudButton, onClick: () => setDarkMode(!darkMode) }, "Toggle dark mode")))));
 };
 
-},{"../log":278,"../theme":279,"../themeStyle":280,"react":222}],269:[function(require,module,exports){
+},{"../log":279,"../theme":280,"../themeStyle":281,"react":222}],269:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -68922,7 +69045,7 @@ class FoyerComposer extends React.PureComponent {
 }
 exports.FoyerComposer = FoyerComposer;
 
-},{"../log":278,"../util":281,"earthstar":100,"react":222}],270:[function(require,module,exports){
+},{"../log":279,"../util":282,"earthstar":100,"react":222}],270:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -68973,7 +69096,7 @@ exports.HelloApp = ({ changeKey, kit }) => {
                     React.createElement("button", { type: "button", style: styles.sLoudButton, onClick: () => setDarkMode(!darkMode) }, "Toggle dark mode")))));
 };
 
-},{"../log":278,"../theme":279,"../themeStyle":280,"react":222}],271:[function(require,module,exports){
+},{"../log":279,"../theme":280,"../themeStyle":281,"react":222}],271:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69001,100 +69124,7 @@ const react_1 = require("react");
 const log_1 = require("../log");
 const theme_1 = require("../theme");
 const themeStyle_1 = require("../themeStyle");
-const earthstar_1 = require("earthstar");
-//================================================================================
-// GENERIC HELPERS
-let randInt = (lo, hi) => 
-// inclusive of endpoints
-Math.floor(Math.random() * ((hi + 1) - lo) + lo);
-let sortedAndUnique = (items) => {
-    // return a sorted version of the array with duplicates removed.
-    // (checks for reference equality, ===)
-    items = [...items];
-    items.sort();
-    let result = [];
-    for (let item of items) {
-        if (result.length === 0 || item !== result[result.length - 1]) {
-            result.push(item);
-        }
-    }
-    return result;
-};
-var TodoFieldName;
-(function (TodoFieldName) {
-    TodoFieldName["text"] = "text.txt";
-    TodoFieldName["isDone"] = "isDone.json";
-})(TodoFieldName || (TodoFieldName = {}));
-let makeTodoId = () => `${Date.now() * 1000}-${randInt(1000000, 9999999)}`;
-let makeTodoPath = (id, fieldName) => {
-    return `/todo/${id}/${fieldName}`;
-};
-let parseTodoPath = (path) => {
-    try {
-        let [_, todo, id, fieldName] = path.split('/');
-        if (todo !== 'todo') {
-            return null;
-        }
-        let fieldNames = Object.values(TodoFieldName);
-        if (fieldNames.indexOf(fieldName) === -1) {
-            return null;
-        }
-        return { id: id, fieldName: fieldName };
-    }
-    catch (e) {
-        return null;
-    }
-};
-let listTodoIds = (storage) => 
-// sort by path, which turns out to be oldest first
-// since we use a timestamp in the path
-sortedAndUnique(storage
-    .paths({ pathPrefix: '/todo/' })
-    .map(path => {
-    // only keep parsable paths which end in '/text.txt'
-    let parsed = parseTodoPath(path);
-    if (parsed === null) {
-        return '';
-    }
-    if (parsed.fieldName !== TodoFieldName.text) {
-        return '';
-    }
-    return parsed.id;
-})
-    .filter(id => id !== ''));
-let loadTodo = (storage, id) => {
-    let text = storage.getContent(makeTodoPath(id, TodoFieldName.text));
-    if (text === undefined || text === '') {
-        return null;
-    }
-    let isDoneStr = storage.getContent(makeTodoPath(id, TodoFieldName.isDone));
-    let isDone = (isDoneStr === 'true') ? true : false;
-    return { id, text, isDone };
-};
-let setTodoText = (storage, keypair, id, text) => {
-    let err = storage.set(keypair, {
-        format: 'es.4',
-        path: makeTodoPath(id, TodoFieldName.text),
-        content: text,
-    });
-    if (earthstar_1.isErr(err)) {
-        console.error(err);
-    }
-};
-let setTodoIsDone = (storage, keypair, id, isDone) => {
-    let err = storage.set(keypair, {
-        format: 'es.4',
-        path: makeTodoPath(id, TodoFieldName.isDone),
-        content: '' + isDone,
-    });
-    if (earthstar_1.isErr(err)) {
-        console.error(err);
-    }
-};
-let setTodo = (storage, keypair, todo) => {
-    setTodoText(storage, keypair, todo.id, todo.text);
-    setTodoIsDone(storage, keypair, todo.id, todo.isDone);
-};
+const todoLayer_1 = require("../layers/todoLayer");
 //================================================================================
 let { lightTheme, darkTheme } = theme_1.makeLightAndDarkThemes({
     // white on dark green with frog colored buttons
@@ -69104,19 +69134,23 @@ let { lightTheme, darkTheme } = theme_1.makeLightAndDarkThemes({
 });
 exports.TodoApp = ({ changeKey, kit }) => {
     log_1.logTodoApp('🎨 render.  changeKey:', changeKey);
+    if (kit === null) {
+        return React.createElement("div", null, "No workspace");
+    }
+    let todoLayer = react_1.useMemo(() => {
+        log_1.logTodoApp('useMemo: making new todo layer');
+        return new todoLayer_1.TodoLayer(kit.storage, kit.authorKeypair);
+    }, [kit.storage, kit.authorKeypair]);
     let [darkMode, setDarkMode] = react_1.useState(false);
     let [newText, setNewText] = react_1.useState('');
     let theme = darkMode ? darkTheme : lightTheme;
     let styles = themeStyle_1.makeStyles(theme);
-    if (kit === null) {
-        return React.createElement("div", null, "No workspace");
-    }
     // load the todos
     // we should not do this on every render...
-    let todoIds = listTodoIds(kit.storage);
+    let todoIds = todoLayer.listIds();
     let todos = [];
     for (let id of todoIds) {
-        let todo = loadTodo(kit.storage, id);
+        let todo = todoLayer.getTodo(id);
         if (todo) {
             todos.push(todo);
         }
@@ -69125,20 +69159,16 @@ exports.TodoApp = ({ changeKey, kit }) => {
         React.createElement("div", { className: 'stack centeredReadableWidth' },
             React.createElement("div", { style: styles.sCard },
                 React.createElement("h3", null, "Todos"),
-                React.createElement("ul", null, todos.map(todo => React.createElement(exports.SingleTodoView, { key: todo.id, kit: kit, todo: todo, styles: styles }))),
+                React.createElement("ul", null, todos.map(todo => React.createElement(exports.SingleTodoView, { key: todo.id, todoLayer: todoLayer, todo: todo, styles: styles }))),
                 kit.authorKeypair === null
                     ? React.createElement("div", null, "Log in to add your own todos.")
                     : React.createElement("form", { className: 'flexRow', onSubmit: (e) => {
                             e.preventDefault();
-                            setNewText('');
                             if (kit.authorKeypair === null) {
                                 return;
                             }
-                            setTodo(kit.storage, kit.authorKeypair, {
-                                id: makeTodoId(),
-                                text: newText,
-                                isDone: false,
-                            });
+                            setNewText('');
+                            todoLayer.setNewTodo(newText);
                         } },
                         React.createElement("input", { type: 'text', className: 'flexItem flexGrow1', style: styles.sTextInput, value: newText, onChange: (e) => setNewText(e.target.value) }),
                         React.createElement("button", { type: 'submit', className: 'flexItem', style: styles.sLoudButton }, "Add"))),
@@ -69146,7 +69176,7 @@ exports.TodoApp = ({ changeKey, kit }) => {
             React.createElement("p", { className: 'right' },
                 React.createElement("button", { type: "button", style: styles.sQuietButton, onClick: () => setDarkMode(!darkMode) }, "Toggle dark mode"))));
 };
-exports.SingleTodoView = ({ kit, todo, styles }) => {
+exports.SingleTodoView = ({ todoLayer, todo, styles }) => {
     // todo.text is the current value from Storage, which may have changed from a sync.
     let [originalText, setOriginalText] = react_1.useState(todo.text); // old value (from first render)
     let [editedText, setEditedText] = react_1.useState(todo.text); // value in <input>, possibly edited by user and not saved yet
@@ -69173,17 +69203,11 @@ exports.SingleTodoView = ({ kit, todo, styles }) => {
     // Should we render the field with a highlight?
     let userInputNeedsSaving = editedText !== todo.text;
     let saveText = (text) => {
-        if (kit.authorKeypair === null) {
-            return;
-        }
-        setTodoText(kit.storage, kit.authorKeypair, todo.id, text);
+        todoLayer.setTodoText(todo.id, text);
         setEditedText(text);
     };
     let toggleTodo = () => {
-        if (kit.authorKeypair === null) {
-            return;
-        }
-        setTodoIsDone(kit.storage, kit.authorKeypair, todo.id, !todo.isDone);
+        todoLayer.setTodoIsDone(todo.id, !todo.isDone);
     };
     log_1.logTodoApp('🎨     render ' + todo.id);
     return React.createElement("li", { style: { listStyle: 'none' } },
@@ -69192,7 +69216,7 @@ exports.SingleTodoView = ({ kit, todo, styles }) => {
             React.createElement("input", { type: 'text', className: 'flexItem flexGrow1', style: Object.assign(Object.assign({}, styles.sTextInput), { border: 'none', paddingLeft: 0, fontWeight: userInputNeedsSaving ? 'bold' : 'normal' }), value: editedText, onChange: (e) => setEditedText(e.target.value), onBlur: (e) => saveText(e.target.value) })));
 };
 
-},{"../log":278,"../theme":279,"../themeStyle":280,"earthstar":100,"react":222}],272:[function(require,module,exports){
+},{"../layers/todoLayer":278,"../log":279,"../theme":280,"../themeStyle":281,"react":222}],272:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69482,7 +69506,7 @@ class Earthbar extends React.Component {
 }
 exports.Earthbar = Earthbar;
 
-},{"./earthbarAppPanel":273,"./earthbarStore":274,"./earthbarUserPanel":275,"./earthbarWorkspacePanel":276,"./log":278,"./util":281,"react":222}],273:[function(require,module,exports){
+},{"./earthbarAppPanel":273,"./earthbarStore":274,"./earthbarUserPanel":275,"./earthbarWorkspacePanel":276,"./log":279,"./util":282,"react":222}],273:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69539,7 +69563,7 @@ class EarthbarAppPanel extends React.Component {
 }
 exports.EarthbarAppPanel = EarthbarAppPanel;
 
-},{"./log":278,"react":222}],274:[function(require,module,exports){
+},{"./log":279,"react":222}],274:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EarthbarStore = void 0;
@@ -69901,7 +69925,7 @@ class EarthbarStore {
 }
 exports.EarthbarStore = EarthbarStore;
 
-},{"./kit":277,"./log":278,"./util":281,"earthstar":100,"fast-equals":133}],275:[function(require,module,exports){
+},{"./kit":277,"./log":279,"./util":282,"earthstar":100,"fast-equals":133}],275:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -70102,7 +70126,7 @@ class EarthbarUserPanel extends React.Component {
 }
 exports.EarthbarUserPanel = EarthbarUserPanel;
 
-},{"./log":278,"./util":281,"earthstar":100,"react":222}],276:[function(require,module,exports){
+},{"./log":279,"./util":282,"earthstar":100,"react":222}],276:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -70263,7 +70287,7 @@ class EarthbarWorkspacePanel extends React.Component {
 }
 exports.EarthbarWorkspacePanel = EarthbarWorkspacePanel;
 
-},{"./log":278,"./util":281,"earthstar":100,"react":222}],277:[function(require,module,exports){
+},{"./log":279,"./util":282,"earthstar":100,"react":222}],277:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Kit = void 0;
@@ -70314,10 +70338,123 @@ class Kit {
 }
 exports.Kit = Kit;
 
-},{"./log":278,"earthstar":100,"lodash.debounce":171}],278:[function(require,module,exports){
+},{"./log":279,"earthstar":100,"lodash.debounce":171}],278:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logTodoApp = exports.logDebugApp = exports.logHelloApp = exports.logFoyerApp = exports.logEarthbarPanel = exports.logEarthbar = exports.logKit = exports.logEarthbarStore = void 0;
+exports.TodoLayer = void 0;
+const log_1 = require("../log");
+const earthstar_1 = require("earthstar");
+//================================================================================
+// GENERIC HELPERS
+let randInt = (lo, hi) => 
+// inclusive of endpoints
+Math.floor(Math.random() * ((hi + 1) - lo) + lo);
+const fieldNames = [
+    'text.txt',
+    'isDone.json'
+];
+class TodoLayer {
+    constructor(storage, keypair) {
+        log_1.logTodoLayer('constructor');
+        this.storage = storage;
+        this.keypair = keypair;
+    }
+    static makeTodoId() {
+        return `${Date.now() * 1000}-${randInt(1000000, 9999999)}`;
+    }
+    static makeTodoPath(id, fieldName) {
+        return `/${this.layerName}/${id}/${fieldName}`;
+    }
+    static parseTodoPath(path) {
+        try {
+            let [_, todo, id, fieldName] = path.split('/');
+            if (todo !== TodoLayer.layerName) {
+                return null;
+            }
+            if (fieldNames.indexOf(fieldName) === -1) {
+                return null;
+            }
+            return { id: id, fieldName: fieldName };
+        }
+        catch (e) {
+            throw e;
+            return null;
+        }
+    }
+    listIds() {
+        log_1.logTodoLayer('listIds()');
+        // storage.paths will give us results in sorted order (oldest first)
+        return this.storage
+            .paths({ pathPrefix: '/todo/' })
+            .map(path => {
+            let parsed = TodoLayer.parseTodoPath(path);
+            if (parsed === null) {
+                return '';
+            }
+            if (parsed.fieldName !== 'text.txt') {
+                return '';
+            }
+            return parsed.id;
+        })
+            .filter(id => id !== '');
+    }
+    getTodo(id) {
+        let text = this.storage.getContent(TodoLayer.makeTodoPath(id, 'text.txt'));
+        if (text === undefined || text === '') {
+            return undefined;
+        }
+        let isDoneStr = this.storage.getContent(TodoLayer.makeTodoPath(id, 'isDone.json'));
+        let isDone = (isDoneStr === 'true') ? true : false;
+        return { id, text, isDone };
+    }
+    setTodoText(id, text) {
+        log_1.logTodoLayer(`set id=${id} text="${text}"`);
+        if (!this.keypair) {
+            console.error("can't save todo.  keypair is not provided");
+            return;
+        }
+        let err = this.storage.set(this.keypair, {
+            format: 'es.4',
+            path: TodoLayer.makeTodoPath(id, 'text.txt'),
+            content: text,
+        });
+        if (earthstar_1.isErr(err)) {
+            console.error(err);
+        }
+    }
+    setTodoIsDone(id, isDone) {
+        if (!this.keypair) {
+            console.error("can't save todo.  keypair is not provided");
+            return;
+        }
+        let err = this.storage.set(this.keypair, {
+            format: 'es.4',
+            path: TodoLayer.makeTodoPath(id, 'isDone.json'),
+            content: '' + isDone,
+        });
+        if (earthstar_1.isErr(err)) {
+            console.error(err);
+        }
+    }
+    setTodo(todo) {
+        this.setTodoText(todo.id, todo.text);
+        this.setTodoIsDone(todo.id, todo.isDone);
+    }
+    setNewTodo(text, isDone = false) {
+        this.setTodo({
+            id: TodoLayer.makeTodoId(),
+            text,
+            isDone
+        });
+    }
+}
+exports.TodoLayer = TodoLayer;
+TodoLayer.layerName = 'todo'; // used as top level of earthstar path
+
+},{"../log":279,"earthstar":100}],279:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.logTodoLayer = exports.logTodoApp = exports.logDebugApp = exports.logHelloApp = exports.logFoyerApp = exports.logEarthbarPanel = exports.logEarthbar = exports.logKit = exports.logEarthbarStore = void 0;
 let smul = (s, n) => 
 // repeat a string, n times
 Array.from(Array(n)).map(x => s).join('');
@@ -70330,8 +70467,9 @@ exports.logFoyerApp = makeLogger(3, 'foyer app', 'color: black; background: oran
 exports.logHelloApp = makeLogger(3, 'hello app', 'color: black; background: yellow');
 exports.logDebugApp = makeLogger(3, 'debug app', 'color: black; background: #af8');
 exports.logTodoApp = makeLogger(3, 'todo app', 'color: black; background: #8fa');
+exports.logTodoLayer = makeLogger(0, 'todo layer', 'color: white; background: blue');
 
-},{}],279:[function(require,module,exports){
+},{}],280:[function(require,module,exports){
 "use strict";
 //================================================================================
 // TYPES
@@ -70479,7 +70617,7 @@ exports.contrastRatio = (c1, c2) => {
     return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
 };
 
-},{}],280:[function(require,module,exports){
+},{}],281:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.makeStyles = void 0;
@@ -70516,7 +70654,7 @@ exports.makeStyles = (theme) => {
     return { sPage, sCard, sLoudButton, sQuietButton, sTextInput };
 };
 
-},{}],281:[function(require,module,exports){
+},{}],282:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ellipsifyAddress = exports.cutAtPeriod = exports.sortByField = exports.sortFnByField = void 0;

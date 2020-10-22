@@ -1,113 +1,24 @@
 import * as React from 'react';
 import {
     useState,
+    useMemo,
 } from 'react';
 import { Kit } from '../kit';
 import {
     logTodoApp,
 } from '../log';
 import {
-    makeLightAndDarkThemes, makeFullPalette
+    makeLightAndDarkThemes
 } from '../theme';
 import {
     Styles,
     makeStyles
 } from '../themeStyle';
-import { IStorage, isErr, AuthorKeypair, ValidationError } from 'earthstar';
-
-//================================================================================
-// GENERIC HELPERS
-
-let randInt = (lo: number, hi: number): number =>
-    // inclusive of endpoints
-    Math.floor(Math.random() * ((hi+1) - lo) + lo);
-
-let sortedAndUnique = <T, _>(items: T[]) : T[] => {
-    // return a sorted version of the array with duplicates removed.
-    // (checks for reference equality, ===)
-    items = [...items];
-    items.sort();
-    let result: T[] = [];
-    for (let item of items) {
-        if (result.length === 0 || item !== result[result.length-1]) {
-            result.push(item);
-        }
-    }
-    return result;
-};
-
-//================================================================================
-// TODO HELPERS
-
-interface Todo {
-    id: string,  // actually a creation timetamp in microseconds
-    text: string,
-    isDone: boolean,
-}
-enum TodoFieldName {
-    text = 'text.txt',  // required.  set to '' to delete the todo.
-    isDone = 'isDone.json',  // optional, only content === 'true' counts as done
-}
-let makeTodoId = () =>
-    `${Date.now() * 1000}-${randInt(1000000, 9999999)}`;
-let makeTodoPath = (id: string, fieldName: TodoFieldName) => {
-    return `/todo/${id}/${fieldName}`;
-}
-let parseTodoPath = (path: string): null | {id: string, fieldName: TodoFieldName} => {
-    try {
-        let [_, todo, id, fieldName] = path.split('/');
-        if (todo !== 'todo') { return null; }
-        let fieldNames = Object.values(TodoFieldName);
-        if (fieldNames.indexOf(fieldName as any) === -1) { return null; }
-        return { id: id, fieldName: fieldName as TodoFieldName };
-    } catch (e) {
-        return null;
-    }
-}
-let listTodoIds = (storage: IStorage): string[] =>
-    // sort by path, which turns out to be oldest first
-    // since we use a timestamp in the path
-    sortedAndUnique(
-        storage
-            .paths({ pathPrefix: '/todo/' })
-            .map(path => {
-                // only keep parsable paths which end in '/text.txt'
-                let parsed = parseTodoPath(path)
-                if (parsed === null) { return ''; }
-                if (parsed.fieldName !== TodoFieldName.text) { return ''; }
-                return parsed.id;
-            })
-            .filter(id => id !== '')
-    );
-
-let loadTodo = (storage: IStorage, id: string): Todo | null => {
-    let text = storage.getContent(makeTodoPath(id, TodoFieldName.text));
-    if (text === undefined || text === '') { return null; }
-    let isDoneStr = storage.getContent(makeTodoPath(id, TodoFieldName.isDone));
-    let isDone: boolean = (isDoneStr === 'true') ? true : false;
-    return { id, text, isDone };
-}
-
-let setTodoText = (storage: IStorage, keypair: AuthorKeypair, id: string, text: string): void => {
-    let err = storage.set(keypair, {
-        format: 'es.4',
-        path: makeTodoPath(id, TodoFieldName.text),
-        content: text,
-    });
-    if (isErr(err)) { console.error(err); }
-}
-let setTodoIsDone = (storage: IStorage, keypair: AuthorKeypair, id: string, isDone: boolean): void => {
-    let err = storage.set(keypair, {
-        format: 'es.4',
-        path: makeTodoPath(id, TodoFieldName.isDone),
-        content: '' + isDone,
-    });
-    if (isErr(err)) { console.error(err); }
-}
-let setTodo = (storage: IStorage, keypair: AuthorKeypair, todo: Todo): void => {
-    setTodoText(storage, keypair, todo.id, todo.text);
-    setTodoIsDone(storage, keypair, todo.id, todo.isDone);
-}
+import {
+    Todo,
+    TodoId,
+    TodoLayer,
+} from '../layers/todoLayer';
 
 //================================================================================
 
@@ -129,20 +40,25 @@ export interface TodoAppProps {
 export let TodoApp = ({ changeKey, kit }: TodoAppProps) => {
     logTodoApp('🎨 render.  changeKey:', changeKey);
 
+    if (kit === null) { return <div>No workspace</div>; }
+
+    let todoLayer = useMemo(() => {
+        logTodoApp('useMemo: making new todo layer');
+        return new TodoLayer(kit.storage, kit.authorKeypair);
+    }, [kit.storage, kit.authorKeypair]);
+
     let [darkMode, setDarkMode] = useState(false);
     let [newText, setNewText] = useState('');
 
     let theme = darkMode ? darkTheme : lightTheme;
     let styles = makeStyles(theme);
 
-    if (kit === null) { return <div>No workspace</div>; }
-
     // load the todos
     // we should not do this on every render...
-    let todoIds: string[] = listTodoIds(kit.storage)
+    let todoIds: TodoId[] = todoLayer.listIds();
     let todos: Todo[] = []
     for (let id of todoIds) {
-        let todo = loadTodo(kit.storage, id);
+        let todo = todoLayer.getTodo(id);
         if (todo) { todos.push(todo); }
     }
 
@@ -154,7 +70,7 @@ export let TodoApp = ({ changeKey, kit }: TodoAppProps) => {
                     {todos.map(todo =>
                         <SingleTodoView
                             key={todo.id}
-                            kit={kit}
+                            todoLayer={todoLayer}
                             todo={todo}
                             styles={styles}
                             />
@@ -165,13 +81,9 @@ export let TodoApp = ({ changeKey, kit }: TodoAppProps) => {
                   : <form className='flexRow'
                         onSubmit={(e) => {
                             e.preventDefault();
-                            setNewText('');
                             if (kit.authorKeypair === null) { return; }
-                            setTodo(kit.storage, kit.authorKeypair, {
-                                id: makeTodoId(),
-                                text: newText,
-                                isDone: false,
-                            });
+                            setNewText('');
+                            todoLayer.setNewTodo(newText);
                         }}
                         >
                         <input type='text'
@@ -202,12 +114,12 @@ export let TodoApp = ({ changeKey, kit }: TodoAppProps) => {
     </div>;
 }
 
-export interface SingleTodoProps {
-    kit: Kit;
-    todo: Todo;
-    styles: Styles;
+interface SingleTodoProps {
+    todoLayer: TodoLayer,
+    todo: Todo,
+    styles: Styles,
 }
-export let SingleTodoView = ({ kit, todo, styles }: SingleTodoProps) => {
+export let SingleTodoView = ({ todoLayer, todo, styles }: SingleTodoProps) => {
     // todo.text is the current value from Storage, which may have changed from a sync.
     let [originalText, setOriginalText] = useState(todo.text);  // old value (from first render)
     let [editedText, setEditedText] = useState(todo.text);  // value in <input>, possibly edited by user and not saved yet
@@ -236,17 +148,15 @@ export let SingleTodoView = ({ kit, todo, styles }: SingleTodoProps) => {
     let userInputNeedsSaving = editedText !== todo.text;
 
     let saveText = (text: string) => {
-        if (kit.authorKeypair === null) { return; }
-        setTodoText(kit.storage, kit.authorKeypair, todo.id, text);
+        todoLayer.setTodoText(todo.id, text);
         setEditedText(text);
     }
 
     let toggleTodo = () => {
-        if (kit.authorKeypair === null) { return; }
-        setTodoIsDone(kit.storage, kit.authorKeypair, todo.id, !todo.isDone);
+        todoLayer.setTodoIsDone(todo.id, !todo.isDone);
     }
 
-    logTodoApp('🎨     render ' + todo.id);
+    logTodoApp('🎨     render todo: ' + todo.id);
     return <li style={{ listStyle: 'none' }}>
         <form
             className='flexRow'
