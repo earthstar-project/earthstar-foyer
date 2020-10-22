@@ -1,7 +1,9 @@
 import * as React from 'react';
 import {
-    useState,
+    useEffect,
     useMemo,
+    useState,
+    useReducer,
 } from 'react';
 import { Kit } from '../kit';
 import {
@@ -29,6 +31,12 @@ let { lightTheme, darkTheme } = makeLightAndDarkThemes({
     ac3: '#2c960c',
 });
 
+let useForceUpdate = () => {
+    // https://stackoverflow.com/questions/53215285/how-can-i-force-component-to-re-render-with-hooks-in-react
+    let [, forceUpdate] = useReducer(x => x + 1, 0);
+    return forceUpdate;
+}
+
 export interface TodoAppProps {
     // This prop changes whenever something in the earthstar kit has changed,
     // helping trigger a re-render.
@@ -43,9 +51,23 @@ export let TodoApp = ({ changeKey, kit }: TodoAppProps) => {
     if (kit === null) { return <div>No workspace</div>; }
 
     let todoLayer = useMemo(() => {
-        logTodoApp('useMemo: making new todo layer');
+        logTodoApp('🛐 useMemo: making new todo layer');
         return new TodoLayer(kit.storage, kit.authorKeypair);
     }, [kit.storage, kit.authorKeypair]);
+
+    let forceUpdate = useForceUpdate();
+    useEffect(() => {
+        logTodoApp('🛐️ useEffect: subscribing to todo layer');
+        let unsub = todoLayer.onChange.subscribe(() => {
+            logTodoApp('🛐 todoLayer.onChange -- calling forceUpdate');
+            forceUpdate();
+        });
+        return () => {
+            logTodoApp('🛐️ useEffect: UN-subscribing from old todo layer');
+            unsub();
+            todoLayer.close();
+        }
+    }, [todoLayer]);
 
     let [darkMode, setDarkMode] = useState(false);
     let [newText, setNewText] = useState('');

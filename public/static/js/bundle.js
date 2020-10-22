@@ -69132,15 +69132,33 @@ let { lightTheme, darkTheme } = theme_1.makeLightAndDarkThemes({
     gr0: '#0c2122',
     ac3: '#2c960c',
 });
+let useForceUpdate = () => {
+    // https://stackoverflow.com/questions/53215285/how-can-i-force-component-to-re-render-with-hooks-in-react
+    let [, forceUpdate] = react_1.useReducer(x => x + 1, 0);
+    return forceUpdate;
+};
 exports.TodoApp = ({ changeKey, kit }) => {
     log_1.logTodoApp('🎨 render.  changeKey:', changeKey);
     if (kit === null) {
         return React.createElement("div", null, "No workspace");
     }
     let todoLayer = react_1.useMemo(() => {
-        log_1.logTodoApp('useMemo: making new todo layer');
+        log_1.logTodoApp('🛐 useMemo: making new todo layer');
         return new todoLayer_1.TodoLayer(kit.storage, kit.authorKeypair);
     }, [kit.storage, kit.authorKeypair]);
+    let forceUpdate = useForceUpdate();
+    react_1.useEffect(() => {
+        log_1.logTodoApp('🛐️ useEffect: subscribing to todo layer');
+        let unsub = todoLayer.onChange.subscribe(() => {
+            log_1.logTodoApp('🛐 todoLayer.onChange -- calling forceUpdate');
+            forceUpdate();
+        });
+        return () => {
+            log_1.logTodoApp('🛐️ useEffect: UN-subscribing from old todo layer');
+            unsub();
+            todoLayer.close();
+        };
+    }, [todoLayer]);
     let [darkMode, setDarkMode] = react_1.useState(false);
     let [newText, setNewText] = react_1.useState('');
     let theme = darkMode ? darkTheme : lightTheme;
@@ -69209,7 +69227,7 @@ exports.SingleTodoView = ({ todoLayer, todo, styles }) => {
     let toggleTodo = () => {
         todoLayer.setTodoIsDone(todo.id, !todo.isDone);
     };
-    log_1.logTodoApp('🎨     render ' + todo.id);
+    log_1.logTodoApp('🎨     render todo: ' + todo.id);
     return React.createElement("li", { style: { listStyle: 'none' } },
         React.createElement("form", { className: 'flexRow', style: { alignItems: 'center' }, onSubmit: (e) => { e.preventDefault(); saveText(editedText); } },
             React.createElement("input", { type: 'checkbox', className: 'flexItem', style: { transform: 'scale(2)' }, checked: todo.isDone, onChange: (e) => toggleTodo() }),
@@ -70354,10 +70372,28 @@ const fieldNames = [
     'isDone.json'
 ];
 class TodoLayer {
+    // if storage or keypair change, close your old TodoLayer and make a new one.
     constructor(storage, keypair) {
         log_1.logTodoLayer('constructor');
-        this.storage = storage;
-        this.keypair = keypair;
+        // this is called whenever a todo is added or changed,
+        // either locally or via a sync
+        this.onChange = new earthstar_1.Emitter();
+        this._storage = storage;
+        this._keypair = keypair;
+        this._unsubFromStorage = storage.onWrite.subscribe((e) => {
+            if (e.isLatest && e.document.path.startsWith('/' + TodoLayer.layerName + '/')) {
+                log_1.logTodoLayer('storage onWrite for a todo. sending TodoLayer.onChange');
+                this.onChange.send(undefined);
+            }
+            else {
+                log_1.logTodoLayer('storage onWrite - ignored');
+            }
+        });
+    }
+    close() {
+        log_1.logTodoLayer('close()');
+        this._unsubFromStorage();
+        this.onChange.unsubscribeAll();
     }
     static makeTodoId() {
         return `${Date.now() * 1000}-${randInt(1000000, 9999999)}`;
@@ -70382,9 +70418,9 @@ class TodoLayer {
         }
     }
     listIds() {
-        log_1.logTodoLayer('listIds()');
+        log_1.logTodoLayer('listIds() -- querying storage');
         // storage.paths will give us results in sorted order (oldest first)
-        return this.storage
+        return this._storage
             .paths({ pathPrefix: '/todo/' })
             .map(path => {
             let parsed = TodoLayer.parseTodoPath(path);
@@ -70399,21 +70435,21 @@ class TodoLayer {
             .filter(id => id !== '');
     }
     getTodo(id) {
-        let text = this.storage.getContent(TodoLayer.makeTodoPath(id, 'text.txt'));
+        let text = this._storage.getContent(TodoLayer.makeTodoPath(id, 'text.txt'));
         if (text === undefined || text === '') {
             return undefined;
         }
-        let isDoneStr = this.storage.getContent(TodoLayer.makeTodoPath(id, 'isDone.json'));
+        let isDoneStr = this._storage.getContent(TodoLayer.makeTodoPath(id, 'isDone.json'));
         let isDone = (isDoneStr === 'true') ? true : false;
         return { id, text, isDone };
     }
     setTodoText(id, text) {
         log_1.logTodoLayer(`set id=${id} text="${text}"`);
-        if (!this.keypair) {
+        if (!this._keypair) {
             console.error("can't save todo.  keypair is not provided");
             return;
         }
-        let err = this.storage.set(this.keypair, {
+        let err = this._storage.set(this._keypair, {
             format: 'es.4',
             path: TodoLayer.makeTodoPath(id, 'text.txt'),
             content: text,
@@ -70423,11 +70459,11 @@ class TodoLayer {
         }
     }
     setTodoIsDone(id, isDone) {
-        if (!this.keypair) {
+        if (!this._keypair) {
             console.error("can't save todo.  keypair is not provided");
             return;
         }
-        let err = this.storage.set(this.keypair, {
+        let err = this._storage.set(this._keypair, {
             format: 'es.4',
             path: TodoLayer.makeTodoPath(id, 'isDone.json'),
             content: '' + isDone,

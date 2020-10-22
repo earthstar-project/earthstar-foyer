@@ -5,7 +5,10 @@ import {
     AuthorKeypair,
     IStorage,
     isErr,
+    WriteEvent,
+    Emitter,
 } from 'earthstar';
+import { Thunk } from '../types';
 
 //================================================================================
 // GENERIC HELPERS
@@ -33,12 +36,35 @@ type TodoFieldName = (typeof fieldNames)[number];
 export class TodoLayer {
     static layerName = 'todo';  // used as top level of earthstar path
 
-    storage: IStorage;
-    keypair: AuthorKeypair | null;
+    _storage: IStorage;
+    _keypair: AuthorKeypair | null;
+    _unsubFromStorage: Thunk;
+
+    onChange: Emitter<undefined>;
+
+    // if storage or keypair change, close your old TodoLayer and make a new one.
     constructor(storage: IStorage, keypair: AuthorKeypair | null) {
         logTodoLayer('constructor');
-        this.storage = storage;
-        this.keypair = keypair;
+
+        // this is called whenever a todo is added or changed,
+        // either locally or via a sync
+        this.onChange = new Emitter<undefined>();
+
+        this._storage = storage;
+        this._keypair = keypair;
+        this._unsubFromStorage = storage.onWrite.subscribe((e: WriteEvent) => {
+            if (e.isLatest && e.document.path.startsWith('/' + TodoLayer.layerName + '/')) {
+                logTodoLayer('storage onWrite for a todo. sending TodoLayer.onChange');
+                this.onChange.send(undefined);
+            } else {
+                logTodoLayer('storage onWrite - ignored');
+            }
+        });
+    }
+    close() {
+        logTodoLayer('close()');
+        this._unsubFromStorage();
+        this.onChange.unsubscribeAll();
     }
 
     static makeTodoId(): TodoId {
@@ -62,9 +88,9 @@ export class TodoLayer {
     }
 
     listIds(): TodoId[] {
-        logTodoLayer('listIds()');
+        logTodoLayer('listIds() -- querying storage');
         // storage.paths will give us results in sorted order (oldest first)
-        return this.storage
+        return this._storage
             .paths({ pathPrefix: '/todo/' })
             .map(path => {
                 let parsed = TodoLayer.parseTodoPath(path);
@@ -75,19 +101,19 @@ export class TodoLayer {
             .filter(id => id !== '');
     }
     getTodo(id: TodoId): Todo | undefined {
-        let text = this.storage.getContent(TodoLayer.makeTodoPath(id, 'text.txt'));
+        let text = this._storage.getContent(TodoLayer.makeTodoPath(id, 'text.txt'));
         if (text === undefined || text === '') { return undefined; }
-        let isDoneStr = this.storage.getContent(TodoLayer.makeTodoPath(id, 'isDone.json'));
+        let isDoneStr = this._storage.getContent(TodoLayer.makeTodoPath(id, 'isDone.json'));
         let isDone = (isDoneStr === 'true') ? true : false;
         return { id, text, isDone };
     }
     setTodoText(id: TodoId, text: string): void {
         logTodoLayer(`set id=${id} text="${text}"`);
-        if (!this.keypair) {
+        if (!this._keypair) {
             console.error("can't save todo.  keypair is not provided");
             return;
         }
-        let err = this.storage.set(this.keypair, {
+        let err = this._storage.set(this._keypair, {
             format: 'es.4',
             path: TodoLayer.makeTodoPath(id, 'text.txt'),
             content: text,
@@ -95,11 +121,11 @@ export class TodoLayer {
         if (isErr(err)) { console.error(err); }
     }
     setTodoIsDone(id: TodoId, isDone: boolean): void {
-        if (!this.keypair) {
+        if (!this._keypair) {
             console.error("can't save todo.  keypair is not provided");
             return;
         }
-        let err = this.storage.set(this.keypair, {
+        let err = this._storage.set(this._keypair, {
             format: 'es.4',
             path: TodoLayer.makeTodoPath(id, 'isDone.json'),
             content: '' + isDone,
