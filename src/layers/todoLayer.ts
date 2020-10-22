@@ -100,6 +100,14 @@ export class TodoLayer {
             })
             .filter(id => id !== '');
     }
+    listTodos(): Todo[] {
+        let todos: Todo[] = [];
+        for (let id of this.listIds()) {
+            let todo = this.getTodo(id);
+            if (todo) { todos.push(todo); }
+        }
+        return todos;
+    }
     getTodo(id: TodoId): Todo | undefined {
         let text = this._storage.getContent(TodoLayer.makeTodoPath(id, 'text.txt'));
         if (text === undefined || text === '') { return undefined; }

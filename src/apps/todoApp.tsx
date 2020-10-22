@@ -1,9 +1,10 @@
 import * as React from 'react';
 import {
     useEffect,
+    useLayoutEffect,
     useMemo,
-    useState,
     useReducer,
+    useState,
 } from 'react';
 import { Kit } from '../kit';
 import {
@@ -50,18 +51,75 @@ export let TodoApp = ({ changeKey, kit }: TodoAppProps) => {
 
     if (kit === null) { return <div>No workspace</div>; }
 
+    //------------------------------------------------------------
+    // BEGIN HOOK: [todoLayer, todos] = useTodos(storage, authorKeypair)
+    //
+    // it would be better if this was two hooks:
+    //   let todoLayer = useTodoLayer(storage, authorKeypair)
+    //   let todos = useTodos(todoLayer)
+    //
+    // ...but we need to clear todos when the todoLayer is reloaded in useMemo,
+    // otherwise we don't get a loading state in between when the todoLayer changes,
+    // and we render old todos with a different non-matching todoLayer
+    // until useEffect kicks in and sets fresh ones.
+    //
+    // maybe this would work, having a second useMemo since that seems to run
+    // right away, not delayed like useEffect:
+    //
+    //    todoLayer = useTodoLayer(storage, authorKeypair) =>
+    //        useMemo(() => { return new TodoLayer() }, [storage, authorkeypair])
+    //
+    //    todos = useTodos(todoLayer) =>
+    //        [todos, setTodos] = useState('loading')
+    //        // zero out todos right away with useMemo
+    //        useMemo(() => { setTodos('loading') }, [todoLayer])
+    //        // eventually...
+    //        useEffect(() => {
+    //            // load them...
+    //            setTodos(todoLayer.listTodos());
+    //            // and subscribe / unsubscribe...
+    //            let unsub = todoLayer.onChange.subscribe(() => {
+    //                setTodos(todoLayer.listTodos());
+    //            });
+    //            return () => { unsub(); }
+    //        }, [todoLayer]);
+    //
+
+    // first render will have empty todos.
+    // then useEffect will run after first render and set them.
+    let [todos, setTodos] = useState('LOADING' as Todo[] | 'LOADING');
+
     let todoLayer = useMemo(() => {
         logTodoApp('🛐 useMemo: making new todo layer');
+        // clear the old todos.  new ones will be loaded by useEffect.
+        setTodos('LOADING');
         return new TodoLayer(kit.storage, kit.authorKeypair);
     }, [kit.storage, kit.authorKeypair]);
 
-    let forceUpdate = useForceUpdate();
+    // subscribe to todoLayer.onChange and look up the todos again
     useEffect(() => {
+        // when the todoLayer changes, reload the todos...
+        logTodoApp('🛐️ useEffect: loading and setting todos');
+        // pretend this is a slow async operation, for testing
+        setTimeout(() => {
+            logTodoApp('   ...🛐️ useEffect: loading and setting todos');
+            // this can throw StorageIsClosedError or React can complain
+            // that the state was updated after the component was unmounted.
+            // we would need to check if the component is still mounted
+            // before doing this...
+            setTodos(todoLayer.listTodos());
+        }, 200);
+
+        // when the todoLayer changes, subscribe to it...
         logTodoApp('🛐️ useEffect: subscribing to todo layer');
         let unsub = todoLayer.onChange.subscribe(() => {
-            logTodoApp('🛐 todoLayer.onChange -- calling forceUpdate');
-            forceUpdate();
+            // changes from todoLayer make us reload todos
+            logTodoApp('🛐 todoLayer.onChange -- reloading and setting todos');
+            setTodos(todoLayer.listTodos());
         });
+
+        // when the component is going away or the todoLayer changes,
+        // unsubscribe from the old one...
         return () => {
             logTodoApp('🛐️ useEffect: UN-subscribing from old todo layer');
             unsub();
@@ -69,35 +127,33 @@ export let TodoApp = ({ changeKey, kit }: TodoAppProps) => {
         }
     }, [todoLayer]);
 
+    // END useTodos HOOK
+    //------------------------------------------------------------
+
     let [darkMode, setDarkMode] = useState(false);
     let [newText, setNewText] = useState('');
 
     let theme = darkMode ? darkTheme : lightTheme;
     let styles = makeStyles(theme);
 
-    // load the todos
-    // we should not do this on every render...
-    let todoIds: TodoId[] = todoLayer.listIds();
-    let todos: Todo[] = []
-    for (let id of todoIds) {
-        let todo = todoLayer.getTodo(id);
-        if (todo) { todos.push(todo); }
-    }
-
+    logTodoApp('🎨 rendering now, hooks are done');
     return <div style={{...styles.sPage, padding: 'var(--s0)', minHeight: '100vh'}}>
         <div className='stack centeredReadableWidth'>
             <div style={styles.sCard}>
                 <h3>Todos</h3>
-                <ul>
-                    {todos.map(todo =>
-                        <SingleTodoView
-                            key={todo.id}
-                            todoLayer={todoLayer}
-                            todo={todo}
-                            styles={styles}
-                            />
-                    )}
-                </ul>
+                {todos === 'LOADING'
+                  ? <ul><h4 style={{ color: theme.faintText }}><i>LOADING</i></h4></ul>
+                  : <ul>
+                        {todos.map(todo =>
+                            <SingleTodoView
+                                key={todo.id}
+                                todoLayer={todoLayer}
+                                todo={todo}
+                                styles={styles}
+                                />
+                        )}
+                    </ul>
+                }
                 {kit.authorKeypair === null
                   ? <div>Log in to add your own todos.</div>
                   : <form className='flexRow'
