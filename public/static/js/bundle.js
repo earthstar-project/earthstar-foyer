@@ -69122,9 +69122,10 @@ exports.SingleTodoView = exports.TodoApp = void 0;
 const React = __importStar(require("react"));
 const react_1 = require("react");
 const log_1 = require("../log");
+const hooks_1 = require("../hooks");
+const todoLayer_1 = require("../layers/todoLayer");
 const theme_1 = require("../theme");
 const themeStyle_1 = require("../themeStyle");
-const todoHooks_1 = require("../layers/todoHooks");
 //================================================================================
 let { lightTheme, darkTheme } = theme_1.makeLightAndDarkThemes({
     // white on dark green with frog colored buttons
@@ -69137,8 +69138,14 @@ exports.TodoApp = ({ changeKey, kit }) => {
     if (kit === null) {
         return React.createElement("div", null, "No workspace");
     }
-    let todoLayer = todoHooks_1.useTodoLayer(kit.storage, kit.authorKeypair);
-    let todos = todoHooks_1.useTodos(todoLayer);
+    // Make a new Layer whenever the workspace or author change.
+    let todoLayer = react_1.useMemo(() => new todoLayer_1.TodoLayer(kit.storage, kit.authorKeypair), [kit.storage, kit.authorKeypair]);
+    // Getting data from a Layer will usually be an async operation.
+    // Layers will let you subscribe to notifications when the data changes.
+    // This hook handles all of that for you:
+    let todos = hooks_1.useAsyncDataOnChange(() => todoLayer.listTodosAsync(), // the async data-getter
+    (cb) => todoLayer.onChange.subscribe(cb), // how to subscribe
+    [todoLayer]);
     let [darkMode, setDarkMode] = react_1.useState(false);
     let [newText, setNewText] = react_1.useState('');
     let theme = darkMode ? darkTheme : lightTheme;
@@ -69211,7 +69218,7 @@ exports.SingleTodoView = ({ todoLayer, todo, styles }) => {
             React.createElement("input", { type: 'text', className: 'flexItem flexGrow1', style: Object.assign(Object.assign({}, styles.sTextInput), { border: 'none', paddingLeft: 0, fontWeight: userInputNeedsSaving ? 'bold' : 'normal' }), value: editedText, onChange: (e) => setEditedText(e.target.value), onBlur: (e) => saveText(e.target.value) })));
 };
 
-},{"../layers/todoHooks":278,"../log":280,"../theme":281,"../themeStyle":282,"react":222}],272:[function(require,module,exports){
+},{"../hooks":277,"../layers/todoLayer":279,"../log":280,"../theme":281,"../themeStyle":282,"react":222}],272:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69920,7 +69927,7 @@ class EarthbarStore {
 }
 exports.EarthbarStore = EarthbarStore;
 
-},{"./kit":277,"./log":280,"./util":283,"earthstar":100,"fast-equals":133}],275:[function(require,module,exports){
+},{"./kit":278,"./log":280,"./util":283,"earthstar":100,"fast-equals":133}],275:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -70285,6 +70292,88 @@ exports.EarthbarWorkspacePanel = EarthbarWorkspacePanel;
 },{"./log":280,"./util":283,"earthstar":100,"react":222}],277:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.useObservable = exports.useAsyncDataOnChange = exports.useIsMounted = void 0;
+const react_1 = require("react");
+//================================================================================
+// from https://github.com/jmlweb/isMounted
+exports.useIsMounted = () => {
+    const isMounted = react_1.useRef(false);
+    react_1.useEffect(() => {
+        isMounted.current = true;
+        return () => { isMounted.current = false; };
+    }, []);
+    return isMounted;
+};
+/*
+// from https://stackoverflow.com/questions/53215285/how-can-i-force-component-to-re-render-with-hooks-in-react
+let useForceUpdate = () => {
+    let [, forceUpdate] = useReducer(x => x + 1, 0);
+    return forceUpdate;
+}
+*/
+// also consider https://github.com/rauldeheer/use-async-effect
+//================================================================================
+// Use this when you can subscribe to generic changes, but you
+// have to call an async function to actually get the data.
+exports.useAsyncDataOnChange = (getter, subscribe, dependencies) => {
+    let isMounted = exports.useIsMounted();
+    let [result, setResult] = react_1.useState('LOADING');
+    // reload data when deps change
+    // we could have done this in useEffect, but useMemo runs before first render
+    // se we get a little head start on loading the data.
+    react_1.useMemo(() => {
+        // first, zero out result so we don't show stale results while reloading the data
+        setResult('LOADING');
+        // load data
+        getter().then(r => {
+            // the component might not be mounted anymore by the time we have a result
+            if (isMounted.current) {
+                setResult(r);
+            }
+        });
+    }, dependencies);
+    // subscription
+    react_1.useEffect(() => {
+        let unsub = subscribe(() => {
+            getter().then(r => {
+                if (isMounted.current) {
+                    setResult(r);
+                }
+            });
+        });
+        return unsub;
+    }, dependencies);
+    return result;
+};
+// Use this one when your subscription returns the changed data with every event.
+// This also assumes the subscription fires once when you subscribe to give you
+// the current value.
+// 
+// What I'm calling an "observable" looks like this:
+// 
+//   let unsub = layer.observeTodos(
+//       (todo) => console.log(todo)
+//   );
+exports.useObservable = (observe, dependencies) => {
+    let isMounted = exports.useIsMounted();
+    let [result, setResult] = react_1.useState('LOADING');
+    react_1.useEffect(() => {
+        let unsub = observe((data) => {
+            if (isMounted.current) {
+                setResult(data);
+            }
+            else {
+                unsub();
+            }
+        });
+        return unsub;
+    }, dependencies);
+    return result;
+};
+
+},{"react":222}],278:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.Kit = void 0;
 const debounce = require("lodash.debounce");
 const earthstar_1 = require("earthstar");
@@ -70333,102 +70422,7 @@ class Kit {
 }
 exports.Kit = Kit;
 
-},{"./log":280,"earthstar":100,"lodash.debounce":171}],278:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.useTodos = exports.useTodoLayer = void 0;
-const react_1 = require("react");
-const log_1 = require("../log");
-const todoLayer_1 = require("../layers/todoLayer");
-const earthstar_1 = require("earthstar");
-//================================================================================
-// from https://github.com/jmlweb/isMounted
-let useIsMounted = () => {
-    const isMounted = react_1.useRef(false);
-    react_1.useEffect(() => {
-        isMounted.current = true;
-        return () => { isMounted.current = false; };
-    }, []);
-    return isMounted;
-};
-// from https://stackoverflow.com/questions/53215285/how-can-i-force-component-to-re-render-with-hooks-in-react
-let useForceUpdate = () => {
-    let [, forceUpdate] = react_1.useReducer(x => x + 1, 0);
-    return forceUpdate;
-};
-// also consider https://github.com/rauldeheer/use-async-effect
-//================================================================================
-exports.useTodoLayer = (storage, keypair) => react_1.useMemo(() => {
-    log_1.logTodoHook('🛐 useTodoLayer: useMemo: making new TodoLayer');
-    return new todoLayer_1.TodoLayer(storage, keypair);
-}, [storage, keypair]);
-//================================================================================
-exports.useTodos = (todoLayer) => {
-    let isMounted = useIsMounted();
-    let [todos, setTodos] = react_1.useState('LOADING');
-    // when todoLayer changes...
-    react_1.useMemo(() => {
-        // zero out todos
-        // (todoLayer changes when storage or keypair changes,
-        //  so we don't want to keep showing the old stale todos we had before)
-        log_1.logTodoHook('🛐 useTodos: useMemo: todoLayer changed. setting todos to "LOADING"');
-        setTodos('LOADING');
-        // reload them
-        log_1.logTodoHook('🛐 useTodos: useMemo: starting async query...');
-        // whenever we do an async call we have to do all this nonsense...
-        todoLayer.listTodosAsync().then(todos => {
-            log_1.logTodoHook('🛐 useTodos: useMemo: ...got todos.  setting.');
-            // the component might not be mounted anymore, e.g. if we switch to a different earthstar app
-            if (isMounted.current) {
-                setTodos(todos);
-            }
-            else {
-                log_1.logTodoHook('🛐 useTodos: useMemo: ...(skipped because not mounted)');
-            }
-        }).catch(e => {
-            // the storage might be closed, e.g. if we switch to a different workspace
-            if (e instanceof earthstar_1.StorageIsClosedError) {
-                log_1.logTodoHook('🛐 useTodos: useMemo: ...(storage was closed)');
-            }
-            else {
-                throw e;
-            }
-        });
-    }, [todoLayer]);
-    // when todoLayer has a change event...
-    react_1.useEffect(() => {
-        // subscribe & load when change happens
-        log_1.logTodoHook('🛐 useTodos: useEffect: subscribing');
-        let unsub = todoLayer.onChange.subscribe(() => {
-            log_1.logTodoHook('🛐 useTodos: TodoLayer.onChange: starting async query...');
-            // all the same nonsense again
-            todoLayer.listTodosAsync().then(todos => {
-                log_1.logTodoHook('🛐 useTodos: TodoLayer.onChange: ...got todos.  setting.');
-                if (isMounted.current) {
-                    setTodos(todos);
-                }
-                else {
-                    log_1.logTodoHook('🛐 useTodos: Todolayer.onChange: ...(skipped because not mounted)');
-                }
-            }).catch(e => {
-                if (e instanceof earthstar_1.StorageIsClosedError) {
-                    log_1.logTodoHook('🛐 useTodos: TodoLayer.onChange: ...(storage was closed)');
-                }
-                else {
-                    throw e;
-                }
-            });
-        });
-        // unsubscribe
-        return () => {
-            log_1.logTodoHook('🛐 useTodos: useEffect: unsubscribing');
-            unsub();
-        };
-    }, [todoLayer]);
-    return todos;
-};
-
-},{"../layers/todoLayer":279,"../log":280,"earthstar":100,"react":222}],279:[function(require,module,exports){
+},{"./log":280,"earthstar":100,"lodash.debounce":171}],279:[function(require,module,exports){
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -70528,7 +70522,18 @@ class TodoLayer {
     listTodosAsync() {
         return __awaiter(this, void 0, void 0, function* () {
             yield earthstar_1.sleep(200);
-            return this.listTodos();
+            try {
+                return this.listTodos();
+            }
+            catch (e) {
+                if (e instanceof earthstar_1.StorageIsClosedError) {
+                    log_1.logTodoLayer('storage was closed; ignoring');
+                    return [];
+                }
+                else {
+                    throw e;
+                }
+            }
         });
     }
     getTodo(id) {

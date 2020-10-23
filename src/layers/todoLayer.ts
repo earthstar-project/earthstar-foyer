@@ -8,6 +8,7 @@ import {
     WriteEvent,
     Emitter,
     sleep,
+    StorageIsClosedError,
 } from 'earthstar';
 import { Thunk } from '../types';
 
@@ -111,7 +112,17 @@ export class TodoLayer {
     // like it will be with IndexedDb
     async listTodosAsync(): Promise<Todo[]> {
         await sleep(200);
-        return this.listTodos();
+        try {
+            return this.listTodos();
+        } catch (e) {
+            if (e instanceof StorageIsClosedError) {
+                logTodoLayer('storage was closed; ignoring');
+                return [];
+            }
+            else {
+                throw e;
+            }
+        }
     }
 
     getTodo(id: TodoId): Todo | undefined {

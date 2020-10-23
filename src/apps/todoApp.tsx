@@ -1,28 +1,12 @@
 import * as React from 'react';
-import {
-    useReducer,
-    useState,
-} from 'react';
+import { useMemo, useState } from 'react';
 
+import { logTodoApp } from '../log';
+import { useAsyncDataOnChange } from '../hooks';
 import { Kit } from '../kit';
-import {
-    logTodoApp,
-} from '../log';
-import {
-    makeLightAndDarkThemes
-} from '../theme';
-import {
-    Styles,
-    makeStyles
-} from '../themeStyle';
-import {
-    Todo,
-    TodoLayer,
-} from '../layers/todoLayer';
-import {
-    useTodos,
-    useTodoLayer
-} from '../layers/todoHooks';
+import { Todo, TodoLayer } from '../layers/todoLayer';
+import { makeLightAndDarkThemes } from '../theme';
+import { Styles, makeStyles } from '../themeStyle';
 
 //================================================================================
 
@@ -46,8 +30,22 @@ export let TodoApp = ({ changeKey, kit }: TodoAppProps) => {
 
     if (kit === null) { return <div>No workspace</div>; }
 
-    let todoLayer: TodoLayer = useTodoLayer(kit.storage, kit.authorKeypair);
-    let todos: Todo[] | 'LOADING' = useTodos(todoLayer);
+
+    // Make a new Layer whenever the workspace or author change.
+    let todoLayer = useMemo(
+        () => new TodoLayer(kit.storage, kit.authorKeypair),
+        [kit.storage, kit.authorKeypair]
+    );
+
+    // Getting data from a Layer will usually be an async operation.
+    // Layers will let you subscribe to notifications when the data changes.
+    // This hook handles all of that for you:
+    let todos: Todo[] | 'LOADING' = useAsyncDataOnChange(
+        () => todoLayer.listTodosAsync(),  // the async data-getter
+        (cb) => todoLayer.onChange.subscribe(cb),  // how to subscribe
+        [todoLayer]
+    );
+
 
     let [darkMode, setDarkMode] = useState(false);
     let [newText, setNewText] = useState('');
