@@ -6,6 +6,7 @@ import { FoyerApp } from './apps/foyerApp';
 import { HelloApp } from './apps/helloApp';
 import { DebugApp } from './apps/debugApp';
 import { TodoApp } from './apps/todoApp';
+import { BunchApp } from './apps/bunchApp';
 
 //================================================================================
 // MAIN
@@ -17,6 +18,7 @@ import { TodoApp } from './apps/todoApp';
 // DisplayText: Component
 // first app listed here is the default
 let apps = {
+    "Bunch": BunchApp,
     "Todos": TodoApp,
     "Foyer": FoyerApp,
     "Debug View": DebugApp,
