@@ -24501,7 +24501,7 @@ module.exports={
   "_args": [
     [
       "elliptic@6.5.3",
-      "/Users/rabbit/projects/earthstar-foyer"
+      "/Users/judytuna/src/earthstarcode/earthstar-foyer"
     ]
   ],
   "_development": true,
@@ -24527,7 +24527,7 @@ module.exports={
   ],
   "_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.5.3.tgz",
   "_spec": "6.5.3",
-  "_where": "/Users/rabbit/projects/earthstar-foyer",
+  "_where": "/Users/judytuna/src/earthstarcode/earthstar-foyer",
   "author": {
     "name": "Fedor Indutny",
     "email": "fedor@indutny.com"
@@ -68780,6 +68780,7 @@ const foyerApp_1 = require("./apps/foyerApp");
 const helloApp_1 = require("./apps/helloApp");
 const debugApp_1 = require("./apps/debugApp");
 const todoApp_1 = require("./apps/todoApp");
+const bunchApp_1 = require("./apps/bunchApp");
 //================================================================================
 // MAIN
 // The "Earthbar" is the workspace and user switcher panel across the top.
@@ -68788,6 +68789,7 @@ const todoApp_1 = require("./apps/todoApp");
 // DisplayText: Component
 // first app listed here is the default
 let apps = {
+    "Bunch": bunchApp_1.BunchApp,
     "Todos": todoApp_1.TodoApp,
     "Foyer": foyerApp_1.FoyerApp,
     "Debug View": debugApp_1.DebugApp,
@@ -68795,7 +68797,85 @@ let apps = {
 };
 ReactDOM.render(React.createElement(earthbar_1.Earthbar, { apps: apps }), document.getElementById('react-slot'));
 
-},{"./apps/debugApp":268,"./apps/foyerApp":269,"./apps/helloApp":270,"./apps/todoApp":271,"./earthbar":272,"react":222,"react-dom":219}],268:[function(require,module,exports){
+},{"./apps/bunchApp":268,"./apps/debugApp":269,"./apps/foyerApp":270,"./apps/helloApp":271,"./apps/todoApp":272,"./earthbar":273,"react":222,"react-dom":219}],268:[function(require,module,exports){
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CellView = exports.BunchApp = void 0;
+const React = __importStar(require("react"));
+const react_1 = require("react");
+const log_1 = require("../log");
+const theme_1 = require("../theme");
+const themeStyle_1 = require("../themeStyle");
+let { lightTheme, darkTheme } = theme_1.makeLightAndDarkThemes({
+    // twilight lavender with purple button
+    gr6: "#dee5ff",
+    gr0: "#0e1222",
+    ac3: "#b937b2",
+});
+exports.BunchApp = ({ changeKey, kit }) => {
+    let [darkMode, setDarkMode] = react_1.useState(false);
+    let theme = darkMode ? darkTheme : lightTheme;
+    let styles = themeStyle_1.makeStyles(theme);
+    log_1.logHelloApp('🎨 render.  changeKey:', changeKey);
+    return React.createElement("div", { style: Object.assign(Object.assign({}, styles.sPage), { padding: 'var(--s0)', minHeight: '100vh' }) },
+        React.createElement("div", { className: 'stack centeredReadableWidth' },
+            React.createElement("div", { style: styles.sCard },
+                React.createElement(exports.CellView, { kit: kit, pageId: 'page1', cellId: 0 })),
+            React.createElement("div", { style: styles.sCard },
+                React.createElement(exports.CellView, { kit: kit, pageId: 'page1', cellId: 1 })),
+            React.createElement("div", { style: styles.sCard },
+                React.createElement(exports.CellView, { kit: kit, pageId: 'page1', cellId: 2 }))));
+};
+exports.CellView = ({ kit, pageId, cellId }) => {
+    if (kit === null) {
+        return null;
+    }
+    let storage = kit.storage;
+    let path = `/bunch/${pageId}/${cellId}.json`;
+    let contentStr = storage.getContent(path);
+    let content;
+    if (contentStr === undefined) {
+        content = { label: '???' };
+    }
+    else {
+        try {
+            content = JSON.parse(contentStr);
+        }
+        catch (err) {
+            content = { label: '???' };
+        }
+    }
+    return React.createElement("div", null,
+        React.createElement("div", null,
+            React.createElement("i", null,
+                "This is ",
+                pageId,
+                " and cell ",
+                cellId)),
+        React.createElement("b", null, content.label),
+        React.createElement("input", null));
+};
+
+},{"../log":281,"../theme":282,"../themeStyle":283,"react":222}],269:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -68874,7 +68954,7 @@ exports.DebugApp = ({ changeKey, kit }) => {
                     React.createElement("button", { type: "button", style: styles.sLoudButton, onClick: () => setDarkMode(!darkMode) }, "Toggle dark mode")))));
 };
 
-},{"../log":280,"../theme":281,"../themeStyle":282,"react":222}],269:[function(require,module,exports){
+},{"../log":281,"../theme":282,"../themeStyle":283,"react":222}],270:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69045,7 +69125,7 @@ class FoyerComposer extends React.PureComponent {
 }
 exports.FoyerComposer = FoyerComposer;
 
-},{"../log":280,"../util":283,"earthstar":100,"react":222}],270:[function(require,module,exports){
+},{"../log":281,"../util":284,"earthstar":100,"react":222}],271:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69096,7 +69176,7 @@ exports.HelloApp = ({ changeKey, kit }) => {
                     React.createElement("button", { type: "button", style: styles.sLoudButton, onClick: () => setDarkMode(!darkMode) }, "Toggle dark mode")))));
 };
 
-},{"../log":280,"../theme":281,"../themeStyle":282,"react":222}],271:[function(require,module,exports){
+},{"../log":281,"../theme":282,"../themeStyle":283,"react":222}],272:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69218,7 +69298,7 @@ exports.SingleTodoView = ({ todoLayer, todo, styles }) => {
             React.createElement("input", { type: 'text', className: 'flexItem flexGrow1', style: Object.assign(Object.assign({}, styles.sTextInput), { border: 'none', paddingLeft: 0, fontWeight: userInputNeedsSaving ? 'bold' : 'normal' }), value: editedText, onChange: (e) => setEditedText(e.target.value), onBlur: (e) => saveText(e.target.value) })));
 };
 
-},{"../hooks":277,"../layers/todoLayer":279,"../log":280,"../theme":281,"../themeStyle":282,"react":222}],272:[function(require,module,exports){
+},{"../hooks":278,"../layers/todoLayer":280,"../log":281,"../theme":282,"../themeStyle":283,"react":222}],273:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69508,7 +69588,7 @@ class Earthbar extends React.Component {
 }
 exports.Earthbar = Earthbar;
 
-},{"./earthbarAppPanel":273,"./earthbarStore":274,"./earthbarUserPanel":275,"./earthbarWorkspacePanel":276,"./log":280,"./util":283,"react":222}],273:[function(require,module,exports){
+},{"./earthbarAppPanel":274,"./earthbarStore":275,"./earthbarUserPanel":276,"./earthbarWorkspacePanel":277,"./log":281,"./util":284,"react":222}],274:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -69565,7 +69645,7 @@ class EarthbarAppPanel extends React.Component {
 }
 exports.EarthbarAppPanel = EarthbarAppPanel;
 
-},{"./log":280,"react":222}],274:[function(require,module,exports){
+},{"./log":281,"react":222}],275:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EarthbarStore = void 0;
@@ -69927,7 +70007,7 @@ class EarthbarStore {
 }
 exports.EarthbarStore = EarthbarStore;
 
-},{"./kit":278,"./log":280,"./util":283,"earthstar":100,"fast-equals":133}],275:[function(require,module,exports){
+},{"./kit":279,"./log":281,"./util":284,"earthstar":100,"fast-equals":133}],276:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -70128,7 +70208,7 @@ class EarthbarUserPanel extends React.Component {
 }
 exports.EarthbarUserPanel = EarthbarUserPanel;
 
-},{"./log":280,"./util":283,"earthstar":100,"react":222}],276:[function(require,module,exports){
+},{"./log":281,"./util":284,"earthstar":100,"react":222}],277:[function(require,module,exports){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -70289,7 +70369,7 @@ class EarthbarWorkspacePanel extends React.Component {
 }
 exports.EarthbarWorkspacePanel = EarthbarWorkspacePanel;
 
-},{"./log":280,"./util":283,"earthstar":100,"react":222}],277:[function(require,module,exports){
+},{"./log":281,"./util":284,"earthstar":100,"react":222}],278:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.useObservable = exports.useAsyncDataOnChange = exports.useIsMounted = void 0;
@@ -70371,7 +70451,7 @@ exports.useObservable = (observe, dependencies) => {
     return result;
 };
 
-},{"react":222}],278:[function(require,module,exports){
+},{"react":222}],279:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Kit = void 0;
@@ -70422,7 +70502,7 @@ class Kit {
 }
 exports.Kit = Kit;
 
-},{"./log":280,"earthstar":100,"lodash.debounce":171}],279:[function(require,module,exports){
+},{"./log":281,"earthstar":100,"lodash.debounce":171}],280:[function(require,module,exports){
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -70589,7 +70669,7 @@ class TodoLayer {
 exports.TodoLayer = TodoLayer;
 TodoLayer.layerName = 'todo'; // used as top level of earthstar path
 
-},{"../log":280,"earthstar":100}],280:[function(require,module,exports){
+},{"../log":281,"earthstar":100}],281:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.logTodoLayer = exports.logTodoHook = exports.logTodoApp = exports.logDebugApp = exports.logHelloApp = exports.logFoyerApp = exports.logEarthbarPanel = exports.logEarthbar = exports.logKit = exports.logEarthbarStore = void 0;
@@ -70608,7 +70688,7 @@ exports.logTodoApp = makeLogger(3, 'todo app', 'color: black; background: #8fa')
 exports.logTodoHook = makeLogger(0, 'todo hook', 'color: white; background: #80c');
 exports.logTodoLayer = makeLogger(1, 'todo layer', 'color: white; background: blue');
 
-},{}],281:[function(require,module,exports){
+},{}],282:[function(require,module,exports){
 "use strict";
 //================================================================================
 // TYPES
@@ -70756,7 +70836,7 @@ exports.contrastRatio = (c1, c2) => {
     return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
 };
 
-},{}],282:[function(require,module,exports){
+},{}],283:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.makeStyles = void 0;
@@ -70793,7 +70873,7 @@ exports.makeStyles = (theme) => {
     return { sPage, sCard, sLoudButton, sQuietButton, sTextInput };
 };
 
-},{}],283:[function(require,module,exports){
+},{}],284:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ellipsifyAddress = exports.cutAtPeriod = exports.sortByField = exports.sortFnByField = void 0;
