@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {useState} from 'react';
 import { Kit } from '../kit';
 import {
     cutAtPeriod,
@@ -139,24 +140,23 @@ export class FoyerApp extends React.PureComponent<FoyerProps, FoyerState> {
 export interface FoyerComposerState {
     text: string,
 }
-export class FoyerComposer extends React.PureComponent<FoyerProps, FoyerComposerState> {
-    constructor(props: FoyerProps) {
-        super(props);
-        this.state = {
-            text: '',
-        };
-    }
-    handleSubmit() {
+
+export function FoyerComposer(props: FoyerProps){
+    const [text, setText] = useState('')
+
+    function handleSubmit() {
         logFoyerApp('posting...');
-        this.setState({text: ''});
-        if (this.props.kit && this.props.kit.authorKeypair) {
-            let keypair = this.props.kit.authorKeypair;
+
+        setText('')
+
+        if (props.kit && props.kit.authorKeypair) {
+            let keypair = props.kit.authorKeypair;
             let docToSet : DocToSet = {
                 format: 'es.4',
                 path: `/lobby/~${keypair.address}/${Date.now()}.txt`,
-                content: this.state.text,
+                content: text,
             }
-            let result = this.props.kit.storage.set(keypair, docToSet);
+            let result = props.kit.storage.set(keypair, docToSet);
             if (result !== WriteResult.Accepted) {
                 console.error('post: write failed', result);
             } else {
@@ -166,29 +166,28 @@ export class FoyerComposer extends React.PureComponent<FoyerProps, FoyerComposer
             console.error("post: can't because kit or author keypair are null");
         }
     }
-    render() {
-        let myAddress = this.props.kit?.authorKeypair?.address || '';
-        let buttonStyle = {
-            '--cPaper': 'var(--cBlack)',
-            '--cInk': 'var(--cWhite)',
-        } as React.CSSProperties;
-        return <form className='stack' style={userStyle(myAddress, false)}
-            onSubmit={(e) => {e.preventDefault(); this.handleSubmit();}}
-            >
-            <textarea rows={4}
-                style={{resize: 'vertical'}}
-                value={this.state.text}
-                onChange={(e) => this.setState({text: e.target.value}) }
-                />
-            <div className='flexRow'>
-                <div className='flexItem flexGrow1' />
-                <button className='flexItem button' type="submit"
-                    style={buttonStyle}
-                    disabled={this.state.text.length === 0}
-                    >
-                    Post
-                </button>
-            </div>
-        </form>
-    }
+
+    let myAddress = props.kit?.authorKeypair?.address || '';
+    let buttonStyle = {
+        '--cPaper': 'var(--cBlack)',
+        '--cInk': 'var(--cWhite)',
+    } as React.CSSProperties;
+    return <form className='stack' style={userStyle(myAddress, false)}
+        onSubmit={(e) => {e.preventDefault(); handleSubmit();}}
+        >
+        <textarea rows={4}
+            style={{resize: 'vertical'}}
+            value={text}
+            onChange={(e) => setText(e.target.value) }
+            />
+        <div className='flexRow'>
+            <div className='flexItem flexGrow1' />
+            <button className='flexItem button' type="submit"
+                style={buttonStyle}
+                disabled={text.length === 0}
+                >
+                Post
+            </button>
+        </div>
+    </form>
 }
