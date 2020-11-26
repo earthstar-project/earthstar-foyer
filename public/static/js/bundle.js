@@ -24501,7 +24501,7 @@ module.exports={
   "_args": [
     [
       "elliptic@6.5.3",
-      "/Users/rabbit/projects/earthstar-foyer"
+      "/Users/judytuna/src/earthstarcode/earthstar-foyer"
     ]
   ],
   "_development": true,
@@ -24527,7 +24527,7 @@ module.exports={
   ],
   "_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.5.3.tgz",
   "_spec": "6.5.3",
-  "_where": "/Users/rabbit/projects/earthstar-foyer",
+  "_where": "/Users/judytuna/src/earthstarcode/earthstar-foyer",
   "author": {
     "name": "Fedor Indutny",
     "email": "fedor@indutny.com"
@@ -68898,6 +68898,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FoyerComposer = exports.FoyerApp = void 0;
 const React = __importStar(require("react"));
+const react_1 = require("react");
 const util_1 = require("../util");
 const log_1 = require("../log");
 const earthstar_1 = require("earthstar");
@@ -68950,74 +68951,65 @@ let humanDate = (earthstarTimestamp) => {
     ;
     return `${weekday} ${month} ${d.getDate()} ${hr}:${mn}${ampm}`;
 };
-class FoyerApp extends React.PureComponent {
-    constructor(props) {
-        super(props);
+function FoyerApp(props) {
+    log_1.logFoyerApp('🎨 render.  changeKey:', props.changeKey);
+    let kit = props.kit;
+    if (kit === null) {
+        return null;
     }
-    render() {
-        log_1.logFoyerApp('🎨 render.  changeKey:', this.props.changeKey);
-        let kit = this.props.kit;
-        if (kit === null) {
-            return null;
-        }
-        // load docs
-        let docs = kit.storage.documents({ pathPrefix: '/lobby/', includeHistory: false }) || [];
-        docs = docs.filter(doc => doc.content !== ''); // remove empty docs (aka "deleted" docs)
-        util_1.sortByField(docs, 'timestamp');
-        docs.reverse();
-        let sAppBackground = {
-            '--cPaper': 'var(--cEggplant)',
-            background: 'var(--cPaper)',
-            minHeight: '100vh',
-        };
-        return React.createElement("div", { style: sAppBackground },
-            React.createElement("div", { className: 'stack centeredReadableWidth', style: { padding: 'var(--s0)' } },
-                React.createElement("h1", { style: { fontStyle: 'italic', fontFamily: 'georgia, serif' } }, "Welcome To The Foyer"),
-                kit.authorKeypair
-                    ? React.createElement(FoyerComposer, { kit: this.props.kit, changeKey: this.props.changeKey })
-                    : null,
-                React.createElement("div", null, docs.map(doc => {
-                    let displayName = getDisplayName(kit, doc.author);
-                    let address = util_1.cutAtPeriod(doc.author);
-                    let name1, name2;
-                    if (displayName) {
-                        name1 = displayName;
-                        name2 = address;
-                    }
-                    else {
-                        name1 = address;
-                        name2 = null;
-                    }
-                    return React.createElement("div", { key: doc.path, className: 'stack', style: userStyle(doc.author, true) },
-                        React.createElement("div", { className: 'flexRow flexRowWrap', title: doc.author },
-                            React.createElement("div", { className: 'flexItem singleLineTextEllipsis bold', style: { color: 'var(--darkColor)' } }, name1),
-                            React.createElement("div", { className: 'flexItem singleLineTextEllipsis bold faint', style: { color: 'var(--darkColor)' } }, name2),
-                            React.createElement("div", { className: 'flexItem flexGrow1' }),
-                            React.createElement("div", { className: 'flexItem singleLineTextEllipsis faint' }, humanDate(doc.timestamp))),
-                        React.createElement("div", { className: 'wrappyText' }, doc.content));
-                }))));
-    }
+    // load docs
+    let docs = kit.storage.documents({ pathPrefix: '/lobby/', includeHistory: false }) || [];
+    docs = docs.filter(doc => doc.content !== ''); // remove empty docs (aka "deleted" docs)
+    util_1.sortByField(docs, 'timestamp');
+    docs.reverse();
+    let sAppBackground = {
+        '--cPaper': 'var(--cEggplant)',
+        background: 'var(--cPaper)',
+        minHeight: '100vh',
+    };
+    return React.createElement("div", { style: sAppBackground },
+        React.createElement("div", { className: 'stack centeredReadableWidth', style: { padding: 'var(--s0)' } },
+            React.createElement("h1", { style: { fontStyle: 'italic', fontFamily: 'georgia, serif' } }, "Welcome To The Foyer"),
+            kit.authorKeypair
+                ? React.createElement(FoyerComposer, { kit: props.kit, changeKey: props.changeKey })
+                : null,
+            React.createElement("div", null, docs.map(doc => {
+                let displayName = getDisplayName(kit, doc.author);
+                let address = util_1.cutAtPeriod(doc.author);
+                let name1, name2;
+                if (displayName) {
+                    name1 = displayName;
+                    name2 = address;
+                }
+                else {
+                    name1 = address;
+                    name2 = null;
+                }
+                return React.createElement("div", { key: doc.path, className: 'stack', style: userStyle(doc.author, true) },
+                    React.createElement("div", { className: 'flexRow flexRowWrap', title: doc.author },
+                        React.createElement("div", { className: 'flexItem singleLineTextEllipsis bold', style: { color: 'var(--darkColor)' } }, name1),
+                        React.createElement("div", { className: 'flexItem singleLineTextEllipsis bold faint', style: { color: 'var(--darkColor)' } }, name2),
+                        React.createElement("div", { className: 'flexItem flexGrow1' }),
+                        React.createElement("div", { className: 'flexItem singleLineTextEllipsis faint' }, humanDate(doc.timestamp))),
+                    React.createElement("div", { className: 'wrappyText' }, doc.content));
+            }))));
 }
 exports.FoyerApp = FoyerApp;
 ;
-class FoyerComposer extends React.PureComponent {
-    constructor(props) {
-        super(props);
-        this.state = {
-            text: '',
-        };
-    }
-    handleSubmit() {
+function FoyerComposer(props) {
+    var _a, _b;
+    const [text, setText] = react_1.useState('');
+    function handleSubmit() {
         log_1.logFoyerApp('posting...');
-        this.setState({ text: '' });
-        if (this.props.kit && this.props.kit.authorKeypair) {
-            let keypair = this.props.kit.authorKeypair;
+        setText('');
+        if (props.kit && props.kit.authorKeypair) {
+            let keypair = props.kit.authorKeypair;
             let docToSet = {
                 format: 'es.4',
                 path: `/lobby/~${keypair.address}/${Date.now()}.txt`,
-                content: this.state.text,
+                content: text,
             };
-            let result = this.props.kit.storage.set(keypair, docToSet);
+            let result = props.kit.storage.set(keypair, docToSet);
             if (result !== earthstar_1.WriteResult.Accepted) {
                 console.error('post: write failed', result);
             }
@@ -69029,19 +69021,16 @@ class FoyerComposer extends React.PureComponent {
             console.error("post: can't because kit or author keypair are null");
         }
     }
-    render() {
-        var _a, _b;
-        let myAddress = ((_b = (_a = this.props.kit) === null || _a === void 0 ? void 0 : _a.authorKeypair) === null || _b === void 0 ? void 0 : _b.address) || '';
-        let buttonStyle = {
-            '--cPaper': 'var(--cBlack)',
-            '--cInk': 'var(--cWhite)',
-        };
-        return React.createElement("form", { className: 'stack', style: userStyle(myAddress, false), onSubmit: (e) => { e.preventDefault(); this.handleSubmit(); } },
-            React.createElement("textarea", { rows: 4, style: { resize: 'vertical' }, value: this.state.text, onChange: (e) => this.setState({ text: e.target.value }) }),
-            React.createElement("div", { className: 'flexRow' },
-                React.createElement("div", { className: 'flexItem flexGrow1' }),
-                React.createElement("button", { className: 'flexItem button', type: "submit", style: buttonStyle, disabled: this.state.text.length === 0 }, "Post")));
-    }
+    let myAddress = ((_b = (_a = props.kit) === null || _a === void 0 ? void 0 : _a.authorKeypair) === null || _b === void 0 ? void 0 : _b.address) || '';
+    let buttonStyle = {
+        '--cPaper': 'var(--cBlack)',
+        '--cInk': 'var(--cWhite)',
+    };
+    return React.createElement("form", { className: 'stack', style: userStyle(myAddress, false), onSubmit: (e) => { e.preventDefault(); handleSubmit(); } },
+        React.createElement("textarea", { rows: 4, style: { resize: 'vertical' }, value: text, onChange: (e) => setText(e.target.value) }),
+        React.createElement("div", { className: 'flexRow' },
+            React.createElement("div", { className: 'flexItem flexGrow1' }),
+            React.createElement("button", { className: 'flexItem button', type: "submit", style: buttonStyle, disabled: text.length === 0 }, "Post")));
 }
 exports.FoyerComposer = FoyerComposer;
 

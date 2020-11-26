@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {useState} from 'react';
 import { Kit } from '../kit';
 import {
     cutAtPeriod,
@@ -72,91 +73,85 @@ export interface FoyerProps {
 }
 export interface FoyerState {
 }
-export class FoyerApp extends React.PureComponent<FoyerProps, FoyerState> {
-    constructor(props: FoyerProps) {
-        super(props);
-    }
-    render() {
-        logFoyerApp('🎨 render.  changeKey:', this.props.changeKey);
-        let kit = this.props.kit;
+export function FoyerApp(props: FoyerProps) {
+    logFoyerApp('🎨 render.  changeKey:', props.changeKey);
+    let kit = props.kit;
 
-        if (kit === null) { return null; }
+    if (kit === null) { return null; }
 
-        // load docs
-        let docs = kit.storage.documents({ pathPrefix: '/lobby/', includeHistory: false }) || [];
-        docs = docs.filter(doc => doc.content !== '');  // remove empty docs (aka "deleted" docs)
-        sortByField(docs, 'timestamp');
-        docs.reverse();
+    // load docs
+    let docs = kit.storage.documents({ pathPrefix: '/lobby/', includeHistory: false }) || [];
+    docs = docs.filter(doc => doc.content !== '');  // remove empty docs (aka "deleted" docs)
+    sortByField(docs, 'timestamp');
+    docs.reverse();
 
-        let sAppBackground = {
-            '--cPaper': 'var(--cEggplant)',
-            background: 'var(--cPaper)',
-            minHeight: '100vh',
-        } as React.CSSProperties;
+    let sAppBackground = {
+        '--cPaper': 'var(--cEggplant)',
+        background: 'var(--cPaper)',
+        minHeight: '100vh',
+    } as React.CSSProperties;
 
-        return <div style={sAppBackground}>
-            <div className='stack centeredReadableWidth' style={{padding: 'var(--s0)'}}>
-                <h1 style={{fontStyle: 'italic', fontFamily: 'georgia, serif'}}>Welcome To The Foyer</h1>
-                {kit.authorKeypair
-                    ? <FoyerComposer kit={this.props.kit} changeKey={this.props.changeKey} />
-                    : null}
-                {/*
-                <pre className='faint' style={{marginBottom: 50, overflow: 'hidden'}}>{
-                    `workspace address: ${kit.workspaceAddress || '(no workspace)'}\n`+
-                    `user address: ${kit.authorKeypair?.address || '(guest user)'}\n`+
-                    `pubs: ${(kit.syncer.state.pubs.map(p => p.domain) || ['(none)']).join('\n')}`
-                }</pre>
-                */}
-                {/* lobby messages */}
-                <div>
-                    {docs.map(doc => {
-                        let displayName = getDisplayName(kit as Kit, doc.author);
-                        let address = cutAtPeriod(doc.author);
-                        let name1: string, name2: string | null;
-                        if (displayName) {
-                            name1 = displayName;
-                            name2 = address;
-                        } else {
-                            name1 = address;
-                            name2 = null;
-                        }
-                        return <div key={doc.path} className='stack' style={userStyle(doc.author, true)}>
-                            <div className='flexRow flexRowWrap' title={doc.author}>
-                                <div className='flexItem singleLineTextEllipsis bold' style={{color: 'var(--darkColor)'}}>{name1}</div>
-                                <div className='flexItem singleLineTextEllipsis bold faint' style={{color: 'var(--darkColor)'}}>{name2}</div>
-                                <div className='flexItem flexGrow1' />
-                                <div className='flexItem singleLineTextEllipsis faint'>{humanDate(doc.timestamp)}</div>
-                            </div>
-                            <div className='wrappyText'>{doc.content}</div>
+    return <div style={sAppBackground}>
+        <div className='stack centeredReadableWidth' style={{padding: 'var(--s0)'}}>
+            <h1 style={{fontStyle: 'italic', fontFamily: 'georgia, serif'}}>Welcome To The Foyer</h1>
+            {kit.authorKeypair
+                ? <FoyerComposer kit={props.kit} changeKey={props.changeKey} />
+                : null}
+            {/*
+            <pre className='faint' style={{marginBottom: 50, overflow: 'hidden'}}>{
+                `workspace address: ${kit.workspaceAddress || '(no workspace)'}\n`+
+                `user address: ${kit.authorKeypair?.address || '(guest user)'}\n`+
+                `pubs: ${(kit.syncer.state.pubs.map(p => p.domain) || ['(none)']).join('\n')}`
+            }</pre>
+            */}
+            {/* lobby messages */}
+            <div>
+                {docs.map(doc => {
+                    let displayName = getDisplayName(kit as Kit, doc.author);
+                    let address = cutAtPeriod(doc.author);
+                    let name1: string, name2: string | null;
+                    if (displayName) {
+                        name1 = displayName;
+                        name2 = address;
+                    } else {
+                        name1 = address;
+                        name2 = null;
+                    }
+                    return <div key={doc.path} className='stack' style={userStyle(doc.author, true)}>
+                        <div className='flexRow flexRowWrap' title={doc.author}>
+                            <div className='flexItem singleLineTextEllipsis bold' style={{color: 'var(--darkColor)'}}>{name1}</div>
+                            <div className='flexItem singleLineTextEllipsis bold faint' style={{color: 'var(--darkColor)'}}>{name2}</div>
+                            <div className='flexItem flexGrow1' />
+                            <div className='flexItem singleLineTextEllipsis faint'>{humanDate(doc.timestamp)}</div>
                         </div>
-                    })}
-                </div>
+                        <div className='wrappyText'>{doc.content}</div>
+                    </div>
+                })}
             </div>
-        </div>;
-    }
+        </div>
+    </div>;
 };
 
 export interface FoyerComposerState {
     text: string,
 }
-export class FoyerComposer extends React.PureComponent<FoyerProps, FoyerComposerState> {
-    constructor(props: FoyerProps) {
-        super(props);
-        this.state = {
-            text: '',
-        };
-    }
-    handleSubmit() {
+
+export function FoyerComposer(props: FoyerProps){
+    const [text, setText] = useState('')
+
+    function handleSubmit() {
         logFoyerApp('posting...');
-        this.setState({text: ''});
-        if (this.props.kit && this.props.kit.authorKeypair) {
-            let keypair = this.props.kit.authorKeypair;
+
+        setText('')
+
+        if (props.kit && props.kit.authorKeypair) {
+            let keypair = props.kit.authorKeypair;
             let docToSet : DocToSet = {
                 format: 'es.4',
                 path: `/lobby/~${keypair.address}/${Date.now()}.txt`,
-                content: this.state.text,
+                content: text,
             }
-            let result = this.props.kit.storage.set(keypair, docToSet);
+            let result = props.kit.storage.set(keypair, docToSet);
             if (result !== WriteResult.Accepted) {
                 console.error('post: write failed', result);
             } else {
@@ -166,29 +161,28 @@ export class FoyerComposer extends React.PureComponent<FoyerProps, FoyerComposer
             console.error("post: can't because kit or author keypair are null");
         }
     }
-    render() {
-        let myAddress = this.props.kit?.authorKeypair?.address || '';
-        let buttonStyle = {
-            '--cPaper': 'var(--cBlack)',
-            '--cInk': 'var(--cWhite)',
-        } as React.CSSProperties;
-        return <form className='stack' style={userStyle(myAddress, false)}
-            onSubmit={(e) => {e.preventDefault(); this.handleSubmit();}}
-            >
-            <textarea rows={4}
-                style={{resize: 'vertical'}}
-                value={this.state.text}
-                onChange={(e) => this.setState({text: e.target.value}) }
-                />
-            <div className='flexRow'>
-                <div className='flexItem flexGrow1' />
-                <button className='flexItem button' type="submit"
-                    style={buttonStyle}
-                    disabled={this.state.text.length === 0}
-                    >
-                    Post
-                </button>
-            </div>
-        </form>
-    }
+
+    let myAddress = props.kit?.authorKeypair?.address || '';
+    let buttonStyle = {
+        '--cPaper': 'var(--cBlack)',
+        '--cInk': 'var(--cWhite)',
+    } as React.CSSProperties;
+    return <form className='stack' style={userStyle(myAddress, false)}
+        onSubmit={(e) => {e.preventDefault(); handleSubmit();}}
+        >
+        <textarea rows={4}
+            style={{resize: 'vertical'}}
+            value={text}
+            onChange={(e) => setText(e.target.value) }
+            />
+        <div className='flexRow'>
+            <div className='flexItem flexGrow1' />
+            <button className='flexItem button' type="submit"
+                style={buttonStyle}
+                disabled={text.length === 0}
+                >
+                Post
+            </button>
+        </div>
+    </form>
 }
